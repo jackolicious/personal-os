@@ -1019,7 +1019,7 @@ After 5+ sources on any single wiki concept:
 - If today >= next_tuning_date: run `Workflows/preference-tuning.md`
 - Update schedule after tuning completes
 
-### Step 9: Update HEARTBEAT.md
+### Step 10: Update HEARTBEAT.md
 - Last Nightly Synthesis: [today]
 - Count of items processed
 - Any patterns flagged (from Step 6)
