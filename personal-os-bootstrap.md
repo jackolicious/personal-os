@@ -354,6 +354,7 @@ Never rewrite existing sections.
 - Role: [Title] at [Function]
 - Relationship: [collaborator | dependency | sponsor | inform-only]
 - Slack: @[handle]
+- Last contact: YYYY-MM-DD
 - Key context: [one line]
 ```
 
@@ -690,6 +691,7 @@ audience: {{AUDIENCE}}
 
 # [NAME]
 **Role:** [Title] | **Function:** [Team] | **Slack:** @[handle]
+**Last contact:** YYYY-MM-DD | **Sessions:** 0
 
 ## Key context
 [One paragraph — who they are, their priorities, how they work]
@@ -740,16 +742,21 @@ makes connections, and recommends one clear action for the day.
    - If a 1on1 is today: surface last session summary + open loops for that person
    - Suggest running `/1on1-prep [name]` if not already done
 
-4. **Fresh from last night**
+4. **Relationship health check**
+   - Scan `People/team.md` and `People/stakeholders.md` for `Last contact:` fields
+   - Flag anyone not contacted in >14 days (direct reports) or >21 days (stakeholders)
+   - Format: "Haven't connected with [Name] in X days — open loops: N"
+
+6. **Fresh from last night**
    - Read `Data/synthesis-log.json` → what was processed in the last nightly run
    - Surface: new wiki connections made, new open loops created, any patterns flagged
 
-5. **Coaching insight**
+7. **Coaching insight**
    - Scan recent meeting summaries (last 7 days) for cross-cutting patterns
    - If 2+ people mentioned the same theme: flag it ("Three 1on1s this week touched on X")
    - If a strategy theme is emerging from multiple sources: surface it
 
-6. **Recommendation**
+8. **Recommendation**
    - One clear action for today that moves the most important needle
    - Based on: goals progress, overdue loops, emerging patterns
 
@@ -765,6 +772,9 @@ makes connections, and recommends one clear action for the day.
 
 ### Open loops requiring action
 [Overdue / due today / high priority — with suggested action]
+
+### Relationship health
+[Anyone overdue for contact — name, days since last touch, open loop count]
 
 ### Fresh from last night
 [What nightly synthesis found — new connections, flags]
@@ -989,7 +999,12 @@ c. Never re-evaluate old connections
 - If 3+ people mentioned a theme in 1on1s this week → flag for next daily briefing
 - Log flags in `HEARTBEAT.md` under "Open Questions"
 
-### Step 7: Profile synthesis (triggered by session count)
+### Step 7: Last contact update
+For each 1on1 session processed tonight:
+- Update `Last contact:` in `1on1s/[Name]/CLAUDE.md` to today's date
+- If person is in `People/stakeholders.md`, update their `Last contact:` field there too
+
+### Step 8: Profile synthesis (triggered by session count)
 After 10+ sessions with any single person:
 - Re-read all their summaries
 - Update `[Name]/profile.md` themes section with synthesized patterns
@@ -999,7 +1014,7 @@ After 5+ sources on any single wiki concept:
 - Append "Synthesis as of [date]" section to that wiki page
 - Do NOT delete prior connection entries
 
-### Step 8: Preference tuning check
+### Step 9: Preference tuning check
 - Read preference_tuning from synthesis-log.json
 - If today >= next_tuning_date: run `Workflows/preference-tuning.md`
 - Update schedule after tuning completes
