@@ -11,9 +11,9 @@
 # Personal OS Bootstrap
 
 I am setting up my Personal OS from scratch. This directory is both my Obsidian
-vault and my Claude Code working directory. Work through setup in phases using
-plan mode first, then execute each phase sequentially. Confirm completion of each
-phase before moving to the next.
+vault and my Claude Code working directory. Execute each phase sequentially —
+start Phase 1 immediately without previewing the plan. Confirm completion of each
+phase with a single line before moving to the next.
 
 ---
 
