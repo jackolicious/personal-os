@@ -1,8 +1,9 @@
 # Personal OS Bootstrap Meta Prompt
 
-> Paste everything below the horizontal rule into Claude Code in a fresh local vault directory.
+> Run `bash setup.sh` to scaffold the vault, check prerequisites, and wire up automation.
+> Then paste everything below the horizontal rule into Claude Code in that directory.
 > Complete the PERSONALIZATION CHECKLIST (Phase 10) before first use.
-> Prerequisites: `pip install markitdown`, Granola configured to export to `Inbox/transcripts/`
+> Prerequisites: `pip install markitdown`, one transcript tool configured (Granola / Fireflies / Zoom MCP / Otter)
 > Mobile sync: Obsidian Sync (set up separately when ready — vault runs fine without it)
 
 ---
@@ -22,7 +23,7 @@ I am [YOUR NAME], Head of Product at [COMPANY], starting [DATE].
 
 This system is my Chief of Staff second brain and personal knowledge management coach.
 Primary use cases:
-- Process meeting transcripts (Granola exports to Inbox/transcripts/)
+- Process meeting transcripts (Granola / Fireflies / Zoom MCP / Otter → Inbox/transcripts/)
 - Convert PDFs to annotated Markdown via markitdown
 - Track open loops per person and per project — reviewed daily
 - Generate a daily briefing with coaching recommendations
@@ -36,6 +37,33 @@ Design constraints:
 - Non-destructive: sources are sacred, synthesis is append-only
 - Context-efficient: CLAUDE.md files are lean doc-indexes, not instruction manuals
 - Incremental: nightly synthesis processes only the delta, never reruns everything
+- Index-first: every directory has an `_index.md`; workflows read the index, then targeted files — never full directory scans
+
+## Why three-tier immutability
+
+Raw transcripts and PDFs can run 5,000–15,000 tokens each. If any workflow had to
+read raw sources to answer a question, you'd exhaust your context window before
+reaching synthesis. The three tiers solve this by keeping each layer at the right
+abstraction and token cost:
+
+| Tier | Examples | Token footprint | Rule |
+|------|----------|-----------------|------|
+| **Sources** | Transcripts, PDFs, raw URLs | 5k–15k each | Immutable after ingestion |
+| **Summaries** | 1on1 session summaries, source annotations | 300–800 each | Write-once, regeneratable |
+| **Synthesis** | Wiki pages, profiles, briefings, open-loops.json | 100–400 per entry | Append-only, never rewritten |
+
+**Context efficiency**: Workflows load summaries and synthesis — not sources.
+A `/1on1-prep` that reads 3 summaries uses ~2k tokens, not 45k.
+
+**Reproducibility**: Sources never change, so any summary can be regenerated from
+ground truth if synthesis logic improves.
+
+**Incremental trust**: The hash-based synthesis-log.json only works if sources are
+immutable. Mutable sources would require reprocessing everything on every change.
+
+**Compounding**: Each tier accumulates independently. New sessions create summaries;
+summaries feed wiki pages; wiki pages compound into strategic themes. A single change
+anywhere lower would invalidate the layers above it.
 
 Automation runs nightly via persistent terminal loop on an always-on Mac.
 
@@ -215,14 +243,28 @@ Raw inputs only. Nothing here is processed or synthesized yet.
 |--------|---------|--------------|
 | `links/` | .txt or .md files with one URL each | `/ingest-url` |
 | `pdfs/` | Raw PDFs awaiting conversion | `Workflows/pdf-ingestion.md` |
-| `transcripts/` | Granola exports (raw markdown) | `Workflows/meeting-notes.md` |
+| `transcripts/` | Meeting transcripts (see sources below) | `Workflows/meeting-notes.md` |
 | `scratch/` | Fleeting notes, unstructured | `/process-inbox` |
+
+## Supported transcript sources
+All tools export to `Inbox/transcripts/` as `.md` or `.txt` files.
+
+| Tool | How to get files here |
+|------|-----------------------|
+| **Granola** | Configure export folder to `Inbox/transcripts/` in Granola settings |
+| **Fireflies** | Set up Zapier/webhook to POST summaries → save to `Inbox/transcripts/` |
+| **Zoom AI Companion** | Use Zoom MCP (`/zoom-transcript`) or download summary from zoom.us/recording |
+| **Otter.ai** | Export transcript as TXT/MD → move to `Inbox/transcripts/` |
+| **Fathom** | Enable auto-email summary → forward to a script that saves to `Inbox/transcripts/` |
+
+File naming convention: `YYYY-MM-DD [Meeting Title].md`
 
 ## Processing rules
 - Never modify originals in `transcripts/` — outputs go to `Meetings/` or `1on1s/`
 - PDFs: convert with markitdown → annotate → file to `Knowledge/sources/`
 - After processing any file, log it in `Data/synthesis-log.json`
 - If unsure where something belongs, file to `scratch/` and flag in `HEARTBEAT.md`
+- Read `_index.md` first to see what's already been processed before scanning any subfolder
 ```
 
 ### `1on1s/CLAUDE.md`
@@ -232,6 +274,10 @@ Raw inputs only. Nothing here is processed or synthesized yet.
 
 One subfolder per person. Direct reports and key stakeholders.
 
+## Index
+Read `_index.md` before any other operation. It lists all people, last session date,
+session count, and last contact — enabling targeted reads without scanning the directory.
+
 ## Person folder structure
 ```
 [Person Name]/
@@ -239,6 +285,7 @@ One subfolder per person. Direct reports and key stakeholders.
   profile.md      ← role, background, working style, key themes
   open-loops.md   ← active commitments and follow-ups (append-only)
   sessions/
+    _index.md              ← session index: date, key topic, summary link (auto-maintained)
     YYYY-MM-DD.md          ← raw notes (immutable after session)
     YYYY-MM-DD-summary.md  ← processed summary (structured)
 ```
@@ -247,9 +294,9 @@ One subfolder per person. Direct reports and key stakeholders.
 Use `/new-1on1 [name]` — creates from `Templates/person-folder.md`
 
 ## Query patterns
-- "What's open with Alex?" → reads Alex/open-loops.md + last summary
+- "What's open with Alex?" → read `1on1s/_index.md`, then Alex/open-loops.md + last summary only
 - "Prep my 1on1 with Alex" → `/1on1-prep Alex`
-- "What themes keep coming up with the team?" → reads all [person]/profile.md theme sections
+- "What themes keep coming up with the team?" → read `1on1s/_index.md`, then each person's profile.md
 ```
 
 ### `Meetings/CLAUDE.md`
@@ -475,6 +522,44 @@ Schema for each `processed_files` entry (key = relative file path):
 - Days 8–14: schedule = "every-3-days"
 - Days 15–21: schedule = "every-5-days"
 - Day 22+: schedule = "weekly"
+
+---
+
+### Directory indexes (`_index.md`)
+
+Each key directory maintains a `_index.md` that workflows read **instead of scanning the directory**.
+Nightly synthesis updates these after processing each file (see Step 7).
+
+**`1on1s/_index.md`** — one row per person:
+```markdown
+| Name | Last session | Sessions | Open loops | Last contact | Folder |
+|------|-------------|----------|------------|--------------|--------|
+| Alice | 2026-04-28 | 14 | 3 | 2026-04-28 | 1on1s/Alice/ |
+```
+
+**`1on1s/[Name]/sessions/_index.md`** — one row per session:
+```markdown
+| Date | Key topic | Summary | Processed |
+|------|-----------|---------|-----------|
+| 2026-04-28 | Q2 roadmap | sessions/2026-04-28-summary.md | yes |
+```
+
+**`Knowledge/wiki/_index.md`** — one row per wiki page:
+```markdown
+| Page | Concepts | Sources | Last updated |
+|------|----------|---------|--------------|
+| product-strategy.md | roadmap, prioritization | 8 | 2026-04-28 |
+```
+
+**`Meetings/_index.md`** — one row per meeting:
+```markdown
+| Date | Title | Type | Participants | Action items | Processed |
+|------|-------|------|--------------|--------------|-----------|
+| 2026-04-28 | All-Hands | team | 12 | 2 | yes |
+```
+
+Rule: if a workflow needs to know what's in a directory, it reads `_index.md` first.
+It only opens individual files when it knows specifically which ones it needs.
 
 ---
 
@@ -751,8 +836,9 @@ makes connections, and recommends one clear action for the day.
    - Read `Data/synthesis-log.json` → what was processed in the last nightly run
    - Surface: new wiki connections made, new open loops created, any patterns flagged
 
-7. **Coaching insight**
-   - Scan recent meeting summaries (last 7 days) for cross-cutting patterns
+7. **Coaching insight** (index-first)
+   - Read `1on1s/_index.md` → find people with sessions in the last 7 days
+   - Read only those people's most recent summary (via sessions/_index.md) — do not scan all 1on1s
    - If 2+ people mentioned the same theme: flag it ("Three 1on1s this week touched on X")
    - If a strategy theme is emerging from multiple sources: surface it
 
@@ -802,9 +888,11 @@ If yes, post the briefing to the configured Telegram chat.
 ## Audiences: Down (direct reports), Lateral (cross-functional), Up (C-suite)
 ## Use judgment on which audiences to activate each week
 
-## Step 0: Open loop review
-Before elicitation, run: load `Data/open-loops.json` filtered by this week.
-Surface any overdue or newly closed loops — these feed into the cascade.
+## Step 0: Context load (index-first)
+1. Read `Data/open-loops.json` — filter for this week's overdue/new loops
+2. Read `1on1s/_index.md` — identify people with sessions this week (by last session date)
+3. Read only those people's most recent summary (via their sessions/_index.md) — do not scan all sessions
+Surface overdue/newly closed loops and this week's 1on1 themes — these feed into the cascade.
 
 ## Step 1: Elicitation — ask these questions one at a time, wait for each answer
 
@@ -903,18 +991,19 @@ When a new Granola transcript appears in `Inbox/transcripts/`
 ## Trigger: `/1on1-prep [name]`
 
 1. Load `1on1s/[Name]/CLAUDE.md` and `profile.md`
-2. Read most recent `sessions/[date]-summary.md`
-3. Filter `Data/open-loops.json` where context_person = [Name]
-4. Scan for shared meetings in the last 2 weeks
+2. Read `1on1s/[Name]/sessions/_index.md` → identify the 2 most recent sessions by date
+3. Read only those 2 summary files — do not open the full sessions/ directory
+4. Filter `Data/open-loops.json` where context_person = [Name]
+5. Check `Meetings/_index.md` for shared meetings in the last 2 weeks — read only those files
 
-5. Generate prep doc:
+6. Generate prep doc:
    - Their open commitments to me (overdue flagged)
    - My open commitments to them
    - Suggested agenda topics based on themes
    - One probing question I haven't asked yet
    - Relevant context from HEARTBEAT.md
 
-6. Create session file from `Templates/1on1-session.md`
+7. Create session file from `Templates/1on1-session.md`
 ```
 
 ### `Workflows/preference-tuning.md`
@@ -968,11 +1057,11 @@ Determined by `Data/synthesis-log.json` preference_tuning section:
 ### Step 1: Load state
 Read `Data/synthesis-log.json`
 
-### Step 2: Scan for unprocessed files
-- `Inbox/transcripts/*.md` — not in log
-- `Inbox/pdfs/*.md` — converted but not annotated
-- `Inbox/links/*.md` — not in log
-- `Knowledge/sources/*.md` — in log but hash changed
+### Step 2: Find unprocessed files (index-first, no directory scans)
+Read `Data/synthesis-log.json` to build the work queue — do NOT scan directories:
+- Files referenced in `Inbox/transcripts/_index.md` but absent from synthesis-log → queue for processing
+- Files in synthesis-log with a changed hash (compare MD5) → re-queue
+- Do not open any file until it is specifically queued for processing
 
 ### Step 3: Process each file (ONE AT A TIME)
 a. Determine type → apply correct workflow
@@ -1004,7 +1093,15 @@ For each 1on1 session processed tonight:
 - Update `Last contact:` in `1on1s/[Name]/CLAUDE.md` to today's date
 - If person is in `People/stakeholders.md`, update their `Last contact:` field there too
 
-### Step 8: Profile synthesis (triggered by session count)
+### Step 8: Update directory indexes
+After all files are processed, refresh each `_index.md`:
+- `1on1s/_index.md` — update last session date, session count, last contact for any person touched tonight
+- `1on1s/[Name]/sessions/_index.md` — append row for each new session processed
+- `Knowledge/wiki/_index.md` — append row for each new wiki page created; update source count for existing
+- `Meetings/_index.md` — append row for each meeting processed
+Never rewrite the full index — append or update only the rows that changed.
+
+### Step 9: Profile synthesis (triggered by session count)
 After 10+ sessions with any single person:
 - Re-read all their summaries
 - Update `[Name]/profile.md` themes section with synthesized patterns
@@ -1014,12 +1111,12 @@ After 5+ sources on any single wiki concept:
 - Append "Synthesis as of [date]" section to that wiki page
 - Do NOT delete prior connection entries
 
-### Step 9: Preference tuning check
+### Step 10: Preference tuning check
 - Read preference_tuning from synthesis-log.json
 - If today >= next_tuning_date: run `Workflows/preference-tuning.md`
 - Update schedule after tuning completes
 
-### Step 10: Update HEARTBEAT.md
+### Step 11: Update HEARTBEAT.md
 - Last Nightly Synthesis: [today]
 - Count of items processed
 - Any patterns flagged (from Step 6)
@@ -1141,21 +1238,46 @@ $ARGUMENTS contains the person's name.
 
 ```bash
 #!/bin/bash
-# Nightly synthesis loop
-# Keep running in a dedicated terminal tab on your always-on Mac
-# Prerequisite: set System Settings > Energy > "Prevent automatic sleeping" ON
+# Personal OS — persistent automation loop
+# Run in a dedicated terminal tab on your always-on Mac.
+# Prerequisite: System Settings > Battery > Options > "Prevent automatic sleeping when on power adapter"
 
-echo "Nightly synthesis loop started at $(date). Ctrl+C to stop."
+set -euo pipefail
+VAULT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+mkdir -p "$VAULT_DIR/logs" "$VAULT_DIR/Briefings"
+
+echo "Personal OS loop started at $(date). Ctrl+C to stop."
+
+NIGHTLY_DONE_DATE=""
+BRIEFING_DONE_DATE=""
 
 while true; do
-  hour=$(date +%H)
-  if [ "$hour" = "02" ]; then
+  TODAY="$(date +%Y-%m-%d)"
+  HOUR="$(date +%H)"
+
+  # Nightly synthesis at 02:00
+  if [ "$HOUR" = "02" ] && [ "$NIGHTLY_DONE_DATE" != "$TODAY" ]; then
     echo "$(date): Running nightly synthesis..."
-    claude --print "/nightly" 2>&1 | tee -a logs/nightly.log
-    sleep 3600  # avoid double-run within same hour
-  else
-    sleep 300   # check every 5 minutes
+    claude --print "$(cat "$VAULT_DIR/.claude/commands/nightly.md")" \
+      2>&1 | tee -a "$VAULT_DIR/logs/nightly.log"
+    NIGHTLY_DONE_DATE="$TODAY"
+    sleep 60
   fi
+
+  # Daily briefing at 07:00 — only if nightly has run today (or it's already morning)
+  if [ "$HOUR" = "07" ] && [ "$BRIEFING_DONE_DATE" != "$TODAY" ]; then
+    BRIEF_FILE="$VAULT_DIR/Briefings/$TODAY.md"
+    if [ ! -f "$BRIEF_FILE" ]; then
+      echo "$(date): Generating daily briefing..."
+      claude --print "$(cat "$VAULT_DIR/.claude/commands/daily-briefing.md")" \
+        > "$BRIEF_FILE" 2>&1
+      echo "$(date): Briefing saved to $BRIEF_FILE"
+    fi
+    BRIEFING_DONE_DATE="$TODAY"
+    sleep 60
+  fi
+
+  sleep 300  # check every 5 minutes
 done
 ```
 
