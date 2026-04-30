@@ -11,11 +11,11 @@ Personal OS is a bootstrap meta prompt that turns Claude Code + Obsidian into a 
 | Workflow | Trigger | Output |
 |----------|---------|--------|
 | **Daily briefing** | Auto at 5am | Prioritized morning brief: open loops, meetings, relationship health, patterns |
-| **1on1 tracking** | `/1on1-prep [name]` | Pre-read: last 2 sessions + open loops + themes for that person |
-| **Meeting processing** | `/process-inbox` | Extracts commitments from transcripts → open loops JSON |
-| **Cascade** | `/cascade` | Weekly stakeholder updates drafted for down / lateral / up audiences |
+| **1on1 tracking** | `/personal-os-1on1-prep [name]` | Pre-read: last 2 sessions + open loops + themes for that person |
+| **Meeting processing** | `/personal-os-process-inbox` | Extracts commitments from transcripts → open loops JSON |
+| **Cascade** | `/personal-os-cascade` | Weekly stakeholder updates drafted for down / lateral / up audiences |
 | **Nightly synthesis** | Auto at 2am | Incremental: wiki connections, pattern detection, preference tuning |
-| **Open loops** | `/open-loops` | Filterable view by person, project, priority, or staleness |
+| **Open loops** | `/personal-os-open-loops` | Filterable view by person, project, priority, or staleness |
 | **Relationship health** | Part of daily briefing | Flags direct reports (>14d) and stakeholders (>21d) with no contact |
 
 ---
@@ -88,7 +88,7 @@ claude
 - Fill in your name, company, start date
 - Add your team roster to `People/team.md`
 - Set your 30/60/90 goals in `GOALS.md`
-- Create your first 1on1 folders with `/new-1on1 [name]`
+- Create your first 1on1 folders with `/personal-os-new-1on1 [name]`
 
 ---
 
@@ -99,7 +99,7 @@ vault/
 ├── CLAUDE.md              ← Root context (≤70 lines) — always loaded
 ├── GOALS.md               ← 30/60/90 objectives
 ├── HEARTBEAT.md           ← Current focus, upcoming meetings, synthesis state
-├── Inbox/                 ← Drop zone: transcripts, PDFs, URLs
+├── Inbox/                 ← Drop zone: transcripts, PDFs, URLs; archive/ holds processed originals
 ├── 1on1s/
 │   ├── _index.md          ← All people: last session, session count, last contact
 │   └── [Name]/
@@ -114,17 +114,25 @@ vault/
 │   ├── sources/           ← Immutable annotated sources
 │   └── wiki/
 │       └── _index.md      ← Wiki pages: concepts, sources, last updated
-├── Data/
-│   ├── open-loops.json    ← Structured commitments with priority + due dates
-│   ├── decisions.json     ← Decision log
-│   └── synthesis-log.json ← Incremental processing ledger (hash-based)
-├── Workflows/             ← Playbooks for each workflow
-├── Briefings/             ← Auto-generated daily briefings
-├── Templates/             ← Scaffolds for sessions, summaries, person folders
+├── Interviews/
+│   ├── _index.md          ← Active roles: company, stage, status
+│   └── [Role]/
+│       ├── role-context.md ← JD, company notes
+│       ├── question-bank.md← Questions to ask
+│       └── notes/          ← Per-interview notes
+├── _system/               ← System-managed (do not edit directly)
+│   ├── data/
+│   │   ├── open-loops.json ← Structured commitments with priority + due dates
+│   │   ├── decisions.json  ← Decision log
+│   │   └── synthesis-log.json ← Incremental processing ledger (hash-based)
+│   ├── workflows/          ← Playbooks for each workflow
+│   ├── briefings/          ← Auto-generated daily briefings
+│   ├── templates/          ← Scaffolds for sessions, summaries, person folders
+│   └── logs/               ← Automation logs
 ├── profile/
 │   └── preferences.md     ← Adaptive briefing preferences (auto-tuned weekly)
 ├── run-nightly.sh         ← Persistent loop: 2am synthesis + 5am briefing
-└── .claude/commands/      ← Slash commands: /daily-briefing, /cascade, etc.
+└── .claude/commands/      ← Slash commands: /personal-os-daily-briefing, /personal-os-cascade, etc.
 ```
 
 ---
@@ -136,7 +144,7 @@ Two jobs run unattended on an always-on Mac:
 | Time | Job | What it does |
 |------|-----|--------------|
 | 2:00 AM | Nightly synthesis | Processes new transcripts/PDFs, updates wiki, flags patterns, refreshes all `_index.md` files |
-| 5:00 AM | Daily briefing | Generates `Briefings/YYYY-MM-DD.md` from current state |
+| 5:00 AM | Daily briefing | Generates `_system/briefings/YYYY-MM-DD.md` from current state |
 
 Both run inside a single `run-nightly.sh` loop. `setup.sh` also installs a launchd plist as a fallback if the terminal session is closed.
 

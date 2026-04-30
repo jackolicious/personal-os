@@ -53,7 +53,7 @@ abstraction and token cost:
 | **Synthesis** | Wiki pages, profiles, briefings, open-loops.json | 100–400 per entry | Append-only, never rewritten |
 
 **Context efficiency**: Workflows load summaries and synthesis — not sources.
-A `/1on1-prep` that reads 3 summaries uses ~2k tokens, not 45k.
+A `/personal-os-1on1-prep` that reads 3 summaries uses ~2k tokens, not 45k.
 
 **Reproducibility**: Sources never change, so any summary can be regenerated from
 ground truth if synthesis logic improves.
@@ -79,6 +79,11 @@ Inbox/links/
 Inbox/pdfs/
 Inbox/transcripts/
 Inbox/scratch/
+Inbox/archive/
+Inbox/archive/links/
+Inbox/archive/pdfs/
+Inbox/archive/transcripts/
+Inbox/archive/scratch/
 1on1s/
 Meetings/
 Projects/
@@ -91,11 +96,14 @@ Knowledge/wiki/
 Knowledge/wiki/concepts/
 Knowledge/wiki/market/
 People/
-Workflows/
-Templates/
-Data/
+Interviews/
 profile/
-logs/
+_system/
+_system/data/
+_system/logs/
+_system/briefings/
+_system/templates/
+_system/workflows/
 .claude/
 .claude/commands/
 ```
@@ -112,7 +120,8 @@ logs/
 .trash/
 *.DS_Store
 Inbox/pdfs/*.pdf
-logs/*.log
+Inbox/archive/pdfs/*.pdf
+_system/logs/*.log
 .env
 ```
 
@@ -187,9 +196,9 @@ Last Updated: [DATE]
 | `Projects/` | Active initiatives |
 | `Knowledge/` | Sources (immutable) + wiki (synthesized) |
 | `People/` | Team roster + stakeholder map |
-| `Workflows/` | Repeatable process playbooks |
+| `Interviews/` | Active roles: per-role context, question bank, interview notes |
 | `profile/` | My preferences and working style (for tuning) |
-| `Data/` | Structured state: open loops, decisions, synthesis log |
+| `_system/` | System-maintained: data, logs, briefings, templates, workflows |
 
 ## Always Load
 - `GOALS.md` — current objectives
@@ -214,21 +223,24 @@ Last Updated: [DATE]
 ## Commands
 | Say | Does |
 |-----|------|
-| `/daily-briefing` | Generate daily coaching briefing with open loops + recommendations |
-| `/process-inbox` | Process all new Inbox items |
-| `/cascade` | Start weekly Cascade workflow |
-| `/1on1-prep [name]` | Prep for a 1on1 |
-| `/ingest-url [url]` | Fetch, annotate, file a URL |
-| `/nightly` | Run synthesis manually |
-| `/open-loops [filter?]` | Review open loops |
-| `/new-1on1 [name]` | Create 1on1 session |
+| `/personal-os-daily-briefing` | Generate daily coaching briefing with open loops + recommendations |
+| `/personal-os-process-inbox` | Process all new Inbox items |
+| `/personal-os-cascade` | Start weekly Cascade workflow |
+| `/personal-os-1on1-prep [name]` | Prep for a 1on1 |
+| `/personal-os-ingest-url [url]` | Fetch, annotate, file a URL |
+| `/personal-os-nightly` | Run synthesis manually |
+| `/personal-os-open-loops [filter?]` | Review open loops |
+| `/personal-os-new-1on1 [name]` | Create 1on1 session |
+| `/personal-os-new-interview-role [role]` | Open a new interview role folder |
+| `/personal-os-interview-prep [role]` | Generate prep brief for next interview |
 
 ## Rules
-- Check `Data/synthesis-log.json` before processing any file
+- Check `_system/data/synthesis-log.json` before processing any file
 - Never modify files in `Knowledge/sources/` or `Inbox/transcripts/`
 - Open loops: append only — archive, never delete
 - Wiki pages: append dated sections, never rewrite core content
 - Always load `profile/preferences.md` when generating any briefing or synthesis
+- `_system/` is managed by automation — do not edit files there directly
 ```
 
 ### `Inbox/CLAUDE.md`
@@ -241,10 +253,11 @@ Raw inputs only. Nothing here is processed or synthesized yet.
 ## Structure
 | Folder | Contains | Process with |
 |--------|---------|--------------|
-| `links/` | .txt or .md files with one URL each | `/ingest-url` |
-| `pdfs/` | Raw PDFs awaiting conversion | `Workflows/pdf-ingestion.md` |
-| `transcripts/` | Meeting transcripts (see sources below) | `Workflows/meeting-notes.md` |
-| `scratch/` | Fleeting notes, unstructured | `/process-inbox` |
+| `links/` | .txt or .md files with one URL each | `/personal-os-ingest-url` |
+| `pdfs/` | Raw PDFs awaiting conversion | `_system/workflows/pdf-ingestion.md` |
+| `transcripts/` | Meeting transcripts (see sources below) | `_system/workflows/meeting-notes.md` |
+| `scratch/` | Fleeting notes, unstructured | `/personal-os-process-inbox` |
+| `archive/` | Processed originals (read-only) — never reprocessed | — |
 
 ## Supported transcript sources
 All tools export to `Inbox/transcripts/` as `.md` or `.txt` files.
@@ -260,9 +273,10 @@ All tools export to `Inbox/transcripts/` as `.md` or `.txt` files.
 File naming convention: `YYYY-MM-DD [Meeting Title].md`
 
 ## Processing rules
-- Never modify originals in `transcripts/` — outputs go to `Meetings/` or `1on1s/`
+- Never modify originals — outputs go to `Meetings/` or `1on1s/`
 - PDFs: convert with markitdown → annotate → file to `Knowledge/sources/`
-- After processing any file, log it in `Data/synthesis-log.json`
+- After processing any file: log it in `_system/data/synthesis-log.json`, then move the original to `Inbox/archive/[subfolder]/`
+- Originals in `archive/` are immutable — they are never modified or reprocessed
 - If unsure where something belongs, file to `scratch/` and flag in `HEARTBEAT.md`
 - Read `_index.md` first to see what's already been processed before scanning any subfolder
 ```
@@ -291,11 +305,11 @@ session count, and last contact — enabling targeted reads without scanning the
 ```
 
 ## Creating a new person folder
-Use `/new-1on1 [name]` — creates from `Templates/person-folder.md`
+Use `/personal-os-new-1on1 [name]` — creates from `_system/templates/person-folder.md`
 
 ## Query patterns
 - "What's open with Alex?" → read `1on1s/_index.md`, then Alex/open-loops.md + last summary only
-- "Prep my 1on1 with Alex" → `/1on1-prep Alex`
+- "Prep my 1on1 with Alex" → `/personal-os-1on1-prep Alex`
 - "What themes keep coming up with the team?" → read `1on1s/_index.md`, then each person's profile.md
 ```
 
@@ -405,7 +419,38 @@ Never rewrite existing sections.
 - Key context: [one line]
 ```
 
-### `Workflows/CLAUDE.md`
+### `Interviews/CLAUDE.md`
+
+```markdown
+# Interviews
+
+Active roles under consideration. One subfolder per role.
+
+## Index
+See `_index.md` for role list: company, stage, status, last activity.
+
+## Role folder structure
+```
+Interviews/[Role Name]/
+├── role-context.md   ← Company background, JD summary, why interested
+├── question-bank.md  ← Questions I want to ask (curated across prior interviews)
+└── notes/
+    └── YYYY-MM-DD-[interviewer].md  ← Per-conversation notes
+```
+
+## Commands
+- `/personal-os-new-interview-role [role]` — open a new role folder
+- `/personal-os-interview-prep [role]` — generate prep brief for next interview
+
+## Question bank format
+Questions are tagged by type so prep can pull the most relevant:
+- `[culture]` — values, team dynamics, how decisions get made
+- `[strategy]` — product direction, competitive position, roadmap
+- `[role]` — scope, success metrics, what good looks like
+- `[growth]` — learning opportunities, mentorship, trajectory
+```
+
+### `_system/workflows/CLAUDE.md`
 
 ```markdown
 # Workflows
@@ -436,7 +481,7 @@ Contains my working preferences and style — loaded every session for synthesis
 
 ## PHASE 4: Data models
 
-### `Data/open-loops.json`
+### `_system/data/open-loops.json`
 
 ```json
 {
@@ -464,7 +509,7 @@ Schema for each loop entry:
 }
 ```
 
-### `Data/decisions.json`
+### `_system/data/decisions.json`
 
 ```json
 {
@@ -487,7 +532,7 @@ Schema for each decision entry:
 }
 ```
 
-### `Data/synthesis-log.json`
+### `_system/data/synthesis-log.json`
 
 ```json
 {
@@ -602,7 +647,7 @@ It only opens individual files when it knows specifically which ones it needs.
 <!-- Tuning process appends here with timestamps -->
 ```
 
-### `Templates/1on1-session.md`
+### `_system/templates/1on1-session.md`
 
 ```markdown
 ---
@@ -640,7 +685,7 @@ session_number: {{N}}
 -
 ```
 
-### `Templates/1on1-summary.md`
+### `_system/templates/1on1-summary.md`
 
 ```markdown
 ---
@@ -658,7 +703,7 @@ processed_at: {{PROCESSED_DATE}}
 -
 
 ## Open loops opened
-<!-- Also add to Data/open-loops.json with priority -->
+<!-- Also add to _system/data/open-loops.json with priority -->
 -
 
 ## Open loops closed
@@ -671,7 +716,7 @@ processed_at: {{PROCESSED_DATE}}
 [Anything worth flagging — morale, concerns, ideas, political dynamics]
 ```
 
-### `Templates/meeting-summary.md`
+### `_system/templates/meeting-summary.md`
 
 ```markdown
 ---
@@ -690,7 +735,7 @@ processed_at: {{PROCESSED_DATE}}
 -
 
 ## Action items
-<!-- Also add to Meetings/action-items.md and Data/open-loops.json -->
+<!-- Also add to Meetings/action-items.md and _system/data/open-loops.json -->
 | Action | Owner | Due | Priority |
 |--------|-------|-----|----------|
 | | | | |
@@ -705,7 +750,7 @@ processed_at: {{PROCESSED_DATE}}
 -
 ```
 
-### `Templates/source-annotation.md`
+### `_system/templates/source-annotation.md`
 
 ```markdown
 ---
@@ -742,7 +787,7 @@ open_questions:
 [FULL CONVERTED CONTENT BELOW]
 ```
 
-### `Templates/cascade-update.md`
+### `_system/templates/cascade-update.md`
 
 ```markdown
 ---
@@ -769,10 +814,10 @@ audience: {{AUDIENCE}}
 [Context that helps you do your job better]
 ```
 
-### `Templates/person-folder.md`
+### `_system/templates/person-folder.md`
 
 ```markdown
-<!-- Used as CLAUDE.md scaffold by /new-1on1 [name] -->
+<!-- Used as CLAUDE.md scaffold by /personal-os-new-1on1 [name] -->
 
 # [NAME]
 **Role:** [Title] | **Function:** [Team] | **Slack:** @[handle]
@@ -798,7 +843,7 @@ Active count: 0
 
 ## PHASE 6: Workflow playbooks
 
-### `Workflows/daily-briefing.md`
+### `_system/workflows/daily-briefing.md`
 
 ```markdown
 # Daily Briefing Workflow
@@ -807,7 +852,7 @@ Active count: 0
 Morning coaching briefing — not just a status report. Surfaces what needs attention,
 makes connections, and recommends one clear action for the day.
 
-## Trigger: `/daily-briefing`
+## Trigger: `/personal-os-daily-briefing`
 
 ## Steps
 
@@ -817,7 +862,7 @@ makes connections, and recommends one clear action for the day.
    - Read `profile/preferences.md` (briefing preferences and coaching tone)
 
 2. **Open loops triage**
-   - Read `Data/open-loops.json`
+   - Read `_system/data/open-loops.json`
    - Categorize: overdue → due this week → high priority → everything else
    - Flag any loop open >14 days without a status update
    - For critical/overdue loops: draft a one-line suggested action
@@ -825,7 +870,7 @@ makes connections, and recommends one clear action for the day.
 3. **Meeting awareness**
    - Check `HEARTBEAT.md` for 1on1s today or tomorrow
    - If a 1on1 is today: surface last session summary + open loops for that person
-   - Suggest running `/1on1-prep [name]` if not already done
+   - Suggest running `/personal-os-1on1-prep [name]` if not already done
 
 4. **Relationship health check**
    - Scan `People/team.md` and `People/stakeholders.md` for `Last contact:` fields
@@ -833,7 +878,7 @@ makes connections, and recommends one clear action for the day.
    - Format: "Haven't connected with [Name] in X days — open loops: N"
 
 6. **Fresh from last night**
-   - Read `Data/synthesis-log.json` → what was processed in the last nightly run
+   - Read `_system/data/synthesis-log.json` → what was processed in the last nightly run
    - Surface: new wiki connections made, new open loops created, any patterns flagged
 
 7. **Coaching insight** (index-first)
@@ -872,14 +917,14 @@ makes connections, and recommends one clear action for the day.
 [One specific action]
 
 ---
-*Want to update any open loops? Run `/open-loops` | Start cascade? `/cascade`*
+*Want to update any open loops? Run `/personal-os-open-loops` | Start cascade? `/personal-os-cascade`*
 
 ## Telegram delivery (optional)
 After generating the briefing, ask: "Should I send this to Telegram?"
 If yes, post the briefing to the configured Telegram chat.
 ```
 
-### `Workflows/cascade.md`
+### `_system/workflows/cascade.md`
 
 ```markdown
 # Cascade Workflow
@@ -889,7 +934,7 @@ If yes, post the briefing to the configured Telegram chat.
 ## Use judgment on which audiences to activate each week
 
 ## Step 0: Context load (index-first)
-1. Read `Data/open-loops.json` — filter for this week's overdue/new loops
+1. Read `_system/data/open-loops.json` — filter for this week's overdue/new loops
 2. Read `1on1s/_index.md` — identify people with sessions this week (by last session date)
 3. Read only those people's most recent summary (via their sessions/_index.md) — do not scan all sessions
 Surface overdue/newly closed loops and this week's 1on1 themes — these feed into the cascade.
@@ -922,7 +967,7 @@ Ask which audiences to activate this week.
 - Archive any open loops that were resolved this week
 ```
 
-### `Workflows/meeting-notes.md`
+### `_system/workflows/meeting-notes.md`
 
 ```markdown
 # Meeting Notes Ingestion Workflow
@@ -947,15 +992,17 @@ When a new Granola transcript appears in `Inbox/transcripts/`
    - For 1on1s: update `[Name]/profile.md` themes section if new themes observed
 
 5. **Update open loops**
-   - New commitments → append to `Data/open-loops.json` with priority and due date
+   - New commitments → append to `_system/data/open-loops.json` with priority and due date
    - Closed commitments → set status to "archived"
 
 6. **Update action items** → append to `Meetings/action-items.md`
 
 7. **Log in synthesis-log.json**
+
+8. **Archive original** → move file to `Inbox/archive/transcripts/[filename]`
 ```
 
-### `Workflows/pdf-ingestion.md`
+### `_system/workflows/pdf-ingestion.md`
 
 ```markdown
 # PDF Ingestion Workflow
@@ -971,29 +1018,30 @@ When a new Granola transcript appears in `Inbox/transcripts/`
    markitdown "Inbox/pdfs/[filename].pdf" > "Inbox/pdfs/[filename].md"
    ```
 
-3. **Annotate** using `Templates/source-annotation.md`
+3. **Annotate** using `_system/templates/source-annotation.md`
    - Metadata block, summary, key concepts, inferences, open questions
    - Identify connections to existing wiki pages
 
 4. **File** annotated version to `Knowledge/sources/[slug].md`
-   - Original PDF stays in `Inbox/pdfs/` (immutable)
 
 5. **Queue for nightly wiki synthesis** — connections made during nightly run
 
 6. **Log in synthesis-log.json**
+
+7. **Archive original** → move PDF and converted .md to `Inbox/archive/pdfs/[filename]`
 ```
 
-### `Workflows/1on1-prep.md`
+### `_system/workflows/1on1-prep.md`
 
 ```markdown
 # 1on1 Prep Workflow
 
-## Trigger: `/1on1-prep [name]`
+## Trigger: `/personal-os-1on1-prep [name]`
 
 1. Load `1on1s/[Name]/CLAUDE.md` and `profile.md`
 2. Read `1on1s/[Name]/sessions/_index.md` → identify the 2 most recent sessions by date
 3. Read only those 2 summary files — do not open the full sessions/ directory
-4. Filter `Data/open-loops.json` where context_person = [Name]
+4. Filter `_system/data/open-loops.json` where context_person = [Name]
 5. Check `Meetings/_index.md` for shared meetings in the last 2 weeks — read only those files
 
 6. Generate prep doc:
@@ -1003,10 +1051,10 @@ When a new Granola transcript appears in `Inbox/transcripts/`
    - One probing question I haven't asked yet
    - Relevant context from HEARTBEAT.md
 
-7. Create session file from `Templates/1on1-session.md`
+7. Create session file from `_system/templates/1on1-session.md`
 ```
 
-### `Workflows/preference-tuning.md`
+### `_system/workflows/preference-tuning.md`
 
 ```markdown
 # Preference Tuning Workflow
@@ -1016,7 +1064,7 @@ Update `profile/preferences.md` based on patterns observed in recent work.
 Does NOT reprocess old content — reflects on patterns in what was recently processed.
 
 ## Adaptive schedule
-Determined by `Data/synthesis-log.json` preference_tuning section:
+Determined by `_system/data/synthesis-log.json` preference_tuning section:
 - Days 0–7 from start_date: daily
 - Days 8–14: every 3 days
 - Days 15–21: every 5 days
@@ -1037,14 +1085,14 @@ Determined by `Data/synthesis-log.json` preference_tuning section:
    - Append observation to "Feedback log" with timestamp
 5. Present proposed updates — do NOT auto-apply without review
 6. After approval, write updates to `profile/preferences.md`
-7. Update `Data/synthesis-log.json` preference_tuning:
+7. Update `_system/data/synthesis-log.json` preference_tuning:
    - last_tuning_run: today
    - tuning_count: +1
    - next_tuning_date: calculated from schedule
    - current_schedule: recalculate based on days since start_date
 ```
 
-### `Workflows/nightly-synthesis.md`
+### `_system/workflows/nightly-synthesis.md`
 
 ```markdown
 # Nightly Synthesis Workflow
@@ -1055,10 +1103,10 @@ Determined by `Data/synthesis-log.json` preference_tuning section:
 ## Full algorithm
 
 ### Step 1: Load state
-Read `Data/synthesis-log.json`
+Read `_system/data/synthesis-log.json`
 
 ### Step 2: Find unprocessed files (index-first, no directory scans)
-Read `Data/synthesis-log.json` to build the work queue — do NOT scan directories:
+Read `_system/data/synthesis-log.json` to build the work queue — do NOT scan directories:
 - Files referenced in `Inbox/transcripts/_index.md` but absent from synthesis-log → queue for processing
 - Files in synthesis-log with a changed hash (compare MD5) → re-queue
 - Do not open any file until it is specifically queued for processing
@@ -1069,6 +1117,7 @@ b. Process (annotate / summarize / extract loops with priority)
 c. Write output files
 d. Update synthesis-log.json IMMEDIATELY after each file
    (if interrupted, picks up where it left off)
+e. Move original to `Inbox/archive/[subfolder]/[filename]` — keep originals immutable, just relocated
 
 ### Step 4: Wiki connections
 For each source processed tonight:
@@ -1113,7 +1162,7 @@ After 5+ sources on any single wiki concept:
 
 ### Step 10: Preference tuning check
 - Read preference_tuning from synthesis-log.json
-- If today >= next_tuning_date: run `Workflows/preference-tuning.md`
+- If today >= next_tuning_date: run `_system/workflows/preference-tuning.md`
 - Update schedule after tuning completes
 
 ### Step 11: Update HEARTBEAT.md
@@ -1129,82 +1178,83 @@ File hash (MD5) differs from what's stored in synthesis-log.json.
 
 ## PHASE 7: Slash commands
 
-### `.claude/commands/daily-briefing.md`
+### `.claude/commands/personal-os-daily-briefing.md`
 
 ```markdown
 Generate the daily coaching briefing.
 
 Load `profile/preferences.md` first — this governs tone, depth, and what to surface.
-Then follow `Workflows/daily-briefing.md` exactly.
+Then follow `_system/workflows/daily-briefing.md` exactly.
 
 At the end, ask: "Should I send this to Telegram?"
 ```
 
-### `.claude/commands/process-inbox.md`
+### `.claude/commands/personal-os-process-inbox.md`
 
 ```markdown
 Process all new items in the Inbox.
 
-1. Load `Inbox/CLAUDE.md` and `Data/synthesis-log.json`
+1. Load `Inbox/CLAUDE.md` and `_system/data/synthesis-log.json`
 2. Scan each Inbox subfolder for files not in synthesis-log
-3. For each new file, determine type and apply correct workflow from `Workflows/`
+3. For each new file, determine type and apply correct workflow from `_system/workflows/`
 4. Process one file at a time, update synthesis-log after each
 5. Report: N files processed, N skipped, any errors
 ```
 
-### `.claude/commands/cascade.md`
+### `.claude/commands/personal-os-cascade.md`
 
 ```markdown
 Run the weekly Cascade workflow.
 
-Load `Workflows/cascade.md` and follow it exactly.
+Load `_system/workflows/cascade.md` and follow it exactly.
 Do not send anything to Slack without explicit approval.
 Present all three drafts (Down, Lateral, Up) and ask which to activate.
 ```
 
-### `.claude/commands/1on1-prep.md`
+### `.claude/commands/personal-os-1on1-prep.md`
 
 ```markdown
-Prepare for a 1on1. Usage: /1on1-prep [name]
+Prepare for a 1on1. Usage: /personal-os-1on1-prep [name]
 
 $ARGUMENTS contains the person's name.
-Follow `Workflows/1on1-prep.md`.
+Follow `_system/workflows/1on1-prep.md`.
 If no name provided, ask: "Who is this 1on1 with?"
 ```
 
-### `.claude/commands/ingest-url.md`
+### `.claude/commands/personal-os-ingest-url.md`
 
 ```markdown
-Fetch, annotate, and file a URL. Usage: /ingest-url [url]
+Fetch, annotate, and file a URL. Usage: /personal-os-ingest-url [url]
 
 $ARGUMENTS contains the URL.
 
 1. Fetch the URL content
 2. Save raw to `Inbox/links/[slug].md`
-3. Annotate using `Templates/source-annotation.md`
+3. Annotate using `_system/templates/source-annotation.md`
 4. Save annotated to `Knowledge/sources/[slug].md`
-5. Update `Data/synthesis-log.json`
-6. Report: title, key concepts extracted, connections identified
+5. Update `_system/data/synthesis-log.json`
+6. Move `Inbox/links/[slug].md` to `Inbox/archive/links/[slug].md`
+7. Report: title, key concepts extracted, connections identified
 ```
 
-### `.claude/commands/nightly.md`
+### `.claude/commands/personal-os-nightly.md`
 
 ```markdown
 Run nightly synthesis manually.
 
-Follow `Workflows/nightly-synthesis.md` exactly.
+Follow `_system/workflows/nightly-synthesis.md` exactly.
 Process only new/changed files — never reprocess what's already in synthesis-log.
 Report: files processed, loops created, wiki pages updated, any patterns flagged.
 ```
 
-### `.claude/commands/open-loops.md`
+### `.claude/commands/personal-os-open-loops.md`
 
 ```markdown
-Review open loops. Usage: /open-loops [optional filter]
+Review open loops. Usage: /personal-os-open-loops [optional filter]
 
 $ARGUMENTS may contain a person name or project name.
 
-1. Read `Data/open-loops.json`
+1. Read `_system/data/open-loops.json`
 2. Filter if argument provided (context_person or project match)
 3. Sort: overdue first → due this week → critical priority → high priority → rest
 4. Display each: title, owner, priority, due date, days open, source
@@ -1213,21 +1263,58 @@ $ARGUMENTS may contain a person name or project name.
 7. For each confirmed closure: set status="archived", closed_date=today
 ```
 
-### `.claude/commands/new-1on1.md`
+### `.claude/commands/personal-os-new-1on1.md`
 
 ```markdown
-Create a new person folder in 1on1s/. Usage: /new-1on1 [name]
+Create a new person folder in 1on1s/. Usage: /personal-os-new-1on1 [name]
 
 $ARGUMENTS contains the person's name.
 
 1. Create `1on1s/[Name]/` directory
-2. Create `1on1s/[Name]/CLAUDE.md` from `Templates/person-folder.md`
+2. Create `1on1s/[Name]/CLAUDE.md` from `_system/templates/person-folder.md`
 3. Create `1on1s/[Name]/profile.md` (sections: Role, Background, Working Style, Themes, Notes)
 4. Create `1on1s/[Name]/open-loops.md` with empty header
 5. Create `1on1s/[Name]/sessions/` directory
 6. Ask: "Tell me about [Name] — role, relationship to you, key context?"
 7. Fill in CLAUDE.md from the answer
 8. Add to `People/team.md` or `People/stakeholders.md` as appropriate
+```
+
+### `.claude/commands/personal-os-new-interview-role.md`
+
+```markdown
+Open a new interview role folder. Usage: /personal-os-new-interview-role [role]
+
+$ARGUMENTS contains the role name (e.g. "Head of Product - Acme").
+
+1. Create `Interviews/[role]/` directory
+2. Create `Interviews/[role]/role-context.md` with blank template (Company, JD summary, Why interested, Key contacts)
+3. Create `Interviews/[role]/question-bank.md` with blank question list, tagged by type [culture] [strategy] [role] [growth]
+4. Create `Interviews/[role]/notes/` directory
+5. Update `Interviews/_index.md` with new entry (role, company, stage: screening, status: active, opened: today)
+6. Ask: "Tell me about this role — company, what drew you to it, and the JD summary?"
+7. Fill in role-context.md from the answer
+```
+
+### `.claude/commands/personal-os-interview-prep.md`
+
+```markdown
+Prepare for an upcoming interview. Usage: /personal-os-interview-prep [role]
+
+$ARGUMENTS contains the role name (must match a folder under Interviews/).
+
+1. Read `Interviews/[role]/role-context.md`
+2. Read `Interviews/[role]/question-bank.md`
+3. Read `Interviews/_index.md` to get current stage and last activity
+4. If notes/ exists, read the most recent note to understand where the process left off
+5. Based on role context and current stage, select the 6-8 most relevant questions from question-bank.md
+6. Generate a prep brief:
+   - Company / role reminder (2-3 bullets from role-context)
+   - Where you are in the process and who you're meeting
+   - Recommended questions for this stage, ranked by relevance
+   - 2-3 talking points to reinforce your narrative for this role
+7. Create a notes file: `Interviews/[role]/notes/YYYY-MM-DD.md` with today's date
+8. Ask: "Who are you meeting with, and what stage is this?"
 ```
 
 ---
@@ -1244,7 +1331,7 @@ $ARGUMENTS contains the person's name.
 
 set -euo pipefail
 VAULT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-mkdir -p "$VAULT_DIR/logs" "$VAULT_DIR/Briefings"
+mkdir -p "$VAULT_DIR/_system/logs" "$VAULT_DIR/_system/briefings"
 
 echo "Personal OS loop started at $(date). Ctrl+C to stop."
 
@@ -1258,18 +1345,18 @@ while true; do
   # Nightly synthesis at 02:00
   if [ "$HOUR" = "02" ] && [ "$NIGHTLY_DONE_DATE" != "$TODAY" ]; then
     echo "$(date): Running nightly synthesis..."
-    claude --print "$(cat "$VAULT_DIR/.claude/commands/nightly.md")" \
-      2>&1 | tee -a "$VAULT_DIR/logs/nightly.log"
+    claude --print "$(cat "$VAULT_DIR/.claude/commands/personal-os-nightly.md")" \
+      2>&1 | tee -a "$VAULT_DIR/_system/logs/nightly.log"
     NIGHTLY_DONE_DATE="$TODAY"
     sleep 60
   fi
 
   # Daily briefing at 05:00 — only if nightly has run today (or it's already morning)
   if [ "$HOUR" = "05" ] && [ "$BRIEFING_DONE_DATE" != "$TODAY" ]; then
-    BRIEF_FILE="$VAULT_DIR/Briefings/$TODAY.md"
+    BRIEF_FILE="$VAULT_DIR/_system/briefings/$TODAY.md"
     if [ ! -f "$BRIEF_FILE" ]; then
       echo "$(date): Generating daily briefing..."
-      claude --print "$(cat "$VAULT_DIR/.claude/commands/daily-briefing.md")" \
+      claude --print "$(cat "$VAULT_DIR/.claude/commands/personal-os-daily-briefing.md")" \
         > "$BRIEF_FILE" 2>&1
       echo "$(date): Briefing saved to $BRIEF_FILE"
     fi
@@ -1341,21 +1428,21 @@ After scaffold is built, confirm each item before first use.
 
 **`profile/preferences.md`:**
 - [ ] Fill in initial preferences (even rough ones — tuning will refine)
-- [ ] Set start_date in `Data/synthesis-log.json` preference_tuning section to today
+- [ ] Set start_date in `_system/data/synthesis-log.json` preference_tuning section to today
 
 ### First week rituals
 
 | When | What |
 |------|------|
-| Each morning | `/daily-briefing` |
-| Before each 1on1 | `/1on1-prep [name]` |
-| After each Granola export | `/process-inbox` |
-| When dropping a link | `/ingest-url [url]` |
-| Friday afternoon | `/cascade` |
+| Each morning | `/personal-os-daily-briefing` |
+| Before each 1on1 | `/personal-os-1on1-prep [name]` |
+| After each Granola export | `/personal-os-process-inbox` |
+| When dropping a link | `/personal-os-ingest-url [url]` |
+| Friday afternoon | `/personal-os-cascade` |
 
 ### People to create immediately
-- [ ] `/new-1on1 [DR1]`
-- [ ] `/new-1on1 [DR2]`
+- [ ] `/personal-os-new-1on1 [DR1]`
+- [ ] `/personal-os-new-1on1 [DR2]`
 - [ ] (add stakeholders as you meet them)
 
 ---
@@ -1365,10 +1452,10 @@ After scaffold is built, confirm each item before first use.
 After completing all phases, run these checks:
 
 1. `find . -name "CLAUDE.md" | sort` — should show 7+ CLAUDE.md files
-2. `cat Data/synthesis-log.json` — should be valid JSON with empty processed_files
-3. `cat Data/open-loops.json` — should be valid JSON with empty loops array
-4. `ls .claude/commands/` — should show 8 command files
-5. `ls Workflows/` — should show 7 workflow files
+2. `cat _system/data/synthesis-log.json` — should be valid JSON with empty processed_files
+3. `cat _system/data/open-loops.json` — should be valid JSON with empty loops array
+4. `ls .claude/commands/` — should show 10 command files
+5. `ls _system/workflows/` — should show 7 workflow files
 6. `cat profile/preferences.md` — should exist and have all sections
 7. `bash run-nightly.sh` in a separate tab — confirm it starts without error
 
