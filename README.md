@@ -10,7 +10,7 @@ Personal OS is a bootstrap meta prompt that turns Claude Code + Obsidian into a 
 
 | Workflow | Trigger | Output |
 |----------|---------|--------|
-| **Daily briefing** | Auto at 7am | Prioritized morning brief: open loops, meetings, relationship health, patterns |
+| **Daily briefing** | Auto at 5am | Prioritized morning brief: open loops, meetings, relationship health, patterns |
 | **1on1 tracking** | `/1on1-prep [name]` | Pre-read: last 2 sessions + open loops + themes for that person |
 | **Meeting processing** | `/process-inbox` | Extracts commitments from transcripts → open loops JSON |
 | **Cascade** | `/cascade` | Weekly stakeholder updates drafted for down / lateral / up audiences |
@@ -73,7 +73,7 @@ cd personal-os
 bash setup.sh
 ```
 
-`setup.sh` checks prerequisites, creates your vault at a path you choose, wires up the launchd jobs for 7am briefing and 2am synthesis, and walks you through transcript tool configuration. It takes about 2 minutes.
+`setup.sh` checks prerequisites, creates your vault at a path you choose, wires up the launchd jobs for 5am briefing and 2am synthesis, and walks you through transcript tool configuration. It takes about 2 minutes.
 
 Then:
 
@@ -123,7 +123,7 @@ vault/
 ├── Templates/             ← Scaffolds for sessions, summaries, person folders
 ├── profile/
 │   └── preferences.md     ← Adaptive briefing preferences (auto-tuned weekly)
-├── run-nightly.sh         ← Persistent loop: 2am synthesis + 7am briefing
+├── run-nightly.sh         ← Persistent loop: 2am synthesis + 5am briefing
 └── .claude/commands/      ← Slash commands: /daily-briefing, /cascade, etc.
 ```
 
@@ -136,7 +136,7 @@ Two jobs run unattended on an always-on Mac:
 | Time | Job | What it does |
 |------|-----|--------------|
 | 2:00 AM | Nightly synthesis | Processes new transcripts/PDFs, updates wiki, flags patterns, refreshes all `_index.md` files |
-| 7:00 AM | Daily briefing | Generates `Briefings/YYYY-MM-DD.md` from current state |
+| 5:00 AM | Daily briefing | Generates `Briefings/YYYY-MM-DD.md` from current state |
 
 Both run inside a single `run-nightly.sh` loop. `setup.sh` also installs a launchd plist as a fallback if the terminal session is closed.
 

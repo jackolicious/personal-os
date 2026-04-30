@@ -1264,8 +1264,8 @@ while true; do
     sleep 60
   fi
 
-  # Daily briefing at 07:00 — only if nightly has run today (or it's already morning)
-  if [ "$HOUR" = "07" ] && [ "$BRIEFING_DONE_DATE" != "$TODAY" ]; then
+  # Daily briefing at 05:00 — only if nightly has run today (or it's already morning)
+  if [ "$HOUR" = "05" ] && [ "$BRIEFING_DONE_DATE" != "$TODAY" ]; then
     BRIEF_FILE="$VAULT_DIR/Briefings/$TODAY.md"
     if [ ! -f "$BRIEF_FILE" ]; then
       echo "$(date): Generating daily briefing..."

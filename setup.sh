@@ -130,7 +130,7 @@ esac
 # ── Daily briefing automation ─────────────────────────────────────────────────
 
 echo ""
-echo -n "Automate daily briefing at 7:00 AM via launchd? [Y/n]: "
+echo -n "Automate daily briefing at 5:00 AM via launchd? [Y/n]: "
 read -r AUTO_BRIEF
 
 if [[ ! "$AUTO_BRIEF" =~ ^[Nn]$ ]]; then
@@ -157,7 +157,7 @@ if [[ ! "$AUTO_BRIEF" =~ ^[Nn]$ ]]; then
   <key>StartCalendarInterval</key>
   <dict>
     <key>Hour</key>
-    <integer>7</integer>
+    <integer>5</integer>
     <key>Minute</key>
     <integer>0</integer>
   </dict>
@@ -174,7 +174,7 @@ if [[ ! "$AUTO_BRIEF" =~ ^[Nn]$ ]]; then
 </plist>
 PLIST
 
-  launchctl load "$PLIST_PATH" 2>/dev/null && ok "Daily briefing scheduled at 7:00 AM" || warn "launchctl load failed — briefing plist saved at $PLIST_PATH, load manually"
+  launchctl load "$PLIST_PATH" 2>/dev/null && ok "Daily briefing scheduled at 5:00 AM" || warn "launchctl load failed — briefing plist saved at $PLIST_PATH, load manually"
 fi
 
 # ── Nightly synthesis ─────────────────────────────────────────────────────────
