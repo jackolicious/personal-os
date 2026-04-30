@@ -1,0 +1,35 @@
+# Obsidian vault content (personal notes, not tracked)
+.obsidian/
+*.md
+!personal-os-bootstrap.md
+!README.md
+
+# Claude Code local settings (personal overrides)
+.claude/settings.local.json
+
+# Vault directories (personal content)
+Inbox/
+Notes/
+People/
+Projects/
+Areas/
+Resources/
+Archive/
+Memory/
+Daily/
+Weekly/
+
+# Processed/synthesized content
+Synthesis/
+Briefings/
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Google Drive
+.tmp.driveupload
+.tmp.drivedownload
+Icon?
+._*
