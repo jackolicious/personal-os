@@ -26,7 +26,7 @@ _Depends on: Phase 1 (directories must exist)_
 - `GOALS.md` — current objectives
 - `HEARTBEAT.md` — current focus and context
 - `People/team.md` — roster with handles
-- `profile/preferences.md` — my preferences for synthesis and briefings
+- `profile/preferences/synthesis.md` — synthesis style and what to flag
 
 ## Team
 <!-- FILL IN: name, title, slack handle, relationship -->
@@ -67,7 +67,7 @@ _Depends on: Phase 1 (directories must exist)_
 - Never modify files in `Knowledge/sources/` or `Inbox/transcripts/`
 - Open loops: append only — archive, never delete
 - Wiki pages: append dated sections, never rewrite core content
-- Always load `profile/preferences.md` when generating any briefing or synthesis
+- Load `profile/preferences/synthesis.md` for any briefing or synthesis; workflows load their own specific preference module
 - `_system/` is managed by automation — do not edit files there directly
 ```
 
@@ -299,8 +299,16 @@ Questions are tagged by type so prep can pull the most relevant:
 ```markdown
 # Profile
 
-Contains my working preferences and style — loaded every session for synthesis and briefings.
+Contains my working preferences and style — modular files loaded per workflow.
 
 ## Files
-- `preferences.md` — synthesis preferences, what to surface, briefing format
+| File | Contents | Loaded by |
+|------|----------|-----------|
+| `preferences/synthesis.md` | Synthesis depth, format, what to always flag | Root CLAUDE.md (always) |
+| `preferences/briefing.md` | Coaching tone, open loop display order, length | `daily-briefing.md` |
+| `preferences/writing-style.md` | Voice, tone, format, characteristic phrases | `cascade.md` |
+| `preferences/1on1.md` | Focus areas for 1on1 synthesis | `1on1-prep.md` |
+| `preferences/knowledge.md` | Relevance filters — update weekly | `nightly-synthesis.md` |
+
+Preference tuning updates individual modules — never the whole set at once.
 ```

@@ -6,7 +6,7 @@ _Depends on: Phase 1 (.claude/commands/ must exist), Phase 6 (workflows must exi
 ```markdown
 Generate the daily coaching briefing.
 
-Load `profile/preferences.md` first — this governs tone, depth, and what to surface.
+Load `profile/preferences/briefing.md` first — this governs tone, depth, and what to surface.
 Then follow `_system/workflows/daily-briefing.md` exactly.
 
 At the end, ask: "Should I send this to Telegram?"
@@ -30,6 +30,7 @@ Process all new items in the Inbox.
 Run the weekly Cascade workflow.
 
 Load `_system/workflows/cascade.md` and follow it exactly.
+For each elicitation question, generate 3–5 options from loaded context before asking — do not present blank questions.
 Do not send anything to Slack without explicit approval.
 Present all three drafts (Down, Lateral, Up) and ask which to activate.
 ```
@@ -40,8 +41,11 @@ Present all three drafts (Down, Lateral, Up) and ask which to activate.
 Prepare for a 1on1. Usage: /personal-os-1on1-prep [name]
 
 $ARGUMENTS contains the person's name.
-Follow `_system/workflows/1on1-prep.md`.
 If no name provided, ask: "Who is this 1on1 with?"
+
+If `1on1s/[Name]/ready-note.md` exists, open with it — it's the pre-built prep.
+Surface the `## My Notes` section and suggest adding any new notes there.
+Then follow `_system/workflows/1on1-prep.md` to supplement anything not already covered.
 ```
 
 ### `.claude/commands/personal-os-ingest-url.md`
@@ -98,9 +102,10 @@ $ARGUMENTS contains the person's name.
 3. Create `1on1s/[Name]/profile.md` (sections: Role, Background, Working Style, Themes, Notes)
 4. Create `1on1s/[Name]/open-loops.md` with empty header
 5. Create `1on1s/[Name]/sessions/` directory
-6. Ask: "Tell me about [Name] — role, relationship to you, key context?"
-7. Fill in CLAUDE.md from the answer
-8. Add to `People/team.md` or `People/stakeholders.md` as appropriate
+6. Create `1on1s/[Name]/ready-note.md` from `_system/templates/1on1-ready-note.md` with placeholder content
+7. Ask: "Tell me about [Name] — role, relationship to you, key context?"
+8. Fill in CLAUDE.md from the answer
+9. Add to `People/team.md` or `People/stakeholders.md` as appropriate
 ```
 
 ### `.claude/commands/personal-os-new-interview-role.md`

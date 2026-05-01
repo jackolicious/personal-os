@@ -55,8 +55,8 @@ After scaffold is built, confirm each item before first use.
 **`People/team.md`:**
 - [ ] Add full team roster
 
-**`profile/preferences.md`:**
-- [ ] Fill in initial preferences (even rough ones — tuning will refine)
+**`profile/preferences/`:**
+- [ ] All 5 modules pre-filled by Phase 0 interview — verify each file has real content, not placeholders
 - [ ] Set start_date in `_system/data/synthesis-log.json` preference_tuning section to today
 
 ### First week rituals
@@ -85,7 +85,7 @@ After completing all phases, run these checks:
 3. `cat _system/data/open-loops.json` — should be valid JSON with empty loops array
 4. `ls .claude/commands/` — should show 10 command files
 5. `ls _system/workflows/` — should show 7 workflow files
-6. `cat profile/preferences.md` — should exist and have all sections
+6. `ls profile/preferences/` — should show 5 files: synthesis.md, briefing.md, writing-style.md, 1on1.md, knowledge.md
 7. `bash run-nightly.sh` in a separate tab — confirm it starts without error
 
 Report any missing files or errors before marking setup complete.

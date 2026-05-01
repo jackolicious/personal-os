@@ -28,6 +28,7 @@ Knowledge/wiki/market/
 People/
 Interviews/
 profile/
+profile/preferences/
 _system/
 _system/data/
 _system/logs/

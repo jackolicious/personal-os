@@ -1,41 +1,100 @@
 # Phase 5: Profile and Templates
 _Depends on: Phase 1 (directories must exist)_
 
-### `profile/preferences.md`
+## Preference modules
+
+Read `_bootstrap/interview-answers.md` before creating these files — use the answers to pre-fill each module.
+
+### `profile/preferences/synthesis.md`
 
 ```markdown
-# My Preferences & Working Style
-
+# Synthesis Preferences
 **Last Updated:** [DATE]
-**Tuning Schedule:** daily (week 1)
 **Tuning Count:** 0
 
----
-
 ## What I care about most
-[Updated by tuning — what themes, risks, and opportunities I consistently engage with]
+[From interview or tuning — themes, risks, opportunities I consistently engage with]
 
-## Synthesis style
+## Style
 - Depth: detailed
 - Format: lead with the most important thing, then bullets
 - What to always flag: patterns across multiple 1on1s, risks to strategy, market signals
 
-## 1on1 focus areas
-[What I want surfaced from 1on1 processing — e.g., team morale, blockers, growth signals]
-
-## Daily briefing preferences
-- Open loops: show overdue first, then due this week, then high priority
-- Coaching tone: direct, not gentle — tell me what I'm missing
-- Length: concise, scannable — I read this in under 3 minutes
-
-## Knowledge relevance filters
-[Topics currently most relevant — update weekly]
-- Product strategy for new company
-- Team onboarding and assessment
-- Market and competitive landscape
-
 ## Feedback log
-<!-- Tuning process appends here with timestamps -->
+<!-- Preference tuning appends here with timestamps -->
+```
+
+### `profile/preferences/briefing.md`
+
+```markdown
+# Daily Briefing Preferences
+**Last Updated:** [DATE]
+
+## Open loop display order
+Overdue → due this week → high priority → everything else
+
+## Coaching tone
+[From interview Q4 — e.g., "direct and blunt — tell me what I'm missing"]
+
+## Length
+Concise and scannable — I read this in under 3 minutes
+
+## What to always include
+- Anyone not contacted in >14 days (direct reports) or >21 days (stakeholders)
+- Any loop open >14 days without a status update
+- Cross-cutting themes from recent 1on1s
+```
+
+### `profile/preferences/writing-style.md`
+
+```markdown
+# Writing Style
+**Last Updated:** [DATE]
+
+## My voice
+[From interview Q3 — 2–3 sentences verbatim describing how they communicate]
+
+## Format defaults
+- Length: [concise/detailed — inferred from Q3]
+- Structure: [bullets/prose/mixed — inferred from Q3]
+- Tone: [formal/casual — inferred from Q3]
+
+## Cascade drafts
+Match this style exactly when drafting Down, Lateral, and Up versions.
+Avoid corporate jargon unless that's explicitly my style.
+```
+
+### `profile/preferences/1on1.md`
+
+```markdown
+# 1on1 Focus Areas
+**Last Updated:** [DATE]
+
+## What to surface from 1on1 synthesis
+[From interview Q6 — verbatim]
+
+## Default priority
+1. Commitments overdue or at risk
+2. Morale or sentiment signals
+3. Growth and development themes
+4. Political or alignment gaps
+
+## Probing questions
+Generate one question I haven't asked yet, based on recent themes.
+```
+
+### `profile/preferences/knowledge.md`
+
+```markdown
+# Knowledge Relevance Filters
+**Last Updated:** [DATE]
+**Update schedule:** Weekly
+
+## Currently relevant topics
+[From interview Q5 — 2–3 topics as bullet list]
+
+## Relevance criteria
+Flag a source as relevant if it addresses one of the above topics OR connects to an open question in HEARTBEAT.md.
 ```
 
 ### `_system/templates/1on1-session.md`
@@ -203,6 +262,41 @@ audience: {{AUDIENCE}}
 
 ## What you should know
 [Context that helps you do your job better]
+```
+
+### `_system/templates/1on1-ready-note.md`
+
+```markdown
+# Ready Note — {{NAME}}
+_Last rebuilt: {{DATETIME}}_
+
+## Priority Open Loops
+<!-- context_person = {{NAME}}, sorted: overdue → critical → high — top 3–5 -->
+| Loop | Owner | Due | Days Open |
+|------|-------|-----|-----------|
+| | | | |
+
+## Last Session Highlights
+_{{LAST_SESSION_DATE}} — {{LAST_SESSION_TOPIC}}_
+-
+-
+-
+
+## My Notes
+<!-- MANUAL — append new notes above this line; last 15–30 lines preserved on rebuild -->
+
+<!-- END MANUAL -->
+
+## Recent Action Items
+<!-- Open action items from last 2 sessions -->
+| Action | Owner | Due |
+|--------|-------|-----|
+| | | |
+
+## Session History (last 5)
+| Date | Key Topic | One-liner |
+|------|-----------|-----------|
+| | | |
 ```
 
 ### `_system/templates/person-folder.md`

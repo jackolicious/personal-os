@@ -20,7 +20,7 @@ makes connections, and recommends one clear action for the day.
 1. **Load context**
    - Read `HEARTBEAT.md` (current focus, upcoming 1on1s)
    - Read `GOALS.md` (30/60/90 objectives)
-   - Read `profile/preferences.md` (briefing preferences and coaching tone)
+   - Read `profile/preferences/briefing.md` (briefing preferences and coaching tone)
 
 2. **Open loops triage**
    - Read `_system/data/open-loops.json`
@@ -101,10 +101,38 @@ High-quality stakeholder drafts require synthesis and communication reasoning.
 1. Read `_system/data/open-loops.json` — filter for this week's overdue/new loops
 2. Read `1on1s/_index.md` — identify people with sessions this week (by last session date)
 3. Read only those people's most recent summary (via their sessions/_index.md) — do not scan all sessions
+4. Read `HEARTBEAT.md` — current focus, this week's priorities, open questions
+5. Read `profile/preferences/writing-style.md` — use this to match voice and tone in all three drafts
 Surface overdue/newly closed loops and this week's 1on1 themes — these feed into the cascade.
 
-## Step 1: Elicitation — ask these questions one at a time, wait for each answer
+## Step 0.5: Surface priority open loops
+Before asking any questions, display:
 
+```
+### Priority Open Loops This Week
+[List top 3–5 loops sorted: overdue → critical → high]
+| Loop | Owner | Days Open |
+|------|-------|-----------|
+```
+
+This is context for what follows — not a question.
+
+## Step 1: Elicitation — ask these questions ONE AT A TIME, wait for each answer
+
+For each question, generate 3–5 options from the context loaded in Step 0 before asking.
+Format each question as:
+
+```
+**Q[N]: [Question]**
+Options (pick one or more, or type your own):
+1. [Option derived from HEARTBEAT.md / open loops / recent 1on1 themes]
+2. [Option derived from a closed/updated loop this week]
+3. [Option derived from a 1on1 theme or summary from this week]
+4. [Option derived from a flagged pattern or synthesis-log signal]
+5. None of these — [type your own]
+```
+
+Questions:
 1. "What was the most important thing that happened in product this week?"
 2. "What decisions were made? Who made them?"
 3. "What's the biggest thing that's blocked or at risk?"
@@ -213,13 +241,14 @@ Context synthesis and probing question generation require reasoning.
 
 ## Trigger: `/personal-os-1on1-prep [name]`
 
-1. Load `1on1s/[Name]/CLAUDE.md` and `profile.md`
-2. Read `1on1s/[Name]/sessions/_index.md` → identify the 2 most recent sessions by date
-3. Read only those 2 summary files — do not open the full sessions/ directory
-4. Filter `_system/data/open-loops.json` where context_person = [Name]
-5. Check `Meetings/_index.md` for shared meetings in the last 2 weeks — read only those files
+1. Check if `1on1s/[Name]/ready-note.md` exists — if it does, read it first. It's pre-built context; skip re-deriving anything already there and use it as the base for the prep doc.
+2. Load `1on1s/[Name]/CLAUDE.md`, `profile.md`, and `profile/preferences/1on1.md`
+3. Read `1on1s/[Name]/sessions/_index.md` → identify the 2 most recent sessions by date
+4. Read only those 2 summary files — do not open the full sessions/ directory (unless ready-note.md was missing)
+5. Filter `_system/data/open-loops.json` where context_person = [Name] (skip if already shown in ready-note)
+6. Check `Meetings/_index.md` for shared meetings in the last 2 weeks — read only those files
 
-6. Generate prep doc:
+7. Generate prep doc:
    - Their open commitments to me (overdue flagged)
    - My open commitments to them
    - Suggested agenda topics based on themes
@@ -238,7 +267,7 @@ Context synthesis and probing question generation require reasoning.
 Pattern analysis across processed content over time — needs reasoning, not extraction.
 
 ## Purpose
-Update `profile/preferences.md` based on patterns observed in recent work.
+Update `profile/preferences/` modules based on patterns observed in recent work.
 Does NOT reprocess old content — reflects on patterns in what was recently processed.
 
 ## Adaptive schedule
@@ -250,19 +279,19 @@ Determined by `_system/data/synthesis-log.json` preference_tuning section:
 
 ## Steps
 
-1. Read current `profile/preferences.md`
+1. Read all preference modules: `profile/preferences/synthesis.md`, `profile/preferences/briefing.md`, `profile/preferences/knowledge.md`
 2. Read synthesis-log for all files processed since last tuning run
 3. Identify patterns:
    - Which topics/themes appeared most in processed content?
    - Which open loops were created most frequently? By whom?
    - What types of connections were made in the wiki?
    - Any topics consistently flagged as relevant that aren't in current filters?
-4. Draft updates to `profile/preferences.md`:
-   - Update "What I care about most" if new themes emerged
-   - Update "Knowledge relevance filters" if new topics are dominant
-   - Append observation to "Feedback log" with timestamp
+4. Draft targeted updates — one per module that needs changing:
+   - `synthesis.md`: update "What I care about most" if new themes emerged; append to "Feedback log"
+   - `knowledge.md`: update "Currently relevant topics" if dominant topics shifted
+   - `briefing.md`: update coaching tone or display preferences if feedback warrants
 5. Present proposed updates — do NOT auto-apply without review
-6. After approval, write updates to `profile/preferences.md`
+6. After approval, write updates to the specific module(s) that changed
 7. Update `_system/data/synthesis-log.json` preference_tuning:
    - last_tuning_run: today
    - tuning_count: +1
@@ -335,6 +364,18 @@ After all files are processed, refresh each `_index.md`:
 - `Knowledge/wiki/_index.md` — append row for each new wiki page created; update source count for existing
 - `Meetings/_index.md` — append row for each meeting processed
 Never rewrite the full index — append or update only the rows that changed.
+
+### Step 8.5: Rebuild ready notes
+For each person touched tonight (new session processed, open loop created/updated, or last contact changed):
+1. Read current `1on1s/[Name]/ready-note.md` if it exists
+2. Extract the `<!-- MANUAL -->...<!-- END MANUAL -->` block — keep only the **last 15–30 lines** (trim oldest lines from the top if over 30; never drop below 15 if content exists)
+3. Rebuild ready-note.md using `_system/templates/1on1-ready-note.md`:
+   - Priority open loops: top 3–5 where context_person = Name, sorted overdue → critical → high
+   - Last session highlights: 2–3 bullets from the most recent summary
+   - Session history: last 5 sessions (date + key topic + one-liner from summary)
+   - Recent action items: open items from last 2 sessions
+4. Re-insert the trimmed manual block verbatim between the `<!-- MANUAL -->` markers
+5. If no `ready-note.md` exists yet (new person folder), create it from template with empty manual section
 
 ### Step 9: Profile synthesis (triggered by session count)
 After 10+ sessions with any single person:

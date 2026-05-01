@@ -15,11 +15,12 @@ Split into 9 phase files for maintainability. Each phase has one responsibility 
 | File | Purpose |
 |------|---------|
 | `context.md` | System design rationale — read first |
+| `phases/00-interview.md` | Installer interview — ask 6 questions, write answers |
 | `phases/01-scaffold.md` | Directory structure |
 | `phases/02-root-files.md` | `.gitignore`, `GOALS.md`, `HEARTBEAT.md` |
 | `phases/03-claude-md.md` | `CLAUDE.md` hierarchy (10 files) |
 | `phases/04-data.md` | JSON data models + index formats |
-| `phases/05-templates.md` | `profile/preferences.md` + 6 templates |
+| `phases/05-templates.md` | 5 preference modules + 6 templates |
 | `phases/06-workflows.md` | 7 workflow playbooks |
 | `phases/07-commands.md` | 10 slash commands |
 | `phases/08-automation.md` | `run-nightly.sh` + vault permissions |
@@ -48,11 +49,12 @@ Subagent prompt template:
 > When done, report: files created, any errors."
 
 Phases to dispatch in order:
+0. `_bootstrap/phases/00-interview.md` — installer interview (ask questions, write answers)
 1. `_bootstrap/phases/01-scaffold.md` — directory structure
 2. `_bootstrap/phases/02-root-files.md` — .gitignore, GOALS.md, HEARTBEAT.md
 3. `_bootstrap/phases/03-claude-md.md` — CLAUDE.md hierarchy (10 files)
 4. `_bootstrap/phases/04-data.md` — JSON data models + index formats
-5. `_bootstrap/phases/05-templates.md` — profile/preferences.md + 6 templates
+5. `_bootstrap/phases/05-templates.md` — 5 preference modules + 6 templates
 6. `_bootstrap/phases/06-workflows.md` — 7 workflow playbooks
 7. `_bootstrap/phases/07-commands.md` — 10 slash commands
 8. `_bootstrap/phases/08-automation.md` — run-nightly.sh + vault permissions
