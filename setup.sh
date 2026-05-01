@@ -152,7 +152,7 @@ if [[ ! "$AUTO_BRIEF" =~ ^[Nn]$ ]]; then
     <string>/bin/bash</string>
     <string>-l</string>
     <string>-c</string>
-    <string>cd "$VAULT_PATH" &amp;&amp; "$CLAUDE_BIN" --print "\$(cat .claude/commands/personal-os-daily-briefing.md)" &gt; "$BRIEFINGS_DIR/\$(date +%Y-%m-%d).md" 2&gt;&amp;1</string>
+    <string>cd "$VAULT_PATH" &amp;&amp; "$CLAUDE_BIN" --model claude-sonnet-4-6 --print "\$(cat .claude/commands/personal-os-daily-briefing.md)" &gt; "$BRIEFINGS_DIR/\$(date +%Y-%m-%d).md" 2&gt;&amp;1</string>
   </array>
   <key>StartCalendarInterval</key>
   <dict>

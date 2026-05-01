@@ -234,6 +234,12 @@ Last Updated: [DATE]
 | `/personal-os-new-interview-role [role]` | Open a new interview role folder |
 | `/personal-os-interview-prep [role]` | Generate prep brief for next interview |
 
+## Model routing
+| Task | Model |
+|------|-------|
+| Extract / annotate / triage | `claude-haiku-4-5-20251001` — one subprocess per file |
+| Synthesize / reason / draft | `claude-sonnet-4-6` — reads structured outputs only |
+
 ## Rules
 - Check `_system/data/synthesis-log.json` before processing any file
 - Never modify files in `Knowledge/sources/` or `Inbox/transcripts/`
@@ -848,6 +854,9 @@ Active count: 0
 ```markdown
 # Daily Briefing Workflow
 
+## Model: `claude-sonnet-4-6`
+Synthesis and coaching reasoning over structured inputs — needs Sonnet.
+
 ## Purpose
 Morning coaching briefing — not just a status report. Surfaces what needs attention,
 makes connections, and recommends one clear action for the day.
@@ -929,6 +938,9 @@ If yes, post the briefing to the configured Telegram chat.
 ```markdown
 # Cascade Workflow
 
+## Model: `claude-sonnet-4-6`
+High-quality stakeholder drafts require synthesis and communication reasoning.
+
 ## Cadence: Weekly (Friday recommended)
 ## Audiences: Down (direct reports), Lateral (cross-functional), Up (C-suite)
 ## Use judgment on which audiences to activate each week
@@ -972,6 +984,10 @@ Ask which audiences to activate this week.
 ```markdown
 # Meeting Notes Ingestion Workflow
 
+## Model: `claude-haiku-4-5-20251001`
+Structured extraction from raw transcripts — high input tokens, no deep reasoning needed.
+Run as a separate subprocess per file so context resets between transcripts.
+
 ## When to run
 When a new Granola transcript appears in `Inbox/transcripts/`
 
@@ -1005,6 +1021,9 @@ When a new Granola transcript appears in `Inbox/transcripts/`
 ### `_system/workflows/pdf-ingestion.md`
 
 ```markdown
+## Model: `claude-haiku-4-5-20251001`
+Annotation is structured extraction — high input tokens, no reasoning needed.
+Run as a separate subprocess per file.
 # PDF Ingestion Workflow
 
 ## Prerequisite: `pip install markitdown`
@@ -1036,6 +1055,9 @@ When a new Granola transcript appears in `Inbox/transcripts/`
 ```markdown
 # 1on1 Prep Workflow
 
+## Model: `claude-sonnet-4-6`
+Context synthesis and probing question generation require reasoning.
+
 ## Trigger: `/personal-os-1on1-prep [name]`
 
 1. Load `1on1s/[Name]/CLAUDE.md` and `profile.md`
@@ -1058,6 +1080,9 @@ When a new Granola transcript appears in `Inbox/transcripts/`
 
 ```markdown
 # Preference Tuning Workflow
+
+## Model: `claude-sonnet-4-6`
+Pattern analysis across processed content over time — needs reasoning, not extraction.
 
 ## Purpose
 Update `profile/preferences.md` based on patterns observed in recent work.
@@ -1100,6 +1125,13 @@ Determined by `_system/data/synthesis-log.json` preference_tuning section:
 ## Cadence: Nightly at 2am (persistent loop on always-on Mac)
 ## Design: incremental — only processes NEW or CHANGED files
 
+## Execution model
+Two-phase pipeline to keep context clean and model costs proportional:
+- **Steps 1–3** (triage + per-file extraction): `claude-haiku-4-5-20251001`, one subprocess per file.
+  Each file runs in an isolated `claude --print` call — context resets between files.
+- **Steps 4–11** (connections, patterns, coaching, index updates): `claude-sonnet-4-6`, single pass.
+  Reads only the compact outputs from Phase 1 — never the raw sources.
+
 ## Full algorithm
 
 ### Step 1: Load state
@@ -1110,6 +1142,7 @@ Read `_system/data/synthesis-log.json` to build the work queue — do NOT scan d
 - Files referenced in `Inbox/transcripts/_index.md` but absent from synthesis-log → queue for processing
 - Files in synthesis-log with a changed hash (compare MD5) → re-queue
 - Do not open any file until it is specifically queued for processing
+- Output queue as a newline-delimited list for the `run-nightly.sh` loop to consume
 
 ### Step 3: Process each file (ONE AT A TIME)
 a. Determine type → apply correct workflow
@@ -1342,11 +1375,37 @@ while true; do
   TODAY="$(date +%Y-%m-%d)"
   HOUR="$(date +%H)"
 
-  # Nightly synthesis at 02:00
+  # Nightly synthesis at 02:00 — three-pass pipeline
   if [ "$HOUR" = "02" ] && [ "$NIGHTLY_DONE_DATE" != "$TODAY" ]; then
     echo "$(date): Running nightly synthesis..."
-    claude --print "$(cat "$VAULT_DIR/.claude/commands/personal-os-nightly.md")" \
-      2>&1 | tee -a "$VAULT_DIR/_system/logs/nightly.log"
+    LOG="$VAULT_DIR/_system/logs/nightly.log"
+    QUEUE="$VAULT_DIR/_system/logs/nightly-queue-$TODAY.txt"
+
+    # Pass 1 (Haiku): identify unprocessed files → write queue
+    echo "$(date): Pass 1 — building work queue..." | tee -a "$LOG"
+    claude --model claude-haiku-4-5-20251001 --print \
+      "Read _system/data/synthesis-log.json and Inbox/transcripts/_index.md.
+Output one file path per line for each file not yet in synthesis-log. No other text." \
+      > "$QUEUE" 2>> "$LOG"
+
+    # Pass 2 (Haiku): process each file in its own subprocess
+    echo "$(date): Pass 2 — per-file extraction..." | tee -a "$LOG"
+    while IFS= read -r FILE; do
+      [ -z "$FILE" ] && continue
+      echo "$(date): Processing $FILE" | tee -a "$LOG"
+      claude --model claude-haiku-4-5-20251001 --print \
+        "Follow _system/workflows/meeting-notes.md for this single file only: $FILE
+Process it, write all outputs, update synthesis-log, archive the original. Stop." \
+        2>&1 >> "$LOG"
+    done < "$QUEUE"
+
+    # Pass 3 (Sonnet): connections, patterns, coaching, index updates
+    echo "$(date): Pass 3 — synthesis and pattern detection..." | tee -a "$LOG"
+    claude --model claude-sonnet-4-6 --print \
+      "Follow _system/workflows/nightly-synthesis.md Steps 4–11 only.
+Per-file extraction (Steps 1–3) is already complete for tonight. Stop." \
+      2>&1 >> "$LOG"
+
     NIGHTLY_DONE_DATE="$TODAY"
     sleep 60
   fi
@@ -1356,7 +1415,8 @@ while true; do
     BRIEF_FILE="$VAULT_DIR/_system/briefings/$TODAY.md"
     if [ ! -f "$BRIEF_FILE" ]; then
       echo "$(date): Generating daily briefing..."
-      claude --print "$(cat "$VAULT_DIR/.claude/commands/personal-os-daily-briefing.md")" \
+      claude --model claude-sonnet-4-6 --print \
+        "$(cat "$VAULT_DIR/.claude/commands/personal-os-daily-briefing.md")" \
         > "$BRIEF_FILE" 2>&1
       echo "$(date): Briefing saved to $BRIEF_FILE"
     fi
