@@ -1,0 +1,20 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(*)",
+      "Write(*)",
+      "Edit(*)",
+      "Bash(find *)",
+      "Bash(ls *)",
+      "Bash(mv *)",
+      "Bash(mkdir *)",
+      "Bash(markitdown *)",
+      "Bash(md5 *)",
+      "Bash(md5sum *)",
+      "Bash(cat *)",
+      "Bash(grep *)",
+      "Bash(date *)",
+      "mcp__plugin_telegram_telegram__reply"
+    ]
+  }
+}

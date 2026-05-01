@@ -4,6 +4,8 @@
 !personal-os-bootstrap.md
 !README.md
 !CONTRIBUTING.md
+!_bootstrap/*.md
+!_bootstrap/phases/*.md
 
 # Claude Code local settings (personal overrides)
 .claude/settings.local.json
