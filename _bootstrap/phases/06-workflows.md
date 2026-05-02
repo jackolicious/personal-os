@@ -347,6 +347,38 @@ c. Never re-evaluate old connections
 - Flag loops where due_date < today and status = open or in-progress
 - Flag loops where status = open and opened_date > 14 days ago (no update)
 
+### Step 5.1: Deduplication pass
+For each loop created in Step 5 tonight:
+1. Compare against all existing open loops where `status` is `open` or `in-progress` and `canonical_id` is null
+2. Match if ALL of: semantic title similarity (same action, different wording counts) + (context_person matches or either is null) + (project matches or either is null)
+3. Two-phase check: Haiku extraction pass outputs a `match_candidate_id` field (or null) alongside the loop; Sonnet reasoning pass confirms or rejects before merging
+4. **On confirmed match:**
+   - Append tonight's source_file to matched loop's `source_files` array
+   - If tonight's extraction has an earlier due_date, update the canonical's due_date
+   - Mark tonight's new entry as `status: "merged"`, set `canonical_id` to the matched loop's ID
+5. **On no match:** leave as canonical (canonical_id: null)
+All workflows skip any loop where `status: "merged"` — only canonical entries are displayed or operated on.
+
+### Step 5.2: Career evidence extraction
+For each 1on1 summary and meeting summary processed tonight:
+1. Scan for three signal types — extract only clear, unambiguous signals:
+   - `feedback`: explicit praise or positive signal, must have a person attached (e.g., "Alice said great job on X")
+   - `outcome`: concrete deliverable or resolution (e.g., "shipped the roadmap doc", "resolved the pricing dispute")
+   - `growth`: handled something differently, changed approach, acted on coaching received (e.g., "I used to escalate immediately — this time I held the space")
+2. Skip low-confidence or ambiguous extractions
+3. For each clear signal, append to `_system/data/career-evidence.json`:
+   - `id`: next ev-NNN in sequence
+   - `type`: feedback | outcome | growth
+   - `date`: date of the session or meeting
+   - `title`: one-line portable summary, written as if for a resume bullet
+   - `detail`: verbatim quote or close paraphrase from the source
+   - `from`: person's name if attributable, null otherwise
+   - `context`: meeting title or "1on1 with [Name]"
+   - `source_file`: path to the summary file
+   - `tags`: 1–3 skill areas or project names inferred from context
+   - `starred`: false
+4. Log IDs of created entries in synthesis-log.json as `career_evidence_created`
+
 ### Step 6: Pattern detection (coaching function)
 - If 2+ sources or summaries processed this week share a key concept → flag in HEARTBEAT.md
 - If 3+ people mentioned a theme in 1on1s this week → flag for next daily briefing
