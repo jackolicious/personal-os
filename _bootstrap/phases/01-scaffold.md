@@ -5,15 +5,7 @@ Create these directories (add .gitkeep to empty ones):
 
 ```
 Inbox/
-Inbox/links/
-Inbox/pdfs/
-Inbox/transcripts/
-Inbox/scratch/
-Inbox/archive/
-Inbox/archive/links/
-Inbox/archive/pdfs/
-Inbox/archive/transcripts/
-Inbox/archive/scratch/
+Inbox/_archive/
 1on1s/
 Meetings/
 Projects/
@@ -38,4 +30,20 @@ _system/templates/
 _system/workflows/
 .claude/
 .claude/commands/
+```
+
+After creating directories, create these system files:
+
+**`Inbox/_index.md`**
+```markdown
+| File | Type | Status | Added |
+|------|------|--------|-------|
+```
+
+**`Inbox/_unrouted.md`**
+```markdown
+# Inbox — Unrouted Files
+
+Files the nightly router couldn't classify. Rename or move them to help it next time.
+
 ```
