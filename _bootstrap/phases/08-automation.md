@@ -30,11 +30,20 @@ while true; do
     LOG="$VAULT_DIR/_system/logs/nightly.log"
     QUEUE="$VAULT_DIR/_system/logs/nightly-queue-$TODAY.txt"
 
+    # Step 0: Build Inbox queue (shell — no LLM needed)
+    echo "$(date): Step 0 — scanning Inbox for new files..." | tee -a "$LOG"
+    [ -f "$VAULT_DIR/Inbox/_index.md" ] || printf "| File | Type | Status | Added |\n|------|------|--------|-------|\n" > "$VAULT_DIR/Inbox/_index.md"
+    [ -f "$VAULT_DIR/Inbox/_unrouted.md" ] || printf "# Inbox — Unrouted Files\n\nFiles the nightly router couldn't classify. Rename or add metadata to help it classify them next time.\n\n" > "$VAULT_DIR/Inbox/_unrouted.md"
+    find "$VAULT_DIR/Inbox" -maxdepth 1 -type f ! -name '_*' | while IFS= read -r FILE; do
+      grep -qF "$FILE" "$VAULT_DIR/Inbox/_index.md" || \
+        printf "| %s | unknown | pending | %s |\n" "$FILE" "$TODAY" >> "$VAULT_DIR/Inbox/_index.md"
+    done
+
     # Pass 1 (Haiku): identify unprocessed files → write queue
     echo "$(date): Pass 1 — building work queue..." | tee -a "$LOG"
     claude --model claude-haiku-4-5-20251001 --print \
-      "Read _system/data/synthesis-log.json and Inbox/transcripts/_index.md.
-Output one file path per line for each file not yet in synthesis-log. No other text." \
+      "Read _system/data/synthesis-log.json and Inbox/_index.md.
+Output one file path per line for each file where Status=pending and not already in synthesis-log. No other text." \
       > "$QUEUE" 2>> "$LOG"
 
     # Pass 2 (Haiku): process each file in its own subprocess
@@ -43,8 +52,24 @@ Output one file path per line for each file not yet in synthesis-log. No other t
       [ -z "$FILE" ] && continue
       echo "$(date): Processing $FILE" | tee -a "$LOG"
       claude --model claude-haiku-4-5-20251001 --print \
-        "Follow _system/workflows/meeting-notes.md for this single file only: $FILE
-Process it, write all outputs, update synthesis-log, archive the original. Stop." \
+        "Classify this file using these rules:
+- link: file consists primarily of URLs (http:// or https://), with optional surrounding notes
+- transcript: file has speaker labels, timestamps, or meeting header metadata
+- pdf: file has a .pdf extension
+- note: .md file that is neither a transcript nor a link
+- unrouted: anything else (binary files, unknown extensions, ambiguous content)
+
+Then process it using the matching workflow:
+- transcript → _system/workflows/meeting-notes.md
+- pdf → _system/workflows/pdf-ingestion.md
+- note → _system/workflows/note-ingestion.md
+- link → _system/workflows/link-ingestion.md
+- unrouted → append filename + one-line description to Inbox/_unrouted.md, update Inbox/_index.md status to flagged, log in synthesis-log.json to prevent re-queuing, stop.
+
+If the file is already in synthesis-log (hash match), skip immediately.
+After processing: update Inbox/_index.md — set Type to the classified type and Status to processed.
+
+File: $FILE" \
         2>&1 >> "$LOG"
     done < "$QUEUE"
 
