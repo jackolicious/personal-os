@@ -22,6 +22,17 @@ makes connections, and recommends one clear action for the day.
    - Read `GOALS.md` (30/60/90 objectives)
    - Read `profile/preferences/briefing.md` (briefing preferences and coaching tone)
 
+1.5 **Unrouted inbox items**
+   - Check if `Inbox/_unrouted.md` exists and contains any entries (lines after the header)
+   - If yes, add this section to the briefing:
+     ```
+     ### Inbox needs attention
+     These files couldn't be classified automatically:
+     - [filename] — [one-line description]
+     Rename them or move them to a subfolder to help the router next time.
+     ```
+   - If the file doesn't exist or has no entries: omit this section entirely — no noise on clean days
+
 2. **Open loops triage**
    - Read `_system/data/open-loops.json`
    - Filter to canonical entries only (canonical_id = null, status ≠ merged)
@@ -90,6 +101,9 @@ makes connections, and recommends one clear action for the day.
 ## Output format
 
 # Daily Briefing — [DATE]
+
+### Inbox needs attention
+[Only shown when _unrouted.md has entries — omit if empty]
 
 ### Today's focus
 [One sentence from current HEARTBEAT priority]
