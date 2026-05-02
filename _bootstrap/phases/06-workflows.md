@@ -24,9 +24,25 @@ makes connections, and recommends one clear action for the day.
 
 2. **Open loops triage**
    - Read `_system/data/open-loops.json`
+   - Filter to canonical entries only (canonical_id = null, status ≠ merged)
    - Categorize: overdue → due this week → high priority → everything else
    - Flag any loop open >14 days without a status update
    - For critical/overdue loops: draft a one-line suggested action
+
+2.5 **Commitment load check**
+   - Count loops where status = open or in-progress and canonical_id = null
+   - Count critical loops; count high + critical combined
+   - Read `profile/preferences/briefing.md` for thresholds (defaults: critical ≥ 3, high+critical ≥ 8)
+   - If either threshold is breached, add this section to the briefing:
+     ```
+     ### Commitment load
+     You have [N] critical and [N] high-priority open loops.
+     Consider reprioritizing before adding more. Longest-open candidates:
+     - [Loop title] — [priority], open [N] days
+     - [Loop title] — [priority], open [N] days
+     - [Loop title] — [priority], open [N] days
+     ```
+   - If neither threshold is breached, omit this section entirely — no noise on healthy days
 
 3. **Meeting awareness**
    - Check `HEARTBEAT.md` for 1on1s today or tomorrow
