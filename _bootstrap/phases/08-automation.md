@@ -33,9 +33,9 @@ while true; do
     # Step 0: Build Inbox queue (shell — no LLM needed)
     echo "$(date): Step 0 — scanning Inbox for new files..." | tee -a "$LOG"
     [ -f "$VAULT_DIR/Inbox/_index.md" ] || printf "| File | Type | Status | Added |\n|------|------|--------|-------|\n" > "$VAULT_DIR/Inbox/_index.md"
-    [ -f "$VAULT_DIR/Inbox/_unrouted.md" ] || printf "# Inbox — Unrouted Files\n\nFiles the nightly router couldn't classify. Rename or add metadata to help it classify them next time.\n\n" > "$VAULT_DIR/Inbox/_unrouted.md"
+    [ -f "$VAULT_DIR/Inbox/_unrouted.md" ] || printf "# Inbox — Unrouted Files\n\nFiles the nightly router couldn't classify. Rename or move them to help it next time.\n\n" > "$VAULT_DIR/Inbox/_unrouted.md"
     find "$VAULT_DIR/Inbox" -maxdepth 1 -type f ! -name '_*' | while IFS= read -r FILE; do
-      grep -qF "$FILE" "$VAULT_DIR/Inbox/_index.md" || \
+      grep -qF "| $FILE |" "$VAULT_DIR/Inbox/_index.md" || \
         printf "| %s | unknown | pending | %s |\n" "$FILE" "$TODAY" >> "$VAULT_DIR/Inbox/_index.md"
     done
 
