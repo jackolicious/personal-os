@@ -155,3 +155,11 @@ $ARGUMENTS may contain a time range. Default: last 90 days.
 
 Follow `_system/workflows/career-evidence.md` exactly.
 ````
+
+### `.claude/commands/personal-os-week-ahead.md`
+
+```markdown
+Run the week-ahead planning review.
+
+Follow `_system/workflows/week-ahead.md` exactly.
+```

@@ -530,3 +530,70 @@ Default: last 90 days
    - Save to `profile/career/YYYY-MM-DD-brag-doc.md` (YYYY-MM-DD = today)
    - Report: "Saved to profile/career/[filename]"
 ````
+
+### `_system/workflows/week-ahead.md`
+
+```markdown
+# Week-Ahead Workflow
+
+## Model: `claude-sonnet-4-6`
+## Trigger: `/personal-os-week-ahead`
+## Best run: Sunday evening or Monday morning
+
+## Step 1: Load preferences
+- Read `profile/preferences/calendar.md` if it exists
+  - Extract: large meeting threshold (default 4), focus block length (default 90min), days ahead (default 5)
+  - Note calendar source: google | apple | none
+- If `profile/preferences/calendar.md` does not exist: assume calendar source = none
+- Read `profile/preferences/briefing.md` for coaching tone
+
+## Step 2: Calendar scan (conditional)
+If calendar source = google:
+  - Use Google Calendar MCP to list events for next [days_ahead] days
+  - For each event: title, date, time, attendee count, duration
+If calendar source = apple:
+  - Use macOS Calendar MCP or ask: "Please paste your calendar for this week"
+If calendar source = none:
+  - Skip to Step 4 — surface loops only
+
+## Step 3: Flag meetings needing prep
+For each meeting with attendee count >= large_meeting_threshold OR duration >= 60 min:
+1. Check `1on1s/[Name]/ready-note.md` — exists and last rebuilt within 3 days → "Ready-note exists"
+2. Check `Meetings/_index.md` for an existing notes file for this meeting → "Notes exist"
+3. Otherwise → "No prep — consider `/personal-os-1on1-prep [name]`"
+
+## Step 4: Surface focus-required loops
+- Read `_system/data/open-loops.json`
+- Filter: canonical loops (canonical_id = null) where `requires_focus` = true AND status = open or in-progress
+- Sort: overdue → due this week → critical → high
+- Display: title, pillar, priority, days open, due date
+
+## Step 5: Suggest focus blocks
+For each requires_focus loop (top 3 only):
+- If calendar available: identify the next open morning slot ≥ [focus_block_length] minutes in the next [days_ahead] days
+  - Suggest: "Block [DAY] [TIME] for '[loop title]'"
+- If no calendar: suggest "Consider blocking [focus_block_length] min before [due_date] for '[loop title]'"
+- If no due date: suggest "Consider scheduling 90 min this week for '[loop title]'"
+
+## Step 6: Generate week-ahead brief
+
+# Week Ahead — [DATE RANGE]
+
+### This week's schedule
+[Calendar events — date, time, meeting name, prep status]
+[Or: "No calendar connected — create `profile/preferences/calendar.md` to enable calendar scanning"]
+
+### Meetings needing prep
+[Flagged meetings with attendee count or duration + prep status]
+[Omit if all meetings have prep ready]
+
+### Focus work this week
+[requires_focus loops with suggested time blocks]
+[Omit if no requires_focus loops]
+
+### Week theme
+[One sentence: what does this week need to go well for the 30/60/90 goals to stay on track]
+
+---
+*Update a loop? `/personal-os-open-loops` | Run 1on1 prep? `/personal-os-1on1-prep [name]`*
+```

@@ -102,6 +102,25 @@ Generate one question I haven't asked yet, based on recent themes.
 Flag a source as relevant if it addresses one of the above topics OR connects to an open question in HEARTBEAT.md.
 ```
 
+### `profile/preferences/calendar.md` _(created only if calendar integration is configured)_
+
+```markdown
+# Calendar Preferences
+**Last Updated:** [DATE]
+
+## Large meeting threshold
+Flag meetings with ≥ 4 attendees as needing prep review
+
+## Focus block preferences
+- Preferred focus block length: 90 minutes
+- Preferred time of day: morning (before 11am)
+- Days to look ahead: 5
+
+## Calendar source
+[google | apple | none]
+If "none": week-ahead command surfaces loops only, without calendar data
+```
+
 ### `_system/templates/1on1-session.md`
 
 ```markdown

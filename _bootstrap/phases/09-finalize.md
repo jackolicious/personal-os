@@ -56,6 +56,12 @@ After scaffold is built, confirm each item before first use.
 - [ ] Confirm pillars were pre-filled from interview Q7
 - [ ] Add keywords for each pillar (used for auto-tagging loops)
 
+**Calendar integration (optional):**
+- [ ] If using Google Calendar: confirm Google Calendar MCP is connected in Claude Code
+- [ ] If using Apple Calendar: confirm macOS Calendar access is granted to Claude Code
+- [ ] Create `profile/preferences/calendar.md` from template and set your source and preferences
+- [ ] Test: run `/personal-os-week-ahead` and confirm it surfaces your schedule or degrades gracefully
+
 **`People/team.md`:**
 - [ ] Add full team roster
 
@@ -87,8 +93,8 @@ After completing all phases, run these checks:
 1. `find . -name "CLAUDE.md" | sort` — should show 7+ CLAUDE.md files
 2. `cat _system/data/synthesis-log.json` — should be valid JSON with empty processed_files
 3. `cat _system/data/open-loops.json` — should be valid JSON with empty loops array
-4. `ls .claude/commands/` — should show 10 command files
-5. `ls _system/workflows/` — should show 7 workflow files
+4. `ls .claude/commands/` — should show 11 command files (including personal-os-week-ahead.md)
+5. `ls _system/workflows/` — should show 8 workflow files (including week-ahead.md)
 6. `ls profile/preferences/` — should show 5 files: synthesis.md, briefing.md, writing-style.md, 1on1.md, knowledge.md
 7. `bash run-nightly.sh` in a separate tab — confirm it starts without error
 8. `cat PILLARS.md` — should show 4–6 pillar sections with keywords
