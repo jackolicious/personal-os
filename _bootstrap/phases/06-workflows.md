@@ -272,6 +272,41 @@ Run as a separate subprocess per file.
 7. **Archive original** → move PDF and converted .md to `Inbox/archive/pdfs/[filename]`
 ```
 
+### `_system/workflows/note-ingestion.md`
+
+```markdown
+# Note Ingestion Workflow
+
+## Model: `claude-haiku-4-5-20251001`
+Structured extraction from generic markdown notes — high input tokens, no deep reasoning needed.
+Run as a separate subprocess per file so context resets between notes.
+
+## When to run
+When the Inbox router classifies a file as `note`.
+
+## Steps
+
+1. **Check synthesis-log.json** — if hash already in log, skip
+
+2. **Annotate** using `_system/templates/source-annotation.md`:
+   - Metadata block (source_type: note, original: filename, processed_at, relevance, key_concepts, connections, open_questions)
+   - Summary (3–5 sentences: what this is, why it matters)
+   - Key concepts, relevant quotes, inferences
+   - Open questions raised
+   - Connections to existing wiki pages
+
+3. **File** annotated version to `Knowledge/sources/[slug].md`
+   - Slug: lowercase title with spaces replaced by hyphens, max 50 chars
+
+4. **Queue wiki connections** — list connection targets in the annotation's `connections` metadata field for Pass 3
+
+5. **Update synthesis-log.json** — log the file with processing_type: "annotation"
+
+6. **Update Inbox/_index.md** — set Type to `note`, Status to `processed`
+
+7. **Archive original** → move file to `Inbox/_archive/[filename]`
+```
+
 ### `_system/workflows/1on1-prep.md`
 
 ```markdown
