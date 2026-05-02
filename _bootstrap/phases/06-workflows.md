@@ -443,20 +443,26 @@ Two-phase pipeline to keep context clean and model costs proportional:
 ### Step 1: Load state
 Read `_system/data/synthesis-log.json`
 
-### Step 2: Find unprocessed files (index-first, no directory scans)
-Read `_system/data/synthesis-log.json` to build the work queue — do NOT scan directories:
-- Files referenced in `Inbox/transcripts/_index.md` but absent from synthesis-log → queue for processing
-- Files in synthesis-log with a changed hash (compare MD5) → re-queue
+### Step 2: Find unprocessed files (index-first)
+The shell Step 0 in `run-nightly.sh` has already scanned `Inbox/` and updated `Inbox/_index.md` before this workflow runs. Read it now:
+- Read `Inbox/_index.md` — collect all rows where Status = `pending`
+- Read `_system/data/synthesis-log.json` — exclude any pending file whose hash is already in the log
+- Output the remaining file paths as a newline-delimited queue for the `run-nightly.sh` loop to consume
 - Do not open any file until it is specifically queued for processing
-- Output queue as a newline-delimited list for the `run-nightly.sh` loop to consume
 
 ### Step 3: Process each file (ONE AT A TIME)
-a. Determine type → apply correct workflow
-b. Process (annotate / summarize / extract loops with priority)
-c. Write output files
-d. Update synthesis-log.json IMMEDIATELY after each file
-   (if interrupted, picks up where it left off)
-e. Move original to `Inbox/archive/[subfolder]/[filename]` — keep originals immutable, just relocated
+Each file is processed by a dedicated Haiku subprocess via `run-nightly.sh`. That subprocess:
+a. Reads the file once
+b. Classifies it: transcript | pdf | note | link | unrouted
+c. Applies the matching workflow:
+   - transcript → `_system/workflows/meeting-notes.md`
+   - pdf → `_system/workflows/pdf-ingestion.md`
+   - note → `_system/workflows/note-ingestion.md`
+   - link → `_system/workflows/link-ingestion.md`
+   - unrouted → appends to `Inbox/_unrouted.md`, sets `Inbox/_index.md` status to `flagged`, stops
+d. Updates synthesis-log.json IMMEDIATELY after each file (if interrupted, picks up where it left off)
+e. Updates `Inbox/_index.md`: sets Type to classified type, Status to `processed`
+f. Moves original to `Inbox/_archive/[filename]`
 
 ### Step 4: Wiki connections
 For each source processed tonight:
