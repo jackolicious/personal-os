@@ -307,6 +307,44 @@ When the Inbox router classifies a file as `note`.
 7. **Archive original** → move file to `Inbox/_archive/[filename]`
 ```
 
+### `_system/workflows/link-ingestion.md`
+
+```markdown
+# Link Ingestion Workflow
+
+## Model: `claude-haiku-4-5-20251001`
+URL fetching and annotation — high input tokens, no deep reasoning needed.
+Run as a separate subprocess per file. All URLs in a file are fetched sequentially within one subprocess.
+
+## When to run
+When the Inbox router classifies a file as `link`.
+A file is classified as `link` if it consists primarily of URLs (one or more), with optional surrounding notes.
+
+## Steps
+
+1. **Check synthesis-log.json** — if hash already in log, skip
+
+2. **Extract all URLs** from the file — collect any http:// or https:// URLs
+
+3. **For each URL, sequentially:**
+   a. Fetch page content using WebFetch
+   b. Extract title and body text
+   c. Annotate using `_system/templates/source-annotation.md`:
+      - Metadata block (source_type: url, original: URL, processed_at, relevance, key_concepts, connections, open_questions)
+      - Summary, key concepts, relevant quotes, inferences, open questions
+      - If the source file contained notes or context alongside this URL, include them in the `inferences` field
+   d. File annotated version to `Knowledge/sources/[slug].md`
+      - Slug: domain + hyphenated title, max 60 chars (e.g., `nytimes-product-strategy-frameworks`)
+
+4. **Queue wiki connections** for each annotated source — list connection targets in each annotation's `connections` field — Pass 3 reads this during the nightly run
+
+5. **Update synthesis-log.json** — log the source file with processing_type: "annotation", output_files: [all Knowledge/sources paths created]
+
+6. **Update Inbox/_index.md** — set Type to `link`, Status to `processed`
+
+7. **Archive original** → move file to `Inbox/_archive/[filename]`
+```
+
 ### `_system/workflows/1on1-prep.md`
 
 ```markdown
