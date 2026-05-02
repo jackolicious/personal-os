@@ -101,26 +101,26 @@ case "$TRANSCRIPT_TOOL" in
     GRANOLA_PATH="${GRANOLA_PATH:-$HOME/Library/Application Support/Granola/transcripts}"
     GRANOLA_PATH="${GRANOLA_PATH/#\~/$HOME}"
     if [ -d "$GRANOLA_PATH" ]; then
-      # Create a symlink so Granola exports land directly in Inbox/transcripts/
-      mkdir -p "$VAULT_PATH/Inbox/transcripts"
+      # Create a symlink so Granola exports land directly in Inbox/
+      mkdir -p "$VAULT_PATH/Inbox"
       ok "Granola path confirmed: $GRANOLA_PATH"
       echo ""
-      echo -e "${YELLOW}Note:${NC} Configure Granola to export to: $VAULT_PATH/Inbox/transcripts/"
-      echo "      Or symlink: ln -s \"$GRANOLA_PATH\" \"$VAULT_PATH/Inbox/transcripts\""
+      echo -e "${YELLOW}Note:${NC} Configure Granola to export to: $VAULT_PATH/Inbox/"
+      echo "      Or symlink: ln -s \"$GRANOLA_PATH\" \"$VAULT_PATH/Inbox\""
     else
       warn "Path not found — you can configure this after Granola is installed"
     fi
     ;;
   2)
-    ok "Fireflies selected — configure webhook or auto-download to $VAULT_PATH/Inbox/transcripts/"
+    ok "Fireflies selected — configure webhook or auto-download to $VAULT_PATH/Inbox/"
     echo "      Fireflies webhook docs: app.fireflies.ai/integrations"
     ;;
   3)
-    ok "Zoom AI Companion selected — configure MCP or export manually to $VAULT_PATH/Inbox/transcripts/"
+    ok "Zoom AI Companion selected — configure MCP or export manually to $VAULT_PATH/Inbox/"
     echo "      Zoom MCP setup instructions will be in your bootstrap prompt"
     ;;
   4)
-    ok "Otter.ai selected — download transcripts to $VAULT_PATH/Inbox/transcripts/"
+    ok "Otter.ai selected — download transcripts to $VAULT_PATH/Inbox/"
     ;;
   *)
     warn "You can configure transcript ingestion later in Inbox/CLAUDE.md"
