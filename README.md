@@ -58,15 +58,28 @@ Workflows load summaries and synthesis, not sources. If synthesis logic improves
 - An always-on Mac (for nightly automation)
 - One AI note-taking tool (see below)
 
-### Supported transcript tools
+### What Inbox accepts
+
+Drop any of these directly into `Inbox/` — no subfolders needed:
+
+| Type | Examples |
+|------|---------|
+| Transcripts | Granola exports, Fireflies summaries, Zoom/Otter/Fathom .txt or .md files |
+| PDFs | Documents, articles, reports |
+| Markdown notes | Reference material, articles you've copied, scratch notes |
+| Link files | A `.md` file with one or more URLs — the nightly job fetches and annotates each one |
+
+The nightly router reads each file once, classifies it, and applies the right workflow. Anything it can't classify lands in `Inbox/_unrouted.md` and is surfaced in your morning briefing.
+
+### Transcript tool setup
 
 | Tool | Setup |
 |------|-------|
-| [Granola](https://granola.ai) | Configure export folder to `Inbox/transcripts/` |
-| [Fireflies.ai](https://fireflies.ai) | Webhook or Zapier → save to `Inbox/transcripts/` |
-| [Zoom AI Companion](https://zoom.us) | Zoom MCP or manual export from zoom.us/recording |
-| [Otter.ai](https://otter.ai) | Download transcript as .txt → `Inbox/transcripts/` |
-| [Fathom](https://fathom.video) | Auto-email summary → script to `Inbox/transcripts/` |
+| [Granola](https://granola.ai) | Configure export folder to `Inbox/` |
+| [Fireflies.ai](https://fireflies.ai) | Webhook or Zapier → save to `Inbox/` |
+| [Zoom AI Companion](https://zoom.us) | Zoom MCP or manual export from zoom.us/recording → `Inbox/` |
+| [Otter.ai](https://otter.ai) | Download transcript as .txt → `Inbox/` |
+| [Fathom](https://fathom.video) | Auto-email summary → script to `Inbox/` |
 
 `setup.sh` will prompt you to choose and configure your tool.
 
@@ -98,6 +111,12 @@ claude
 - Set your 30/60/90 goals in `GOALS.md`
 - Define your strategic pillars in `PILLARS.md`
 - Create your first 1on1 folders with `/personal-os-new-1on1 [name]`
+
+**Day 1 — seed your system:**
+Drop any existing notes, transcripts, or PDFs into `Inbox/`. The next nightly run (2am) processes everything automatically — no pre-sorting required.
+
+**Importing an existing vault?**
+Drop its contents directly into `Inbox/`. The router classifies and files everything. Check `Inbox/_unrouted.md` the next morning for anything it couldn't place.
 
 ---
 
@@ -137,7 +156,10 @@ vault/
 ├── HEARTBEAT.md           ← Current focus, upcoming meetings, synthesis state
 ├── PILLARS.md             ← Ongoing strategic focus areas with keywords
 ├── BACKLOG.md             ← Ideas and feature requests, reviewed monthly
-├── Inbox/                 ← Drop zone: transcripts, PDFs, URLs; archive/ holds processed originals
+├── Inbox/                 ← Drop zone: transcripts, PDFs, markdown notes, link files
+│   ├── _index.md          ← Nightly-maintained queue: file, type, status, date added
+│   ├── _unrouted.md       ← Files the router couldn't classify (surfaced in daily briefing)
+│   └── _archive/          ← Processed originals (system-managed)
 ├── 1on1s/
 │   ├── _index.md          ← All people: last session, session count, last contact
 │   └── [Name]/
