@@ -328,13 +328,23 @@ A file is classified as `link` if it consists primarily of URLs (one or more), w
 
 3. **For each URL, sequentially:**
    a. Fetch page content using WebFetch
+      - If fetch fails (any error): write a stub annotation with source_type: url,
+        original: URL, processed_at: now, and a `fetch_error: "[error message]"` field.
+        File the stub to `Knowledge/sources/[slug].md` and continue to the next URL.
+        Do not halt the workflow.
    b. Extract title and body text
    c. Annotate using `_system/templates/source-annotation.md`:
       - Metadata block (source_type: url, original: URL, processed_at, relevance, key_concepts, connections, open_questions)
       - Summary, key concepts, relevant quotes, inferences, open questions
       - If the source file contained notes or context alongside this URL, include them in the `inferences` field
    d. File annotated version to `Knowledge/sources/[slug].md`
-      - Slug: domain + hyphenated title, max 60 chars (e.g., `nytimes-product-strategy-frameworks`)
+      - Slug: strip protocol and `www.` from domain, keep only the root
+        (e.g., `nytimes.com` → `nytimes`). Take the page `<title>` tag,
+        lowercase it, remove any site-name suffix after the last `|` or `—`,
+        strip all characters except letters, digits, and spaces, replace spaces
+        with hyphens, truncate to 60 chars at a word boundary.
+        If the resulting slug already exists as a file, append `-2`, `-3`, etc.
+        Example: `nytimes-product-strategy-frameworks`
 
 4. **Queue wiki connections** for each annotated source — list connection targets in each annotation's `connections` field — Pass 3 reads this during the nightly run
 
