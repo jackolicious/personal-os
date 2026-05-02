@@ -25,6 +25,7 @@ _Depends on: Phase 1 (directories must exist)_
 ## Always Load
 - `GOALS.md` — current objectives
 - `HEARTBEAT.md` — current focus and context
+- `PILLARS.md` — ongoing strategic focus areas
 - `People/team.md` — roster with handles
 - `profile/preferences/synthesis.md` — synthesis style and what to flag
 

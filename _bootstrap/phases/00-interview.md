@@ -50,6 +50,16 @@ _(Example: "Blockers and morale first, then growth signals. Flag if someone ment
 
 ---
 
+**Q7:** What are your 4–6 ongoing strategic responsibilities in this role?
+
+These are your *pillars* — not quarterly goals, but the dimensions of the job that stay consistent
+for 6–12 months. Everything you work on ladders up to one of these.
+
+_(Example CPO pillars: "Product Strategy, Engineering Partnership, Customer & Market Intelligence,
+Team & Culture, Executive Alignment, Platform & Technical Foundation")_
+
+---
+
 ## After all answers: write `_bootstrap/interview-answers.md`
 
 ```markdown
@@ -76,6 +86,9 @@ _Captured during bootstrap setup_
 
 ## 1on1 Focus
 [Q6 answer verbatim]
+
+## Strategic Pillars
+[Q7 answer — one pillar per line]
 ```
 
 **Confirm with one line** ("Interview complete — answers saved to _bootstrap/interview-answers.md"), then proceed to Phase 1.

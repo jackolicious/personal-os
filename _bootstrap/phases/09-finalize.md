@@ -52,6 +52,10 @@ After scaffold is built, confirm each item before first use.
 **`GOALS.md`:**
 - [ ] Update 30/60/90 objectives to your actual situation
 
+**`PILLARS.md`:**
+- [ ] Confirm pillars were pre-filled from interview Q7
+- [ ] Add keywords for each pillar (used for auto-tagging loops)
+
 **`People/team.md`:**
 - [ ] Add full team roster
 
@@ -87,6 +91,7 @@ After completing all phases, run these checks:
 5. `ls _system/workflows/` — should show 7 workflow files
 6. `ls profile/preferences/` — should show 5 files: synthesis.md, briefing.md, writing-style.md, 1on1.md, knowledge.md
 7. `bash run-nightly.sh` in a separate tab — confirm it starts without error
+8. `cat PILLARS.md` — should show 4–6 pillar sections with keywords
 
 Report any missing files or errors before marking setup complete.
 

@@ -63,3 +63,31 @@ Last Updated: [DATE]
 ## Last Nightly Synthesis: [DATE]
 ## Last Daily Briefing: [DATE]
 ```
+
+### `PILLARS.md`
+
+```markdown
+# Strategic Pillars
+
+Ongoing dimensions of the role. Everything ladders up to one of these.
+Update when the role fundamentally changes — not quarterly.
+
+## [Pillar 1 Name]
+**Description:** [What this covers]
+**Keywords:** [comma-separated terms workflows use to auto-tag loops]
+
+## [Pillar 2 Name]
+**Description:** [What this covers]
+**Keywords:** [comma-separated terms]
+
+## [Pillar 3 Name]
+**Description:** [What this covers]
+**Keywords:** [comma-separated terms]
+
+## [Pillar 4 Name]
+**Description:** [What this covers]
+**Keywords:** [comma-separated terms]
+
+---
+Last Updated: [DATE]
+```
