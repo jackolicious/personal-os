@@ -17,10 +17,12 @@ echo "Personal OS loop started at $(date). Ctrl+C to stop."
 
 NIGHTLY_DONE_DATE=""
 BRIEFING_DONE_DATE=""
+WEEK_AHEAD_DONE_DATE=""
 
 while true; do
   TODAY="$(date +%Y-%m-%d)"
   HOUR="$(date +%H)"
+  DOW="$(date +%u)"  # 1=Mon ... 7=Sun
 
   # Nightly synthesis at 02:00 — three-pass pipeline
   if [ "$HOUR" = "02" ] && [ "$NIGHTLY_DONE_DATE" != "$TODAY" ]; then
@@ -68,6 +70,20 @@ Per-file extraction (Steps 1–3) is already complete for tonight. Stop." \
       echo "$(date): Briefing saved to $BRIEF_FILE"
     fi
     BRIEFING_DONE_DATE="$TODAY"
+    sleep 60
+  fi
+
+  # Week-ahead brief on Sunday at 20:00
+  if [ "$DOW" = "7" ] && [ "$HOUR" = "20" ] && [ "$WEEK_AHEAD_DONE_DATE" != "$TODAY" ]; then
+    WEEK_FILE="$VAULT_DIR/_system/briefings/week-ahead-$TODAY.md"
+    if [ ! -f "$WEEK_FILE" ]; then
+      echo "$(date): Generating week-ahead brief..."
+      claude --model claude-sonnet-4-6 --print \
+        "$(cat "$VAULT_DIR/.claude/commands/personal-os-week-ahead.md")" \
+        > "$WEEK_FILE" 2>&1
+      echo "$(date): Week-ahead saved to $WEEK_FILE"
+    fi
+    WEEK_AHEAD_DONE_DATE="$TODAY"
     sleep 60
   fi
 

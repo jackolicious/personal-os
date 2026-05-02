@@ -478,6 +478,7 @@ After 5+ sources on any single wiki concept:
 - Last Nightly Synthesis: [today]
 - Count of items processed
 - Any patterns flagged (from Step 6)
+- If today is the first of the month and `BACKLOG.md` has open items: append a flag to HEARTBEAT.md Open Questions: "Backlog review due — N items open in BACKLOG.md"
 
 ### What counts as "changed"
 File hash (MD5) differs from what's stored in synthesis-log.json.
@@ -575,7 +576,9 @@ For each requires_focus loop (top 3 only):
 - If no calendar: suggest "Consider blocking [focus_block_length] min before [due_date] for '[loop title]'"
 - If no due date: suggest "Consider scheduling 90 min this week for '[loop title]'"
 
-## Step 6: Generate week-ahead brief
+## Step 6: Generate and save week-ahead brief
+
+Save output to `_system/briefings/week-ahead-YYYY-MM-DD.md` (YYYY-MM-DD = Sunday's date).
 
 # Week Ahead — [DATE RANGE]
 
@@ -596,4 +599,8 @@ For each requires_focus loop (top 3 only):
 
 ---
 *Update a loop? `/personal-os-open-loops` | Run 1on1 prep? `/personal-os-1on1-prep [name]`*
+
+## Telegram delivery (optional)
+After saving, ask: "Should I send this to Telegram?"
+If yes, post the brief to the configured Telegram chat.
 ```

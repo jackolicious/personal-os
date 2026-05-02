@@ -64,6 +64,22 @@ Last Updated: [DATE]
 ## Last Daily Briefing: [DATE]
 ```
 
+### `BACKLOG.md`
+
+```markdown
+# Backlog
+
+Ideas and feature requests for this system. Add freely — review monthly.
+
+## Open
+
+<!-- Add entries as: - [DATE] [idea] -->
+
+## Done
+
+<!-- Move items here when implemented -->
+```
+
 ### `PILLARS.md`
 
 ```markdown
