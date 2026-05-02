@@ -448,3 +448,51 @@ After 5+ sources on any single wiki concept:
 ### What counts as "changed"
 File hash (MD5) differs from what's stored in synthesis-log.json.
 ```
+
+### `_system/workflows/career-evidence.md`
+
+````markdown
+# Career Evidence Workflow
+
+## Model: `claude-sonnet-4-6`
+Synthesis and narrative framing of accumulated evidence require reasoning.
+
+## Trigger: `/personal-os-career-evidence [last 90d | last 6mo | all]`
+Default: last 90 days
+
+## Steps
+
+1. **Load evidence**
+   - Read `_system/data/career-evidence.json`
+   - Parse date range from $ARGUMENTS (default: 90 days back from today)
+   - Filter entries where date >= range start
+   - Note count of starred entries
+
+2. **Group and rank**
+   - Group by type: feedback → outcomes → growth
+   - Within each group: starred entries first, then by date descending
+
+3. **Render digest** using `_system/templates/career-evidence-digest.md`:
+   - Feedback section: each entry as `[DATE] [FROM]: "[detail]" — [context]`
+   - Outcomes section: each entry as `[DATE]: [title] — [detail]`
+   - Growth section: each entry as `[DATE]: [title] — [detail]`
+   - Mark starred entries with ★
+
+4. **Offer next actions** after the digest:
+   ```
+   ---
+   To star entries for your portfolio: "star ev-001, ev-007"
+   To generate a brag doc: "brag doc"
+   ```
+
+5. **Handle "star [IDs]"**
+   - Update `starred: true` for each listed ID in career-evidence.json
+   - Confirm: "Starred: ev-001, ev-007"
+
+6. **Handle "brag doc"**
+   - Read `profile/preferences/writing-style.md` — match voice and tone exactly
+   - Synthesize: starred entries first, then fill with highest-signal unstarred entries to reach 3–5 paragraphs
+   - Write in first person, past tense, concrete and specific — no generic claims
+   - Save to `profile/career/YYYY-MM-DD-brag-doc.md` (YYYY-MM-DD = today)
+   - Report: "Saved to profile/career/[filename]"
+````
