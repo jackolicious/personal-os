@@ -29,6 +29,7 @@ People/
 Interviews/
 profile/
 profile/preferences/
+profile/career/
 _system/
 _system/data/
 _system/logs/

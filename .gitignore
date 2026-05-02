@@ -26,6 +26,9 @@ Weekly/
 Synthesis/
 _system/
 
+# Git worktrees
+.worktrees/
+
 # macOS
 .DS_Store
 .AppleDouble

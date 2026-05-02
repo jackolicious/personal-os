@@ -144,3 +144,14 @@ $ARGUMENTS contains the role name (must match a folder under Interviews/).
 7. Create a notes file: `Interviews/[role]/notes/YYYY-MM-DD.md` with today's date
 8. Ask: "Who are you meeting with, and what stage is this?"
 ```
+
+### `.claude/commands/personal-os-career-evidence.md`
+
+````markdown
+Review captured career evidence and optionally generate a brag doc.
+Usage: /personal-os-career-evidence [last 90d | last 6mo | all]
+
+$ARGUMENTS may contain a time range. Default: last 90 days.
+
+Follow `_system/workflows/career-evidence.md` exactly.
+````

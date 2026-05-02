@@ -24,9 +24,25 @@ makes connections, and recommends one clear action for the day.
 
 2. **Open loops triage**
    - Read `_system/data/open-loops.json`
+   - Filter to canonical entries only (canonical_id = null, status ≠ merged)
    - Categorize: overdue → due this week → high priority → everything else
    - Flag any loop open >14 days without a status update
    - For critical/overdue loops: draft a one-line suggested action
+
+2.5 **Commitment load check**
+   - Count loops where status = open or in-progress and canonical_id = null
+   - Count critical loops; count high + critical combined
+   - Read `profile/preferences/briefing.md` for thresholds (defaults: critical ≥ 3, high+critical ≥ 8)
+   - If either threshold is breached, add this section to the briefing:
+     ```
+     ### Commitment load
+     You have [N] critical and [N] high-priority open loops.
+     Consider reprioritizing before adding more. Longest-open candidates:
+     - [Loop title] — [priority], open [N] days
+     - [Loop title] — [priority], open [N] days
+     - [Loop title] — [priority], open [N] days
+     ```
+   - If neither threshold is breached, omit this section entirely — no noise on healthy days
 
 3. **Meeting awareness**
    - Check `HEARTBEAT.md` for 1on1s today or tomorrow
@@ -347,6 +363,38 @@ c. Never re-evaluate old connections
 - Flag loops where due_date < today and status = open or in-progress
 - Flag loops where status = open and opened_date > 14 days ago (no update)
 
+### Step 5.1: Deduplication pass
+For each loop created in Step 5 tonight:
+1. Compare against all existing open loops where `status` is `open` or `in-progress` and `canonical_id` is null
+2. Match if ALL of: semantic title similarity (same action, different wording counts) + (context_person matches or either is null) + (project matches or either is null)
+3. Two-phase check: Haiku extraction pass outputs a `match_candidate_id` field (or null) alongside the loop; Sonnet reasoning pass confirms or rejects before merging
+4. **On confirmed match:**
+   - Append tonight's source_file to matched loop's `source_files` array
+   - If tonight's extraction has an earlier due_date, update the canonical's due_date
+   - Mark tonight's new entry as `status: "merged"`, set `canonical_id` to the matched loop's ID
+5. **On no match:** leave as canonical (canonical_id: null)
+All workflows skip any loop where `status: "merged"` — only canonical entries are displayed or operated on.
+
+### Step 5.2: Career evidence extraction
+For each 1on1 summary and meeting summary processed tonight:
+1. Scan for three signal types — extract only clear, unambiguous signals:
+   - `feedback`: explicit praise or positive signal, must have a person attached (e.g., "Alice said great job on X")
+   - `outcome`: concrete deliverable or resolution (e.g., "shipped the roadmap doc", "resolved the pricing dispute")
+   - `growth`: handled something differently, changed approach, acted on coaching received (e.g., "I used to escalate immediately — this time I held the space")
+2. Skip low-confidence or ambiguous extractions
+3. For each clear signal, append to `_system/data/career-evidence.json`:
+   - `id`: next ev-NNN in sequence
+   - `type`: feedback | outcome | growth
+   - `date`: date of the session or meeting
+   - `title`: one-line portable summary, written as if for a resume bullet
+   - `detail`: verbatim quote or close paraphrase from the source
+   - `from`: person's name if attributable, null otherwise
+   - `context`: meeting title or "1on1 with [Name]"
+   - `source_file`: path to the summary file
+   - `tags`: 1–3 skill areas or project names inferred from context
+   - `starred`: false
+4. Log IDs of created entries in synthesis-log.json as `career_evidence_created`
+
 ### Step 6: Pattern detection (coaching function)
 - If 2+ sources or summaries processed this week share a key concept → flag in HEARTBEAT.md
 - If 3+ people mentioned a theme in 1on1s this week → flag for next daily briefing
@@ -370,10 +418,10 @@ For each person touched tonight (new session processed, open loop created/update
 1. Read current `1on1s/[Name]/ready-note.md` if it exists
 2. Extract the `<!-- MANUAL -->...<!-- END MANUAL -->` block — keep only the **last 15–30 lines** (trim oldest lines from the top if over 30; never drop below 15 if content exists)
 3. Rebuild ready-note.md using `_system/templates/1on1-ready-note.md`:
-   - Priority open loops: top 3–5 where context_person = Name, sorted overdue → critical → high
+   - Priority open loops: top 3–5 where context_person = Name, sorted overdue → critical → high; skip any loop where status = merged
    - Last session highlights: 2–3 bullets from the most recent summary
    - Session history: last 5 sessions (date + key topic + one-liner from summary)
-   - Recent action items: open items from last 2 sessions
+   - Recent action items: open items from last 2 sessions — resolve through canonical_id before rendering (if a loop has multiple source_files, show once with "(+N sources)" annotation)
 4. Re-insert the trimmed manual block verbatim between the `<!-- MANUAL -->` markers
 5. If no `ready-note.md` exists yet (new person folder), create it from template with empty manual section
 
@@ -400,3 +448,51 @@ After 5+ sources on any single wiki concept:
 ### What counts as "changed"
 File hash (MD5) differs from what's stored in synthesis-log.json.
 ```
+
+### `_system/workflows/career-evidence.md`
+
+````markdown
+# Career Evidence Workflow
+
+## Model: `claude-sonnet-4-6`
+Synthesis and narrative framing of accumulated evidence require reasoning.
+
+## Trigger: `/personal-os-career-evidence [last 90d | last 6mo | all]`
+Default: last 90 days
+
+## Steps
+
+1. **Load evidence**
+   - Read `_system/data/career-evidence.json`
+   - Parse date range from $ARGUMENTS (default: 90 days back from today)
+   - Filter entries where date >= range start
+   - Note count of starred entries
+
+2. **Group and rank**
+   - Group by type: feedback → outcomes → growth
+   - Within each group: starred entries first, then by date descending
+
+3. **Render digest** using `_system/templates/career-evidence-digest.md`:
+   - Feedback section: each entry as `[DATE] [FROM]: "[detail]" — [context]`
+   - Outcomes section: each entry as `[DATE]: [title] — [detail]`
+   - Growth section: each entry as `[DATE]: [title] — [detail]`
+   - Mark starred entries with ★
+
+4. **Offer next actions** after the digest:
+   ```
+   ---
+   To star entries for your portfolio: "star ev-001, ev-007"
+   To generate a brag doc: "brag doc"
+   ```
+
+5. **Handle "star [IDs]"**
+   - Update `starred: true` for each listed ID in career-evidence.json
+   - Confirm: "Starred: ev-001, ev-007"
+
+6. **Handle "brag doc"**
+   - Read `profile/preferences/writing-style.md` — match voice and tone exactly
+   - Synthesize: starred entries first, then fill with highest-signal unstarred entries to reach 3–5 paragraphs
+   - Write in first person, past tense, concrete and specific — no generic claims
+   - Save to `profile/career/YYYY-MM-DD-brag-doc.md` (YYYY-MM-DD = today)
+   - Report: "Saved to profile/career/[filename]"
+````
