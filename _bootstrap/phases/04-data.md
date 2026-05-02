@@ -20,6 +20,8 @@ Schema for each loop entry:
   "context_person": "string | null",
   "context_meeting": "string | null",
   "project": "string | null",
+  "pillar": "string | null — matches a pillar name from PILLARS.md; auto-tagged by nightly synthesis",
+  "requires_focus": "boolean — true if resolving this loop requires uninterrupted deep work (no external dependency)",
   "priority": "critical | high | medium | low",
   "status": "open | in-progress | blocked | archived | merged",
   "opened_date": "YYYY-MM-DD",

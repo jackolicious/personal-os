@@ -44,6 +44,17 @@ makes connections, and recommends one clear action for the day.
      ```
    - If neither threshold is breached, omit this section entirely — no noise on healthy days
 
+2.6 **Pillar balance check**
+   - Read `PILLARS.md` to get pillar names
+   - Count open + in-progress canonical loops per pillar (exclude nulls from percentage)
+   - If any single pillar holds >60% of tagged loops, add this section:
+     ```
+     ### Pillar balance
+     [Pillar Name]: [N] loops ([X]% of tagged work)
+     Consider: are the other pillars on track, or just un-logged?
+     ```
+   - If distribution is healthy or fewer than 5 tagged loops exist, omit this section
+
 3. **Meeting awareness**
    - Check `HEARTBEAT.md` for 1on1s today or tomorrow
    - If a 1on1 is today: surface last session summary + open loops for that person
@@ -80,6 +91,9 @@ makes connections, and recommends one clear action for the day.
 
 ### Open loops requiring action
 [Overdue / due today / high priority — with suggested action]
+
+### Pillar balance
+[Only shown when one pillar holds >60% of tagged loops]
 
 ### Relationship health
 [Anyone overdue for contact — name, days since last touch, open loop count]
@@ -357,6 +371,15 @@ b. For each named wiki page:
    - Exists → APPEND new dated section
    - Does not exist → CREATE with this connection as seed
 c. Never re-evaluate old connections
+
+### Step 5.0: Pillar auto-tagging
+For each loop created or updated tonight where `pillar` is null:
+1. Read `PILLARS.md` — extract each pillar's name and keywords list
+2. Match loop title + project against each pillar's keywords (case-insensitive substring match)
+3. On single match: set `pillar` to that pillar's name
+4. On multiple matches: set `pillar` to the strongest match (most keyword hits)
+5. On no match: leave `pillar` as null — do not guess
+Loops with `pillar` already set are not re-tagged (preserve manual overrides).
 
 ### Step 5: Open loop maintenance
 - Scan tonight's summaries for new commitments → append to open-loops.json with priority
