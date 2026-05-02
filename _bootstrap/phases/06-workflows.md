@@ -418,10 +418,10 @@ For each person touched tonight (new session processed, open loop created/update
 1. Read current `1on1s/[Name]/ready-note.md` if it exists
 2. Extract the `<!-- MANUAL -->...<!-- END MANUAL -->` block — keep only the **last 15–30 lines** (trim oldest lines from the top if over 30; never drop below 15 if content exists)
 3. Rebuild ready-note.md using `_system/templates/1on1-ready-note.md`:
-   - Priority open loops: top 3–5 where context_person = Name, sorted overdue → critical → high
+   - Priority open loops: top 3–5 where context_person = Name, sorted overdue → critical → high; skip any loop where status = merged
    - Last session highlights: 2–3 bullets from the most recent summary
    - Session history: last 5 sessions (date + key topic + one-liner from summary)
-   - Recent action items: open items from last 2 sessions
+   - Recent action items: open items from last 2 sessions — resolve through canonical_id before rendering (if a loop has multiple source_files, show once with "(+N sources)" annotation)
 4. Re-insert the trimmed manual block verbatim between the `<!-- MANUAL -->` markers
 5. If no `ready-note.md` exists yet (new person folder), create it from template with empty manual section
 
