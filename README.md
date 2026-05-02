@@ -63,7 +63,7 @@ Workflows load summaries and synthesis, not sources. If synthesis logic improves
 Drop any of these directly into `Inbox/` — no subfolders needed:
 
 | Type | Examples |
-|------|---------|
+|------|----------|
 | Transcripts | Granola exports, Fireflies summaries, Zoom/Otter/Fathom .txt or .md files |
 | PDFs | Documents, articles, reports |
 | Markdown notes | Reference material, articles you've copied, scratch notes |
