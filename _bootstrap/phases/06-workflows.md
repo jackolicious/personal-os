@@ -23,13 +23,13 @@ makes connections, and recommends one clear action for the day.
    - Read `profile/preferences/briefing.md` (briefing preferences and coaching tone)
 
 1.5 **Unrouted inbox items**
-   - Check if `Inbox/_unrouted.md` exists and contains any entries (lines after the header)
+   - Check if `Inbox/_unrouted.md` exists and contains any list-item entries (lines beginning with `- `)
    - If yes, add this section to the briefing:
      ```
      ### Inbox needs attention
      These files couldn't be classified automatically:
      - [filename] — [one-line description]
-     Rename them or move them to a subfolder to help the router next time.
+     Rename them or add metadata (e.g., speaker labels for transcripts, a URL for link files) to help the router classify them next time.
      ```
    - If the file doesn't exist or has no entries: omit this section entirely — no noise on clean days
 
