@@ -54,6 +54,38 @@ Schema for each decision entry:
 }
 ```
 
+### `_system/data/career-evidence.json`
+
+```json
+{
+  "schema_version": 1,
+  "evidence": []
+}
+```
+
+Schema for each evidence entry:
+```json
+{
+  "id": "ev-001",
+  "type": "feedback | outcome | growth",
+  "date": "YYYY-MM-DD",
+  "title": "string — one-line portable summary, resume-ready",
+  "detail": "string — what happened, verbatim or paraphrased from source",
+  "from": "string | null — person who gave feedback or can attest to the outcome",
+  "context": "string — meeting title or 1on1 name it came from",
+  "source_file": "path to originating note",
+  "tags": ["string — skill area, project, or theme"],
+  "starred": false
+}
+```
+
+Types:
+- `feedback` — explicit praise or positive signal, must be attributable to a person
+- `outcome` — shipped something, resolved a situation, delivered a concrete result
+- `growth` — handled something differently than before, changed approach, acted on coaching received
+
+---
+
 ### `_system/data/synthesis-log.json`
 
 ```json
@@ -80,6 +112,7 @@ Schema for each `processed_files` entry (key = relative file path):
   "output_files": ["paths of files created/updated"],
   "wiki_connections_made": ["wiki page paths appended to"],
   "open_loops_created": ["loop IDs created"],
+  "career_evidence_created": ["ev-IDs created from this file"],
   "annotation_version": 1
 }
 ```
