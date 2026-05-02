@@ -13,8 +13,7 @@
       "Bash(md5sum *)",
       "Bash(cat *)",
       "Bash(grep *)",
-      "Bash(date *)",
-      "mcp__plugin_telegram_telegram__reply"
+      "Bash(date *)"
     ]
   }
 }
