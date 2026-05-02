@@ -164,18 +164,18 @@ Rule: if a workflow needs to know what's in a directory, it reads `_index.md` fi
 It only opens individual files when it knows specifically which ones it needs.
 
 **`Inbox/_index.md`** — one row per file dropped in Inbox/, append-only:
-~~~markdown
+```markdown
 | File | Type | Status | Added |
 |------|------|--------|-------|
 | Inbox/2026-04-28-standup.md | transcript | processed | 2026-04-28 |
 | Inbox/some-doc.pdf | pdf | pending | 2026-04-29 |
 | Inbox/old-note.md | unrouted | flagged | 2026-04-29 |
-~~~
+```
 
 Types: `transcript` | `pdf` | `note` | `link` | `unrouted`
 Statuses: `pending` → `processed` (or `flagged` for unrouted)
 
-The nightly shell step adds new files as `unknown / pending`. Pass 1 updates both Type and Status after processing.
+The nightly shell step adds new files with Type `unknown` and Status `pending`. Pass 1 updates both Type and Status after processing.
 
 Create empty `_index.md` files in: `1on1s/`, `Meetings/`, `Knowledge/wiki/`, `Interviews/`.
 `Inbox/_index.md` and `Inbox/_unrouted.md` are created in Phase 1 with their initial content.
