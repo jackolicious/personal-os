@@ -300,7 +300,7 @@ When the Inbox router classifies a file as `note`.
 
 4. **Queue wiki connections** — list connection targets in the annotation's `connections` metadata field for Pass 3
 
-5. **Update synthesis-log.json** — log the file with processing_type: "annotation"
+5. **Update synthesis-log.json** — log the file with processing_type: "annotation", output_files: [Knowledge/sources/[slug].md]
 
 6. **Update Inbox/_index.md** — set Type to `note`, Status to `processed`
 
