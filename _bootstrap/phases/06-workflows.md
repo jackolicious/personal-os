@@ -60,6 +60,14 @@ makes connections, and recommends one clear action for the day.
    - If a 1on1 is today: surface last session summary + open loops for that person
    - Suggest running `/personal-os-1on1-prep [name]` if not already done
 
+3.5 **Recent decisions**
+   - Read `_system/data/decisions.json`
+   - Filter: decisions where `date` >= 7 days ago OR `review_date` = today or past
+   - Surface up to 3 decisions, sorted: review_date due first, then most recent
+   - Format each as: "[DATE] [decision] — made by [made_by]"
+   - If a decision has `review_date` = today or overdue: flag with "⚑ Review due"
+   - If 0 decisions match the filter: omit this section entirely — no noise
+
 4. **Relationship health check**
    - Scan `People/team.md` and `People/stakeholders.md` for `Last contact:` fields
    - Flag anyone not contacted in >14 days (direct reports) or >21 days (stakeholders)
@@ -88,6 +96,9 @@ makes connections, and recommends one clear action for the day.
 
 ### Meetings today
 [1on1s or key meetings with prep status]
+
+### Recent decisions
+[Decisions from last 7 days + any with overdue review dates — omitted if empty]
 
 ### Open loops requiring action
 [Overdue / due today / high priority — with suggested action]
