@@ -43,6 +43,11 @@ Concise and scannable — I read this in under 3 minutes
 - Anyone not contacted in >14 days (direct reports) or >21 days (stakeholders)
 - Any loop open >14 days without a status update
 - Cross-cutting themes from recent 1on1s
+
+## Commitment load thresholds
+Warn if critical open loops ≥ 3
+Warn if high + critical open loops ≥ 8
+(Adjust to match your actual load capacity)
 ```
 
 ### `profile/preferences/writing-style.md`
@@ -322,4 +327,31 @@ Active count: 0
 | Date | Key topic | Summary link |
 |------|-----------|-------------|
 | | | |
+```
+
+### `_system/templates/career-evidence-digest.md`
+
+```markdown
+# Career Evidence — [DATE_RANGE]
+_Generated: {{DATE}}_
+
+## Feedback received
+<!-- Sorted: starred first, then date descending -->
+| Date | From | What they said | Context |
+|------|------|----------------|---------|
+| | | | |
+
+## Outcomes delivered
+| Date | What | Detail |
+|------|------|--------|
+| | | |
+
+## Growth moments
+| Date | What | Detail |
+|------|------|--------|
+| | | |
+
+---
+_To star entries for your portfolio: "star ev-001, ev-002"_
+_To generate a brag doc: "brag doc"_
 ```
