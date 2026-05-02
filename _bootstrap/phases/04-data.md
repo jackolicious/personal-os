@@ -15,17 +15,19 @@ Schema for each loop entry:
 {
   "id": "loop-001",
   "title": "string — the commitment or open question",
+  "canonical_id": "string | null — null for canonical entries; loop ID of parent for merged duplicates",
   "owner": "string — who owns resolution",
   "context_person": "string | null",
   "context_meeting": "string | null",
   "project": "string | null",
   "priority": "critical | high | medium | low",
-  "status": "open | in-progress | blocked | archived",
+  "status": "open | in-progress | blocked | archived | merged",
   "opened_date": "YYYY-MM-DD",
   "due_date": "YYYY-MM-DD | null",
   "closed_date": "YYYY-MM-DD | null",
+  "closed_in": "string | null — path of the file that triggered the close",
   "notes": "string — append-only updates separated by | date |",
-  "source_file": "path to originating note"
+  "source_files": ["path to originating note"]
 }
 ```
 
