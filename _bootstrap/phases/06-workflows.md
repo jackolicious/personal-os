@@ -492,7 +492,7 @@ b. For each named wiki page:
 c. Never re-evaluate old connections
 d. After each page touched, append ONE line to `Knowledge/wiki/log.md`:
    - New page: `## [DATE] created | [page.md] — seeded from [source slug]`
-   - Existing page: `## [DATE] ingest | [source slug] → [page.md]`
+   - Existing page: `## [DATE] ingest | [page.md] — from [source slug]`
 
 ### Step 5.0: Pillar auto-tagging
 For each loop created or updated tonight where `pillar` is null:
@@ -756,23 +756,23 @@ If yes, post the brief to the configured Telegram chat.
    ```
    # Wiki Health Report — [DATE]
 
-   ## Orphan pages
-   - [page.md] — last updated [DATE], [N] sources
+   ### Orphan pages (no inbound links)
+   - [page.md] — last updated [date]
 
-   ## Stale pages
-   - [page.md] — last updated [DATE], [N] sources
+   ### Stale pages (60+ days, no new sources pending)
+   - [page.md] — last updated [date], [N] sources
 
-   ## Concept gaps
-   - "[term]" — appears in [N] sources, no wiki page
+   ### Concept gaps (no page yet)
+   - "[term]" — mentioned in [N] sources: [source1.md, source2.md]
 
-   ## Unlinked entities
-   - "[Name]" — mentioned in [N] 1on1 summaries, no wiki page
+   ### Unlinked entities
+   - "[Name]" — mentioned in [N] 1on1 sessions, no wiki page
 
-   ## Possible contradictions
-   - [page-a.md] vs [page-b.md] — [one-line description of inconsistency]
+   ### Possible contradictions (review manually)
+   - [page-a.md] vs [page-b.md] — both reference "[entity]" with potentially conflicting claims
 
-   ## Summary
-   [N] orphans, [N] stale, [N] gaps, [N] unlinked entities, [N] possible contradictions
+   ### Summary
+   [N] orphans | [N] stale | [N] gaps | [N] unlinked | [N] contradictions
    ```
 
 6. Append to `Knowledge/wiki/log.md`:
