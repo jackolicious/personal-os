@@ -6,7 +6,7 @@ _Depends on: Phase 1 (_system/workflows/ must exist)_
 ```markdown
 # Daily Briefing Workflow
 
-## Model: `claude-sonnet-4-6`
+## Model: Sonnet
 Synthesis and coaching reasoning over structured inputs — needs Sonnet.
 
 ## Purpose
@@ -145,7 +145,7 @@ If yes, post the briefing to the configured Telegram chat.
 ```markdown
 # Cascade Workflow
 
-## Model: `claude-sonnet-4-6`
+## Model: Sonnet
 High-quality stakeholder drafts require synthesis and communication reasoning.
 
 ## Cadence: Weekly (Friday recommended)
@@ -219,7 +219,7 @@ Ask which audiences to activate this week.
 ```markdown
 # Meeting Notes Ingestion Workflow
 
-## Model: `claude-haiku-4-5-20251001`
+## Model: Haiku
 Structured extraction from raw transcripts — high input tokens, no deep reasoning needed.
 Run as a separate subprocess per file so context resets between transcripts.
 
@@ -258,7 +258,7 @@ When a new Granola transcript appears in `Inbox/transcripts/`
 ```markdown
 # PDF Ingestion Workflow
 
-## Model: `claude-haiku-4-5-20251001`
+## Model: Haiku
 Annotation is structured extraction — high input tokens, no reasoning needed.
 Run as a separate subprocess per file.
 
@@ -291,7 +291,7 @@ Run as a separate subprocess per file.
 ```markdown
 # Note Ingestion Workflow
 
-## Model: `claude-haiku-4-5-20251001`
+## Model: Haiku
 Structured extraction from generic markdown notes — high input tokens, no deep reasoning needed.
 Run as a separate subprocess per file so context resets between notes.
 
@@ -326,7 +326,7 @@ When the Inbox router classifies a file as `note`.
 ```markdown
 # Link Ingestion Workflow
 
-## Model: `claude-haiku-4-5-20251001`
+## Model: Haiku
 URL fetching and annotation — high input tokens, no deep reasoning needed.
 Run as a separate subprocess per file. All URLs in a file are fetched sequentially within one subprocess.
 
@@ -374,7 +374,7 @@ A file is classified as `link` if it consists primarily of URLs (one or more), w
 ```markdown
 # 1on1 Prep Workflow
 
-## Model: `claude-sonnet-4-6`
+## Model: Sonnet
 Context synthesis and probing question generation require reasoning.
 
 ## Trigger: `/personal-os-1on1-prep [name]`
@@ -401,7 +401,7 @@ Context synthesis and probing question generation require reasoning.
 ```markdown
 # Preference Tuning Workflow
 
-## Model: `claude-sonnet-4-6`
+## Model: Sonnet
 Pattern analysis across processed content over time — needs reasoning, not extraction.
 
 ## Purpose
@@ -447,9 +447,9 @@ Determined by `_system/data/synthesis-log.json` preference_tuning section:
 
 ## Execution model
 Two-phase pipeline to keep context clean and model costs proportional:
-- **Steps 1–3** (triage + per-file extraction): `claude-haiku-4-5-20251001`, one subprocess per file.
+- **Steps 1–3** (triage + per-file extraction): `Haiku`, one subprocess per file.
   Each file runs in an isolated `claude --print` call — context resets between files.
-- **Steps 4–11** (connections, patterns, coaching, index updates): `claude-sonnet-4-6`, single pass.
+- **Steps 4–11** (connections, patterns, coaching, index updates): `Sonnet`, single pass.
   Reads only the compact outputs from Phase 1 — never the raw sources.
 
 ## Full algorithm
@@ -487,9 +487,12 @@ f. Moves original to `Inbox/_archive/[filename]`
 For each source processed tonight:
 a. Read its `connections` metadata
 b. For each named wiki page:
-   - Exists → APPEND new dated section
-   - Does not exist → CREATE with this connection as seed
+   - **Exists** → read frontmatter, increment `sources:` count, update `last_updated:`, APPEND new dated section
+   - **Does not exist** → CREATE from `_system/templates/wiki-page.md`: fill `concept:` from page name, `Summary:` from the source's key_concepts/summary fields, seed with this connection as first dated section
 c. Never re-evaluate old connections
+d. After each page touched, append ONE line to `Knowledge/wiki/log.md`:
+   - New page: `## [DATE] created | [page.md] — seeded from [source slug]`
+   - Existing page: `## [DATE] ingest | [source slug] → [page.md]`
 
 ### Step 5.0: Pillar auto-tagging
 For each loop created or updated tonight where `pillar` is null:
@@ -541,6 +544,11 @@ For each 1on1 summary and meeting summary processed tonight:
 - If 2+ sources or summaries processed this week share a key concept → flag in HEARTBEAT.md
 - If 3+ people mentioned a theme in 1on1s this week → flag for next daily briefing
 - Log flags in `HEARTBEAT.md` under "Open Questions"
+- **Also file to wiki:** For each flagged pattern:
+  a. Identify the closest wiki page (read `Knowledge/wiki/_index.md` — match concept column)
+  b. If a matching page exists: APPEND dated section with the pattern summary
+  c. If no page exists: CREATE from `_system/templates/wiki-page.md` using the pattern as the seed
+  d. Append to `Knowledge/wiki/log.md`: `## [DATE] pattern | [page.md] — [one-line pattern description]`
 
 ### Step 7: Last contact update
 For each 1on1 session processed tonight:
@@ -576,6 +584,8 @@ After 10+ sessions with any single person:
 After 5+ sources on any single wiki concept:
 - Append "Synthesis as of [date]" section to that wiki page
 - Do NOT delete prior connection entries
+- Append to `Knowledge/wiki/log.md`:
+  `## [DATE] synthesis | [page.md] — synthesized from [N] sources`
 
 ### Step 10: Preference tuning check
 - Read preference_tuning from synthesis-log.json
@@ -588,6 +598,13 @@ After 5+ sources on any single wiki concept:
 - Any patterns flagged (from Step 6)
 - If today is the first of the month and `BACKLOG.md` has open items: append a flag to HEARTBEAT.md Open Questions: "Backlog review due — N items open in BACKLOG.md"
 
+### Step 11.5: Monthly wiki lint (1st of each month only)
+- Check if today's date is the 1st of the month
+- If yes: follow `_system/workflows/wiki-lint.md`
+- Output goes to `Knowledge/wiki/_lint-report.md`
+- Append to HEARTBEAT.md Open Questions: "Wiki lint report ready — Knowledge/wiki/_lint-report.md"
+- (Daily briefing Step 6 "Fresh from last night" will surface this automatically via HEARTBEAT.md)
+
 ### What counts as "changed"
 File hash (MD5) differs from what's stored in synthesis-log.json.
 ```
@@ -597,7 +614,7 @@ File hash (MD5) differs from what's stored in synthesis-log.json.
 ````markdown
 # Career Evidence Workflow
 
-## Model: `claude-sonnet-4-6`
+## Model: Sonnet
 Synthesis and narrative framing of accumulated evidence require reasoning.
 
 ## Trigger: `/personal-os-career-evidence [last 90d | last 6mo | all]`
@@ -645,7 +662,7 @@ Default: last 90 days
 ```markdown
 # Week-Ahead Workflow
 
-## Model: `claude-sonnet-4-6`
+## Model: Sonnet
 ## Trigger: `/personal-os-week-ahead`
 ## Best run: Sunday evening or Monday morning
 
@@ -711,4 +728,101 @@ Save output to `_system/briefings/week-ahead-YYYY-MM-DD.md` (YYYY-MM-DD = Sunday
 ## Telegram delivery (optional)
 After saving, ask: "Should I send this to Telegram?"
 If yes, post the brief to the configured Telegram chat.
+```
+
+### `_system/workflows/wiki-lint.md`
+
+````markdown
+# Wiki Lint Workflow
+
+## Model: Sonnet
+## Trigger: Nightly synthesis Step 11.5 (1st of each month)
+
+## Steps
+
+1. Read `Knowledge/wiki/_index.md` — load all page slugs, concept tags, source counts, last-updated dates
+2. Read `Knowledge/wiki/log.md` — understand what changed recently
+3. For each wiki page, scan for outbound `[[wiki-links]]` — build a reverse index of inbound links
+
+4. Check for:
+   a. **Orphan pages** — no inbound links from any other wiki page
+   b. **Stale pages** — `last_updated` > 60 days AND no sources with `status: pending` in `Inbox/_index.md`
+   c. **Concept gaps** — terms appearing 3+ times across `Knowledge/sources/` metadata `key_concepts` fields but with no wiki page
+   d. **Unlinked entities** — a person mentioned in 3+ 1on1 summaries (scan `1on1s/*/sessions/_index.md` Key topic column) but no wiki page exists under their name
+   e. **Possible contradictions** — two pages referencing the same entity with claims that look inconsistent by date (flag for human review — never auto-resolve)
+
+5. Write `Knowledge/wiki/_lint-report.md`:
+
+   ```
+   # Wiki Health Report — [DATE]
+
+   ## Orphan pages
+   - [page.md] — last updated [DATE], [N] sources
+
+   ## Stale pages
+   - [page.md] — last updated [DATE], [N] sources
+
+   ## Concept gaps
+   - "[term]" — appears in [N] sources, no wiki page
+
+   ## Unlinked entities
+   - "[Name]" — mentioned in [N] 1on1 summaries, no wiki page
+
+   ## Possible contradictions
+   - [page-a.md] vs [page-b.md] — [one-line description of inconsistency]
+
+   ## Summary
+   [N] orphans, [N] stale, [N] gaps, [N] unlinked entities, [N] possible contradictions
+   ```
+
+6. Append to `Knowledge/wiki/log.md`:
+   `## [DATE] lint | [N] orphans, [N] stale, [N] gaps — Knowledge/wiki/_lint-report.md`
+````
+
+### `_system/workflows/wiki-remember.md`
+
+```markdown
+# Wiki Remember Workflow
+
+## Model: Sonnet
+## Trigger: `/personal-os-remember`
+
+## Purpose
+File insights from the current session into the wiki before the conversation ends.
+This is the only step in the compounding knowledge pipeline that requires human judgment.
+The system does not write anything without explicit user confirmation.
+
+## Steps
+
+1. **Review session context**
+   Reflect on what just happened in this conversation. Look for insights worth persisting:
+   - Synthesis or patterns discovered (cross-transcript, cross-person, cross-time)
+   - Connections between concepts, people, or projects not captured anywhere else
+   - Open questions surfaced that belong in a wiki page's "Open questions" section
+   - Strategic framing or reasoning that should be traceable later
+   
+   **Exclude:** action items (those go to open-loops.json), routine task outputs (already in summaries), things already in a session summary file, ephemeral context that won't matter next month.
+
+2. **Propose 1–3 items to file**
+   For each item:
+   ```
+   [N]. File to: Knowledge/wiki/[page.md]  (will create if it doesn't exist)
+        Content: [one paragraph — the insight, in plain language, past tense]
+        Type: synthesis | pattern | connection | open-question
+   ```
+   If nothing from this session meets the bar, say: "Nothing from this session meets the bar for wiki filing." Do not manufacture insights.
+
+3. **Wait for user confirmation**
+   User may: approve all, approve some, edit content, redirect to a different page, or decline entirely.
+   Do NOT write anything until the user explicitly approves.
+
+4. **Write each approved item**
+   a. If page exists: append dated section, update `last_updated:` in frontmatter, increment `sources:` count by 1
+   b. If page doesn't exist: create from `_system/templates/wiki-page.md`, use the insight as `Summary:` and as the first dated section below the divider
+   c. Update `Knowledge/wiki/_index.md`: add row if new page (`| [page.md] | [concepts] | 1 | [DATE] |`), update Last updated column if existing page
+   d. Append to `Knowledge/wiki/log.md`:
+      `## [DATE] remember | [page.md] — [one-line description of what was filed]`
+
+5. **Confirm**
+   Report: "Filed [N] insight(s) to: [page1.md, page2.md]. Logged in wiki/log.md."
 ```
