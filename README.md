@@ -4,14 +4,17 @@ A bootstrap meta-prompt that turns Claude Code + Obsidian into a second brain.
 
 **Remember everything. Miss nothing. Become a superhuman version of yourself.**
 
-**What it is** — A self-updating knowledge system built for leaders who are time-poor and information-dense. It ingests your meetings, relationships, decisions, and open loops — and keeps them organized, connected, and surfaced when they matter.
+**What it is**
 
-**Getting set up** — Dead simple. One script, one file, about 20 minutes. [→ Quickstart](#quickstart)
+Personal OS is built for leaders who are time-poor and information-dense. It ingests your meetings, relationships, decisions, and open loops, keeps them organized, and surfaces them when they matter.
 
-**Using it** — Three things the system does for you:
-- **Inbox** — Drop meetings, recordings, links, documents, and notes into `Inbox/`. The system processes, classifies, and files everything automatically. No sorting required.
-- **Query your brain** — Ask questions, surface open loops, prep for 1-on-1s, and pull context on demand with built-in slash commands.
-- **Proactive tracking** — The system keeps itself up-to-date, learns what matters most, and proactively flags what needs your attention — relationship drift, stale commitments, and patterns across your work.
+**Getting set up**
+
+Dead simple. One script, one file, about 20 minutes. [→ Quickstart](#quickstart)
+
+**Using it**
+
+Drop meetings, recordings, links, documents, and notes into `Inbox/` and the system processes everything automatically. Use the built-in slash commands to ask questions, surface open loops, and prep for 1-on-1s. And it stays current on its own — learning what matters, flagging relationship drift, stale commitments, and patterns across your work... automatically.
 
 ---
 
