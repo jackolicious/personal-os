@@ -14,7 +14,9 @@ Dead simple. One script, one file, about 20 minutes. [→ Quickstart](#quickstar
 
 **Using it**
 
-Drop meetings, recordings, links, documents, and notes into `Inbox/` and the system processes everything automatically. Use the built-in slash commands to ask questions, surface open loops, and prep for 1-on-1s. And it stays current on its own — learning what matters, flagging relationship drift, stale commitments, and patterns across your work... automatically.
+- Drop meetings, recordings, links, documents, and notes into `Inbox/` and the system processes everything automatically.
+- Ask questions, surface open loops, and prep for 1-on-1s using the built-in slash commands.
+- It keeps itself current, learns what matters, and proactively flags relationship drift, stale commitments, and patterns across your work.
 
 ---
 
