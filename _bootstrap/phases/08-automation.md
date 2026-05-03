@@ -41,7 +41,7 @@ while true; do
 
     # Pass 1 (Haiku): identify unprocessed files → write queue
     echo "$(date): Pass 1 — building work queue..." | tee -a "$LOG"
-    claude --model claude-haiku-4-5-20251001 --print \
+    claude --model claude-haiku-4-5 --print \
       "Read _system/data/synthesis-log.json and Inbox/_index.md.
 Output one file path per line for each file where Status=pending and not already in synthesis-log. No other text." \
       > "$QUEUE" 2>> "$LOG"
@@ -51,7 +51,7 @@ Output one file path per line for each file where Status=pending and not already
     while IFS= read -r FILE; do
       [ -z "$FILE" ] && continue
       echo "$(date): Processing $FILE" | tee -a "$LOG"
-      claude --model claude-haiku-4-5-20251001 --print \
+      claude --model claude-haiku-4-5 --print \
         "Classify this file using these rules:
 - link: file consists primarily of URLs (http:// or https://), with optional surrounding notes
 - transcript: file has speaker labels, timestamps, or meeting header metadata

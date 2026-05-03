@@ -60,7 +60,7 @@ _Depends on: Phase 1 (directories must exist)_
 ## Model routing
 | Task | Model |
 |------|-------|
-| Extract / annotate / triage | `claude-haiku-4-5-20251001` — one subprocess per file |
+| Extract / annotate / triage | `claude-haiku-4-5` — one subprocess per file |
 | Synthesize / reason / draft | `claude-sonnet-4-6` — reads structured outputs only |
 
 ## Rules
