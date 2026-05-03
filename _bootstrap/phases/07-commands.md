@@ -163,3 +163,12 @@ Run the week-ahead planning review.
 
 Follow `_system/workflows/week-ahead.md` exactly.
 ```
+
+### `.claude/commands/personal-os-remember.md`
+
+```markdown
+File insights from this session into the wiki.
+
+Follow `_system/workflows/wiki-remember.md` exactly.
+If nothing from this session meets the bar for wiki filing, say so directly — do not force it.
+```
