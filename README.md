@@ -1,73 +1,93 @@
 # Personal OS
 
-**An AI-powered Chief of Staff for your Obsidian vault.**
+A bootstrap meta-prompt that turns Claude Code + Obsidian into a second brain.
 
-Personal OS is a bootstrap meta prompt that turns Claude Code + Obsidian into a second brain built for leaders who are information-dense and time-poor. Run one setup script, paste one file, and you have a system that processes your meetings, tracks every open loop, monitors your relationships, and briefs you every morning — automatically.
+**Remember everything. Miss nothing. Become a superhuman version of yourself.**
+
+**What it is**
+
+Personal OS is built for leaders who are time-poor and information-dense. It ingests your meetings, relationships, decisions, and open loops, keeps them organized, and surfaces them when they matter.
+
+**Getting set up**
+
+Dead simple. One script, one file, about 20 minutes. [→ Quickstart](#quickstart)
+
+**Using it**
+
+- Drop meetings, recordings, links, documents, and notes into `Inbox/` and the system processes everything automatically.
+- Ask questions, surface open loops, and prep for 1-on-1s using the built-in slash commands.
+- It keeps itself current, learns what matters, and proactively flags relationship drift, stale commitments, and patterns across your work.
 
 ---
 
 ## What it does
 
-| Workflow | Trigger | Output |
-|----------|---------|--------|
-| **Daily briefing** | Auto at 5am | Prioritized morning brief: open loops, meetings, relationship health, patterns |
-| **1on1 tracking** | `/1on1-prep [name]` | Pre-read: last 2 sessions + open loops + themes for that person |
-| **Meeting processing** | `/process-inbox` | Extracts commitments from transcripts → open loops JSON |
-| **Cascade** | `/cascade` | Weekly stakeholder updates drafted for down / lateral / up audiences |
-| **Nightly synthesis** | Auto at 2am | Incremental: wiki connections, pattern detection, preference tuning |
-| **Open loops** | `/open-loops` | Filterable view by person, project, priority, or staleness |
-| **Relationship health** | Part of daily briefing | Flags direct reports (>14d) and stakeholders (>21d) with no contact |
+### Runs automatically
+
+| When | What happens |
+|------|-------------|
+| 2am nightly | New notes and transcripts processed into summaries, commitments extracted to open loops, wiki connections made, patterns flagged, indexes refreshed |
+| 5am daily | Morning brief generated: open loops, today's meetings, recent decisions, relationship health, coaching insight |
+| Sunday 8pm | Week-ahead brief generated: 7-day calendar scan, meetings needing prep flagged, focus blocks suggested for deep-work loops |
+
+### On demand
+
+| Command | What it does |
+|---------|-------------|
+| `/personal-os-remember` | Tell the system something important — a decision, a commitment, a relationship note — and it files it correctly |
+| `/personal-os-week-ahead` | Run the week-ahead review any time, not just Sunday |
+| `/personal-os-open-loops [filter]` | Review commitments filtered by person, project, priority, or staleness |
+| `/personal-os-1on1-prep [name]` | Pre-read with open loops, last sessions, and a probing question you haven't asked yet |
+| `/personal-os-cascade` | Draft weekly updates for direct reports, cross-functional partners, and the C-suite |
+| `/personal-os-career-evidence` | Review captured accomplishments, star entries, generate a brag doc |
 
 ---
 
 ## Design principles
 
 - **Sources are sacred.** Raw transcripts and PDFs are never modified after ingestion.
-- **Synthesis is append-only.** The wiki grows forward; history is never rewritten.
-- **Index-first.** Every directory has a `_index.md`. Workflows read the index, then only the specific files they need — no full directory scans.
-- **Incremental by default.** Nightly synthesis only processes the delta — never reruns everything.
 - **Context-efficient.** Each tier is loaded at the right abstraction level. A daily briefing costs ~3k tokens in context, not 50k.
-
-### Why three-tier immutability
-
-Raw meeting transcripts run 5,000–15,000 tokens each. The three tiers solve context cost while preserving auditability:
-
-| Tier | Examples | Token cost | Rule |
-|------|----------|------------|------|
-| Sources | Transcripts, PDFs, raw URLs | 5k–15k each | Immutable after ingestion |
-| Summaries | Session summaries, source annotations | 300–800 each | Write-once, regeneratable |
-| Synthesis | Wiki, profiles, open-loops.json | 100–400 per entry | Append-only, never rewritten |
-
-Workflows load summaries and synthesis — not sources. If synthesis logic improves, any summary can be regenerated from its immutable source.
 
 ---
 
-## Prerequisites
+## Automation
 
-- [Claude Code](https://claude.ai/code) (CLI)
-- [Obsidian](https://obsidian.md) (optional for Day 1, required for mobile sync)
-- Python + `pip install markitdown` (for PDF ingestion)
-- An always-on Mac (for nightly automation)
-- One AI note-taking tool (see below)
+Three jobs run unattended on an always-on Mac:
 
-### Supported transcript tools
+| Time | Job | What it does |
+|------|-----|--------------|
+| 2:00 AM | Nightly synthesis | Processes new transcripts/PDFs, updates wiki, flags patterns, refreshes all `_index.md` files |
+| 5:00 AM | Daily briefing | Generates `_system/briefings/YYYY-MM-DD.md` from current state |
+| Sunday 8:00 PM | Week-ahead | Generates `_system/briefings/week-ahead-YYYY-MM-DD.md` with calendar scan and focus block suggestions |
 
-| Tool | Setup |
-|------|-------|
-| [Granola](https://granola.ai) | Configure export folder to `Inbox/transcripts/` |
-| [Fireflies.ai](https://fireflies.ai) | Webhook or Zapier → save to `Inbox/transcripts/` |
-| [Zoom AI Companion](https://zoom.us) | Zoom MCP or manual export from zoom.us/recording |
-| [Otter.ai](https://otter.ai) | Download transcript as .txt → `Inbox/transcripts/` |
-| [Fathom](https://fathom.video) | Auto-email summary → script to `Inbox/transcripts/` |
+All three run inside a single `run-nightly.sh` loop. `setup.sh` also installs a launchd plist as a fallback if the terminal session is closed.
 
-`setup.sh` will prompt you to choose and configure your tool.
+**Required Mac setting:** System Settings → Battery → Options → "Prevent automatic sleeping when on power adapter"
+
+---
+
+## People tracking
+
+Every stakeholder has a `Last contact` field updated automatically when a session note is processed. The daily briefing flags anyone overdue:
+
+- Direct reports: more than 14 days without contact
+- Stakeholders: more than 21 days without contact
+
+Output: `"Haven't connected with [Name] in X days — open loops: N"`
+
+
+---
+
+## Mobile
+
+Obsidian Sync for cross-device access. Set it up when ready. The vault works fine without it on Day 1. For quick capture and briefing delivery to your phone, configure Telegram (`/telegram:configure` in Claude Code).
 
 ---
 
 ## Quickstart
 
 ```bash
-# Clone and run setup — works on macOS
+# Clone and run setup (macOS)
 git clone https://github.com/jackolicious/personal-os.git
 cd personal-os
 bash setup.sh
@@ -84,11 +104,41 @@ claude
 # Follow phases 1–11 (~20 minutes)
 ```
 
-**Before your first real session** (Phase 10 checklist):
+**Before your first real session:**
 - Fill in your name, company, start date
 - Add your team roster to `People/team.md`
 - Set your 30/60/90 goals in `GOALS.md`
-- Create your first 1on1 folders with `/new-1on1 [name]`
+- Define your strategic pillars in `PILLARS.md`
+- Create your first 1on1 folders with `/personal-os-new-1on1 [name]`
+
+**Day 1 — seed your system:**
+Drop any existing notes, transcripts, or PDFs into `Inbox/`. The next nightly run (2am) processes everything automatically — no pre-sorting required.
+
+**Importing an existing vault?**
+Drop its contents directly into `Inbox/`. The router classifies and files everything. Check `Inbox/_unrouted.md` the next morning for anything it couldn't place.
+
+---
+
+## Prerequisites
+
+- [Claude Code](https://claude.ai/code) (CLI)
+- [Obsidian](https://obsidian.md) (optional for Day 1, required for mobile sync)
+- Python + `pip install markitdown` (for PDF ingestion)
+- An always-on Mac (for nightly automation)
+- One AI note-taking tool (see below)
+
+### What Inbox accepts
+
+Drop any of these directly into `Inbox/` — no subfolders needed:
+
+| Type | Examples |
+|------|----------|
+| Transcripts | Granola exports, Fireflies summaries, Zoom/Otter/Fathom .txt or .md files |
+| PDFs | Documents, articles, reports |
+| Markdown notes | Reference material, articles you've copied, scratch notes |
+| Link files | A `.md` file with one or more URLs — the nightly job fetches and annotates each one |
+
+The nightly router reads each file once, classifies it, and applies the right workflow. Anything it can't classify lands in `Inbox/_unrouted.md` and is surfaced in your morning briefing.
 
 ---
 
@@ -96,10 +146,15 @@ claude
 
 ```
 vault/
-├── CLAUDE.md              ← Root context (≤70 lines) — always loaded
+├── CLAUDE.md              ← Root context (70 lines max, always loaded)
 ├── GOALS.md               ← 30/60/90 objectives
 ├── HEARTBEAT.md           ← Current focus, upcoming meetings, synthesis state
-├── Inbox/                 ← Drop zone: transcripts, PDFs, URLs
+├── PILLARS.md             ← Ongoing strategic focus areas with keywords
+├── BACKLOG.md             ← Ideas and feature requests, reviewed monthly
+├── Inbox/                 ← Drop zone: transcripts, PDFs, markdown notes, link files
+│   ├── _index.md          ← Nightly-maintained queue: file, type, status, date added
+│   ├── _unrouted.md       ← Files the router couldn't classify (surfaced in daily briefing)
+│   └── _archive/          ← Processed originals (system-managed)
 ├── 1on1s/
 │   ├── _index.md          ← All people: last session, session count, last contact
 │   └── [Name]/
@@ -114,50 +169,56 @@ vault/
 │   ├── sources/           ← Immutable annotated sources
 │   └── wiki/
 │       └── _index.md      ← Wiki pages: concepts, sources, last updated
-├── Data/
-│   ├── open-loops.json    ← Structured commitments with priority + due dates
-│   ├── decisions.json     ← Decision log
-│   └── synthesis-log.json ← Incremental processing ledger (hash-based)
-├── Workflows/             ← Playbooks for each workflow
-├── Briefings/             ← Auto-generated daily briefings
-├── Templates/             ← Scaffolds for sessions, summaries, person folders
+├── Interviews/
+│   ├── _index.md          ← Active roles: company, stage, status
+│   └── [Role]/
+│       ├── role-context.md
+│       ├── question-bank.md
+│       └── notes/
+├── _system/               ← System-managed (do not edit directly)
+│   ├── data/
+│   │   ├── open-loops.json      ← Commitments with priority, pillar, and due dates
+│   │   ├── decisions.json       ← Decision log with review dates
+│   │   ├── career-evidence.json ← Captured feedback, outcomes, growth moments
+│   │   └── synthesis-log.json   ← Incremental processing ledger (hash-based)
+│   ├── workflows/          ← Playbooks for each workflow
+│   ├── briefings/          ← Auto-generated daily and week-ahead briefings
+│   ├── templates/          ← Scaffolds for sessions, summaries, person folders
+│   └── logs/               ← Automation logs
 ├── profile/
-│   └── preferences.md     ← Adaptive briefing preferences (auto-tuned weekly)
-├── run-nightly.sh         ← Persistent loop: 2am synthesis + 5am briefing
-└── .claude/commands/      ← Slash commands: /daily-briefing, /cascade, etc.
+│   ├── preferences/        ← Modular preference files, auto-tuned over time
+│   └── career/             ← Brag docs saved here
+├── run-nightly.sh         ← Persistent loop: 2am synthesis, 5am briefing, Sunday 8pm week-ahead
+└── .claude/commands/      ← Slash commands: /personal-os-daily-briefing, /personal-os-cascade, etc.
 ```
 
 ---
 
-## Automation
+## Transcript tool setup
 
-Two jobs run unattended on an always-on Mac:
+| Tool | Setup |
+|------|-------|
+| [Granola](https://granola.ai) | Configure export folder to `Inbox/` |
+| [Fireflies.ai](https://fireflies.ai) | Webhook or Zapier → save to `Inbox/` |
+| [Zoom AI Companion](https://zoom.us) | Zoom MCP or manual export from zoom.us/recording → `Inbox/` |
+| [Otter.ai](https://otter.ai) | Download transcript as .txt → `Inbox/` |
+| [Fathom](https://fathom.video) | Auto-email summary → script to `Inbox/` |
 
-| Time | Job | What it does |
-|------|-----|--------------|
-| 2:00 AM | Nightly synthesis | Processes new transcripts/PDFs, updates wiki, flags patterns, refreshes all `_index.md` files |
-| 5:00 AM | Daily briefing | Generates `Briefings/YYYY-MM-DD.md` from current state |
-
-Both run inside a single `run-nightly.sh` loop. `setup.sh` also installs a launchd plist as a fallback if the terminal session is closed.
-
-**Required Mac setting:** System Settings → Battery → Options → "Prevent automatic sleeping when on power adapter"
-
----
-
-## People tracking
-
-Every stakeholder has a `Last contact` field updated automatically when a session note is processed. The daily briefing flags anyone overdue:
-
-- Direct reports: >14 days without contact
-- Stakeholders: >21 days without contact
-
-Output: `"Haven't connected with [Name] in X days — open loops: N"`
+`setup.sh` will prompt you to choose and configure your tool.
 
 ---
 
-## Mobile
+## Why three-tier immutability
 
-Obsidian Sync for cross-device access. Set it up when ready — the vault works fine without it on Day 1. For quick capture and briefing delivery to your phone, configure Telegram (`/telegram:configure` in Claude Code).
+Raw meeting transcripts run 5,000–15,000 tokens each. The three tiers solve context cost while preserving auditability:
+
+| Tier | Examples | Token cost | Rule |
+|------|----------|------------|------|
+| Sources | Transcripts, PDFs, raw URLs | 5k–15k each | Immutable after ingestion |
+| Summaries | Session summaries, source annotations | 300–800 each | Write-once, regeneratable |
+| Synthesis | Wiki, profiles, open-loops.json | 100–400 per entry | Append-only, never rewritten |
+
+Workflows load summaries and synthesis, not sources. If synthesis logic improves, any summary can be regenerated from its immutable source.
 
 ---
 
@@ -171,4 +232,4 @@ This is a meta prompt, not a deployable app. The most valuable contributions are
 
 ## License
 
-MIT — see [LICENSE](LICENSE).
+MIT. See [LICENSE](LICENSE).

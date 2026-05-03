@@ -59,7 +59,7 @@ if [ -d "$VAULT_PATH" ] && [ "$(ls -A "$VAULT_PATH" 2>/dev/null)" ]; then
 fi
 
 mkdir -p "$VAULT_PATH"
-mkdir -p "$VAULT_PATH/logs"
+mkdir -p "$VAULT_PATH/_system/logs"
 ok "Vault directory created at $VAULT_PATH"
 
 # ── Copy bootstrap and config ─────────────────────────────────────────────────
@@ -101,26 +101,26 @@ case "$TRANSCRIPT_TOOL" in
     GRANOLA_PATH="${GRANOLA_PATH:-$HOME/Library/Application Support/Granola/transcripts}"
     GRANOLA_PATH="${GRANOLA_PATH/#\~/$HOME}"
     if [ -d "$GRANOLA_PATH" ]; then
-      # Create a symlink so Granola exports land directly in Inbox/transcripts/
-      mkdir -p "$VAULT_PATH/Inbox/transcripts"
+      # Create a symlink so Granola exports land directly in Inbox/
+      mkdir -p "$VAULT_PATH/Inbox"
       ok "Granola path confirmed: $GRANOLA_PATH"
       echo ""
-      echo -e "${YELLOW}Note:${NC} Configure Granola to export to: $VAULT_PATH/Inbox/transcripts/"
-      echo "      Or symlink: ln -s \"$GRANOLA_PATH\" \"$VAULT_PATH/Inbox/transcripts\""
+      echo -e "${YELLOW}Note:${NC} Configure Granola to export to: $VAULT_PATH/Inbox/"
+      echo "      Or symlink: ln -s \"$GRANOLA_PATH\" \"$VAULT_PATH/Inbox\""
     else
       warn "Path not found — you can configure this after Granola is installed"
     fi
     ;;
   2)
-    ok "Fireflies selected — configure webhook or auto-download to $VAULT_PATH/Inbox/transcripts/"
+    ok "Fireflies selected — configure webhook or auto-download to $VAULT_PATH/Inbox/"
     echo "      Fireflies webhook docs: app.fireflies.ai/integrations"
     ;;
   3)
-    ok "Zoom AI Companion selected — configure MCP or export manually to $VAULT_PATH/Inbox/transcripts/"
+    ok "Zoom AI Companion selected — configure MCP or export manually to $VAULT_PATH/Inbox/"
     echo "      Zoom MCP setup instructions will be in your bootstrap prompt"
     ;;
   4)
-    ok "Otter.ai selected — download transcripts to $VAULT_PATH/Inbox/transcripts/"
+    ok "Otter.ai selected — download transcripts to $VAULT_PATH/Inbox/"
     ;;
   *)
     warn "You can configure transcript ingestion later in Inbox/CLAUDE.md"
@@ -137,7 +137,7 @@ if [[ ! "$AUTO_BRIEF" =~ ^[Nn]$ ]]; then
   PLIST_LABEL="com.personalos.morning"
   PLIST_PATH="$HOME/Library/LaunchAgents/${PLIST_LABEL}.plist"
   CLAUDE_BIN="$(command -v claude)"
-  BRIEFINGS_DIR="$VAULT_PATH/Briefings"
+  BRIEFINGS_DIR="$VAULT_PATH/_system/briefings"
   mkdir -p "$BRIEFINGS_DIR"
 
   cat > "$PLIST_PATH" << PLIST
@@ -152,7 +152,7 @@ if [[ ! "$AUTO_BRIEF" =~ ^[Nn]$ ]]; then
     <string>/bin/bash</string>
     <string>-l</string>
     <string>-c</string>
-    <string>cd "$VAULT_PATH" &amp;&amp; "$CLAUDE_BIN" --print "\$(cat .claude/commands/daily-briefing.md)" &gt; "$BRIEFINGS_DIR/\$(date +%Y-%m-%d).md" 2&gt;&amp;1</string>
+    <string>cd "$VAULT_PATH" &amp;&amp; "$CLAUDE_BIN" --model claude-sonnet-4-6 --print "\$(cat .claude/commands/personal-os-daily-briefing.md)" &gt; "$BRIEFINGS_DIR/\$(date +%Y-%m-%d).md" 2&gt;&amp;1</string>
   </array>
   <key>StartCalendarInterval</key>
   <dict>
@@ -162,9 +162,9 @@ if [[ ! "$AUTO_BRIEF" =~ ^[Nn]$ ]]; then
     <integer>0</integer>
   </dict>
   <key>StandardOutPath</key>
-  <string>$VAULT_PATH/logs/morning.log</string>
+  <string>$VAULT_PATH/_system/logs/morning.log</string>
   <key>StandardErrorPath</key>
-  <string>$VAULT_PATH/logs/morning-error.log</string>
+  <string>$VAULT_PATH/_system/logs/morning-error.log</string>
   <key>EnvironmentVariables</key>
   <dict>
     <key>PATH</key>

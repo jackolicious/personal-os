@@ -4,9 +4,14 @@
 !personal-os-bootstrap.md
 !README.md
 !CONTRIBUTING.md
+!_bootstrap/*.md
+!_bootstrap/phases/*.md
+!docs/**/*.md
+docs/superpowers/
 
 # Claude Code local settings (personal overrides)
 .claude/settings.local.json
+.claude/settings.json
 
 # Vault directories (personal content)
 Inbox/
@@ -22,7 +27,10 @@ Weekly/
 
 # Processed/synthesized content
 Synthesis/
-Briefings/
+_system/
+
+# Git worktrees
+.worktrees/
 
 # macOS
 .DS_Store
