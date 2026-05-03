@@ -4,7 +4,7 @@
 
 Personal OS is a bootstrap meta prompt that turns Claude Code + Obsidian into a second brain built for leaders who are time-poor and information-dense. 
 
-Run one setup script, paste one file, and you have a system that processes your meetings, tracks every open loop, monitors your professional relationships, and briefs you every morning... automatically.
+Run one setup script, paste one file, and you have a system that processes your notes, meeting transcripts, tracks every open loop, monitors your professional relationships, and briefs you every morning... automatically.
 
 ---
 
