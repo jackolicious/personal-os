@@ -2,7 +2,9 @@
 
 **An AI-powered Chief of Staff for your Obsidian vault.**
 
-Personal OS is a bootstrap meta prompt that turns Claude Code + Obsidian into a second brain built for leaders who are information-dense and time-poor. Run one setup script, paste one file, and you have a system that processes your meetings, tracks every open loop, monitors your relationships, and briefs you every morning. Automatically.
+Personal OS is a bootstrap meta prompt that turns Claude Code + Obsidian into a second brain built for leaders who are time-poor and information-dense. 
+
+Run one setup script, paste one file, and you have a system that processes your meetings, tracks every open loop, monitors your professional relationships, and briefs you every morning... automatically.
 
 ---
 
@@ -12,7 +14,7 @@ Personal OS is a bootstrap meta prompt that turns Claude Code + Obsidian into a 
 
 | When | What happens |
 |------|-------------|
-| 2am nightly | New transcripts processed into summaries, commitments extracted to open loops, wiki connections made, patterns flagged, indexes refreshed |
+| 2am nightly | New notes and transcripts processed into summaries, commitments extracted to open loops, wiki connections made, patterns flagged, indexes refreshed |
 | 5am daily | Morning brief generated: open loops, today's meetings, recent decisions, relationship health, coaching insight |
 | Sunday 8pm | Week-ahead brief generated: 7-day calendar scan, meetings needing prep flagged, focus blocks suggested for deep-work loops |
 
@@ -20,11 +22,11 @@ Personal OS is a bootstrap meta prompt that turns Claude Code + Obsidian into a 
 
 | Command | What it does |
 |---------|-------------|
+| `/personal-os-week-ahead` | Run the week-ahead review any time, not just Sunday |
+| `/personal-os-open-loops [filter]` | Review commitments filtered by person, project, priority, or staleness |
 | `/personal-os-1on1-prep [name]` | Pre-read with open loops, last sessions, and a probing question you haven't asked yet |
 | `/personal-os-cascade` | Draft weekly updates for direct reports, cross-functional partners, and the C-suite |
-| `/personal-os-open-loops [filter]` | Review commitments filtered by person, project, priority, or staleness |
 | `/personal-os-career-evidence` | Review captured accomplishments, star entries, generate a brag doc |
-| `/personal-os-week-ahead` | Run the week-ahead review any time, not just Sunday |
 
 ---
 
@@ -60,57 +62,6 @@ Every stakeholder has a `Last contact` field updated automatically when a sessio
 
 Output: `"Haven't connected with [Name] in X days — open loops: N"`
 
----
-
-## Architecture
-
-```
-vault/
-├── CLAUDE.md              ← Root context (70 lines max, always loaded)
-├── GOALS.md               ← 30/60/90 objectives
-├── HEARTBEAT.md           ← Current focus, upcoming meetings, synthesis state
-├── PILLARS.md             ← Ongoing strategic focus areas with keywords
-├── BACKLOG.md             ← Ideas and feature requests, reviewed monthly
-├── Inbox/                 ← Drop zone: transcripts, PDFs, markdown notes, link files
-│   ├── _index.md          ← Nightly-maintained queue: file, type, status, date added
-│   ├── _unrouted.md       ← Files the router couldn't classify (surfaced in daily briefing)
-│   └── _archive/          ← Processed originals (system-managed)
-├── 1on1s/
-│   ├── _index.md          ← All people: last session, session count, last contact
-│   └── [Name]/
-│       ├── sessions/
-│       │   └── _index.md  ← Session list: date, topic, summary link
-│       └── ...
-├── Meetings/
-│   └── _index.md          ← Meeting list: date, title, participants, action items
-├── Projects/              ← Active initiatives
-├── People/                ← Team roster + stakeholder map (with last_contact)
-├── Knowledge/
-│   ├── sources/           ← Immutable annotated sources
-│   └── wiki/
-│       └── _index.md      ← Wiki pages: concepts, sources, last updated
-├── Interviews/
-│   ├── _index.md          ← Active roles: company, stage, status
-│   └── [Role]/
-│       ├── role-context.md
-│       ├── question-bank.md
-│       └── notes/
-├── _system/               ← System-managed (do not edit directly)
-│   ├── data/
-│   │   ├── open-loops.json      ← Commitments with priority, pillar, and due dates
-│   │   ├── decisions.json       ← Decision log with review dates
-│   │   ├── career-evidence.json ← Captured feedback, outcomes, growth moments
-│   │   └── synthesis-log.json   ← Incremental processing ledger (hash-based)
-│   ├── workflows/          ← Playbooks for each workflow
-│   ├── briefings/          ← Auto-generated daily and week-ahead briefings
-│   ├── templates/          ← Scaffolds for sessions, summaries, person folders
-│   └── logs/               ← Automation logs
-├── profile/
-│   ├── preferences/        ← Modular preference files, auto-tuned over time
-│   └── career/             ← Brag docs saved here
-├── run-nightly.sh         ← Persistent loop: 2am synthesis, 5am briefing, Sunday 8pm week-ahead
-└── .claude/commands/      ← Slash commands: /personal-os-daily-briefing, /personal-os-cascade, etc.
-```
 
 ---
 
@@ -175,6 +126,58 @@ Drop any of these directly into `Inbox/` — no subfolders needed:
 | Link files | A `.md` file with one or more URLs — the nightly job fetches and annotates each one |
 
 The nightly router reads each file once, classifies it, and applies the right workflow. Anything it can't classify lands in `Inbox/_unrouted.md` and is surfaced in your morning briefing.
+
+---
+
+## Architecture
+
+```
+vault/
+├── CLAUDE.md              ← Root context (70 lines max, always loaded)
+├── GOALS.md               ← 30/60/90 objectives
+├── HEARTBEAT.md           ← Current focus, upcoming meetings, synthesis state
+├── PILLARS.md             ← Ongoing strategic focus areas with keywords
+├── BACKLOG.md             ← Ideas and feature requests, reviewed monthly
+├── Inbox/                 ← Drop zone: transcripts, PDFs, markdown notes, link files
+│   ├── _index.md          ← Nightly-maintained queue: file, type, status, date added
+│   ├── _unrouted.md       ← Files the router couldn't classify (surfaced in daily briefing)
+│   └── _archive/          ← Processed originals (system-managed)
+├── 1on1s/
+│   ├── _index.md          ← All people: last session, session count, last contact
+│   └── [Name]/
+│       ├── sessions/
+│       │   └── _index.md  ← Session list: date, topic, summary link
+│       └── ...
+├── Meetings/
+│   └── _index.md          ← Meeting list: date, title, participants, action items
+├── Projects/              ← Active initiatives
+├── People/                ← Team roster + stakeholder map (with last_contact)
+├── Knowledge/
+│   ├── sources/           ← Immutable annotated sources
+│   └── wiki/
+│       └── _index.md      ← Wiki pages: concepts, sources, last updated
+├── Interviews/
+│   ├── _index.md          ← Active roles: company, stage, status
+│   └── [Role]/
+│       ├── role-context.md
+│       ├── question-bank.md
+│       └── notes/
+├── _system/               ← System-managed (do not edit directly)
+│   ├── data/
+│   │   ├── open-loops.json      ← Commitments with priority, pillar, and due dates
+│   │   ├── decisions.json       ← Decision log with review dates
+│   │   ├── career-evidence.json ← Captured feedback, outcomes, growth moments
+│   │   └── synthesis-log.json   ← Incremental processing ledger (hash-based)
+│   ├── workflows/          ← Playbooks for each workflow
+│   ├── briefings/          ← Auto-generated daily and week-ahead briefings
+│   ├── templates/          ← Scaffolds for sessions, summaries, person folders
+│   └── logs/               ← Automation logs
+├── profile/
+│   ├── preferences/        ← Modular preference files, auto-tuned over time
+│   └── career/             ← Brag docs saved here
+├── run-nightly.sh         ← Persistent loop: 2am synthesis, 5am briefing, Sunday 8pm week-ahead
+└── .claude/commands/      ← Slash commands: /personal-os-daily-briefing, /personal-os-cascade, etc.
+```
 
 ---
 
