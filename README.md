@@ -31,92 +31,7 @@ Personal OS is a bootstrap meta prompt that turns Claude Code + Obsidian into a 
 ## Design principles
 
 - **Sources are sacred.** Raw transcripts and PDFs are never modified after ingestion.
-- **Synthesis is append-only.** The wiki grows forward; history is never rewritten.
-- **Index-first.** Every directory has a `_index.md`. Workflows read the index, then only the specific files they need. No full directory scans.
-- **Incremental by default.** Nightly synthesis only processes the delta. It never reruns everything.
 - **Context-efficient.** Each tier is loaded at the right abstraction level. A daily briefing costs ~3k tokens in context, not 50k.
-
-### Why three-tier immutability
-
-Raw meeting transcripts run 5,000–15,000 tokens each. The three tiers solve context cost while preserving auditability:
-
-| Tier | Examples | Token cost | Rule |
-|------|----------|------------|------|
-| Sources | Transcripts, PDFs, raw URLs | 5k–15k each | Immutable after ingestion |
-| Summaries | Session summaries, source annotations | 300–800 each | Write-once, regeneratable |
-| Synthesis | Wiki, profiles, open-loops.json | 100–400 per entry | Append-only, never rewritten |
-
-Workflows load summaries and synthesis, not sources. If synthesis logic improves, any summary can be regenerated from its immutable source.
-
----
-
-## Prerequisites
-
-- [Claude Code](https://claude.ai/code) (CLI)
-- [Obsidian](https://obsidian.md) (optional for Day 1, required for mobile sync)
-- Python + `pip install markitdown` (for PDF ingestion)
-- An always-on Mac (for nightly automation)
-- One AI note-taking tool (see below)
-
-### What Inbox accepts
-
-Drop any of these directly into `Inbox/` — no subfolders needed:
-
-| Type | Examples |
-|------|----------|
-| Transcripts | Granola exports, Fireflies summaries, Zoom/Otter/Fathom .txt or .md files |
-| PDFs | Documents, articles, reports |
-| Markdown notes | Reference material, articles you've copied, scratch notes |
-| Link files | A `.md` file with one or more URLs — the nightly job fetches and annotates each one |
-
-The nightly router reads each file once, classifies it, and applies the right workflow. Anything it can't classify lands in `Inbox/_unrouted.md` and is surfaced in your morning briefing.
-
-### Transcript tool setup
-
-| Tool | Setup |
-|------|-------|
-| [Granola](https://granola.ai) | Configure export folder to `Inbox/` |
-| [Fireflies.ai](https://fireflies.ai) | Webhook or Zapier → save to `Inbox/` |
-| [Zoom AI Companion](https://zoom.us) | Zoom MCP or manual export from zoom.us/recording → `Inbox/` |
-| [Otter.ai](https://otter.ai) | Download transcript as .txt → `Inbox/` |
-| [Fathom](https://fathom.video) | Auto-email summary → script to `Inbox/` |
-
-`setup.sh` will prompt you to choose and configure your tool.
-
----
-
-## Quickstart
-
-```bash
-# Clone and run setup (macOS)
-git clone https://github.com/jackolicious/personal-os.git
-cd personal-os
-bash setup.sh
-```
-
-`setup.sh` checks prerequisites, creates your vault at a path you choose, wires up the launchd jobs for 5am briefing and 2am synthesis, and walks you through transcript tool configuration. It takes about 2 minutes.
-
-Then:
-
-```bash
-cd ~/personal-os   # or wherever you chose
-claude
-# Paste the contents of personal-os-bootstrap.md into the prompt
-# Follow phases 1–11 (~20 minutes)
-```
-
-**Before your first real session:**
-- Fill in your name, company, start date
-- Add your team roster to `People/team.md`
-- Set your 30/60/90 goals in `GOALS.md`
-- Define your strategic pillars in `PILLARS.md`
-- Create your first 1on1 folders with `/personal-os-new-1on1 [name]`
-
-**Day 1 — seed your system:**
-Drop any existing notes, transcripts, or PDFs into `Inbox/`. The next nightly run (2am) processes everything automatically — no pre-sorting required.
-
-**Importing an existing vault?**
-Drop its contents directly into `Inbox/`. The router classifies and files everything. Check `Inbox/_unrouted.md` the next morning for anything it couldn't place.
 
 ---
 
@@ -202,6 +117,92 @@ vault/
 ## Mobile
 
 Obsidian Sync for cross-device access. Set it up when ready. The vault works fine without it on Day 1. For quick capture and briefing delivery to your phone, configure Telegram (`/telegram:configure` in Claude Code).
+
+---
+
+## Quickstart
+
+```bash
+# Clone and run setup (macOS)
+git clone https://github.com/jackolicious/personal-os.git
+cd personal-os
+bash setup.sh
+```
+
+`setup.sh` checks prerequisites, creates your vault at a path you choose, wires up the launchd jobs for 5am briefing and 2am synthesis, and walks you through transcript tool configuration. It takes about 2 minutes.
+
+Then:
+
+```bash
+cd ~/personal-os   # or wherever you chose
+claude
+# Paste the contents of personal-os-bootstrap.md into the prompt
+# Follow phases 1–11 (~20 minutes)
+```
+
+**Before your first real session:**
+- Fill in your name, company, start date
+- Add your team roster to `People/team.md`
+- Set your 30/60/90 goals in `GOALS.md`
+- Define your strategic pillars in `PILLARS.md`
+- Create your first 1on1 folders with `/personal-os-new-1on1 [name]`
+
+**Day 1 — seed your system:**
+Drop any existing notes, transcripts, or PDFs into `Inbox/`. The next nightly run (2am) processes everything automatically — no pre-sorting required.
+
+**Importing an existing vault?**
+Drop its contents directly into `Inbox/`. The router classifies and files everything. Check `Inbox/_unrouted.md` the next morning for anything it couldn't place.
+
+---
+
+## Prerequisites
+
+- [Claude Code](https://claude.ai/code) (CLI)
+- [Obsidian](https://obsidian.md) (optional for Day 1, required for mobile sync)
+- Python + `pip install markitdown` (for PDF ingestion)
+- An always-on Mac (for nightly automation)
+- One AI note-taking tool (see below)
+
+### What Inbox accepts
+
+Drop any of these directly into `Inbox/` — no subfolders needed:
+
+| Type | Examples |
+|------|----------|
+| Transcripts | Granola exports, Fireflies summaries, Zoom/Otter/Fathom .txt or .md files |
+| PDFs | Documents, articles, reports |
+| Markdown notes | Reference material, articles you've copied, scratch notes |
+| Link files | A `.md` file with one or more URLs — the nightly job fetches and annotates each one |
+
+The nightly router reads each file once, classifies it, and applies the right workflow. Anything it can't classify lands in `Inbox/_unrouted.md` and is surfaced in your morning briefing.
+
+---
+
+## Transcript tool setup
+
+| Tool | Setup |
+|------|-------|
+| [Granola](https://granola.ai) | Configure export folder to `Inbox/` |
+| [Fireflies.ai](https://fireflies.ai) | Webhook or Zapier → save to `Inbox/` |
+| [Zoom AI Companion](https://zoom.us) | Zoom MCP or manual export from zoom.us/recording → `Inbox/` |
+| [Otter.ai](https://otter.ai) | Download transcript as .txt → `Inbox/` |
+| [Fathom](https://fathom.video) | Auto-email summary → script to `Inbox/` |
+
+`setup.sh` will prompt you to choose and configure your tool.
+
+---
+
+## Why three-tier immutability
+
+Raw meeting transcripts run 5,000–15,000 tokens each. The three tiers solve context cost while preserving auditability:
+
+| Tier | Examples | Token cost | Rule |
+|------|----------|------------|------|
+| Sources | Transcripts, PDFs, raw URLs | 5k–15k each | Immutable after ingestion |
+| Summaries | Session summaries, source annotations | 300–800 each | Write-once, regeneratable |
+| Synthesis | Wiki, profiles, open-loops.json | 100–400 per entry | Append-only, never rewritten |
+
+Workflows load summaries and synthesis, not sources. If synthesis logic improves, any summary can be regenerated from its immutable source.
 
 ---
 
