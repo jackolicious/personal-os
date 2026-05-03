@@ -374,3 +374,30 @@ _Generated: {{DATE}}_
 _To star entries for your portfolio: "star ev-001, ev-002"_
 _To generate a brag doc: "brag doc"_
 ```
+
+### `_system/templates/wiki-page.md`
+
+```markdown
+---
+concept: "{{CONCEPT}}"
+aliases: []
+sources: 0
+last_updated: {{DATE}}
+---
+
+# {{CONCEPT}}
+
+**Summary:** {{ONE_SENTENCE_SUMMARY}}
+
+**Key points:**
+-
+
+**Related:** 
+
+**Open questions:**
+-
+
+---
+<!-- Connections appended below by nightly synthesis and /personal-os-remember -->
+```
+```
