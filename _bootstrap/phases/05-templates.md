@@ -400,4 +400,3 @@ last_updated: {{DATE}}
 ---
 <!-- Connections appended below by nightly synthesis and /personal-os-remember -->
 ```
-```
