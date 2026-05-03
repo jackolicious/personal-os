@@ -1,10 +1,17 @@
 # Personal OS
 
-**An AI-powered Chief of Staff for your Obsidian vault.**
+A bootstrap meta-prompt that turns Claude Code + Obsidian into a second brain.
 
-Personal OS is a bootstrap meta prompt that turns Claude Code + Obsidian into a second brain built for leaders who are time-poor and information-dense. 
+**Remember everything. Miss nothing. Become a superhuman version of yourself.**
 
-Run one setup script, paste one file, and you have a system that processes your notes, meeting transcripts, tracks every open loop, monitors your professional relationships, and briefs you every morning... automatically.
+**What it is** — A self-updating knowledge system built for leaders who are time-poor and information-dense. It ingests your meetings, relationships, decisions, and open loops — and keeps them organized, connected, and surfaced when they matter.
+
+**Getting set up** — Dead simple. One script, one file, about 20 minutes. [→ Quickstart](#quickstart)
+
+**Using it** — Three things the system does for you:
+- **Inbox** — Drop meetings, recordings, links, documents, and notes into `Inbox/`. The system processes, classifies, and files everything automatically. No sorting required.
+- **Query your brain** — Ask questions, surface open loops, prep for 1-on-1s, and pull context on demand with built-in slash commands.
+- **Proactive tracking** — The system keeps itself up-to-date, learns what matters most, and proactively flags what needs your attention — relationship drift, stale commitments, and patterns across your work.
 
 ---
 
@@ -22,6 +29,7 @@ Run one setup script, paste one file, and you have a system that processes your 
 
 | Command | What it does |
 |---------|-------------|
+| `/personal-os-remember` | Tell the system something important — a decision, a commitment, a relationship note — and it files it correctly |
 | `/personal-os-week-ahead` | Run the week-ahead review any time, not just Sunday |
 | `/personal-os-open-loops [filter]` | Review commitments filtered by person, project, priority, or staleness |
 | `/personal-os-1on1-prep [name]` | Pre-read with open loops, last sessions, and a probing question you haven't asked yet |
