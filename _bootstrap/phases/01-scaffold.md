@@ -47,3 +47,13 @@ After creating directories, create these system files:
 Files the nightly router couldn't classify. Rename or move them to help it next time.
 
 ```
+
+**`Knowledge/wiki/log.md`**
+```markdown
+# Wiki Activity Log
+
+_Append-only. Written by nightly synthesis and /personal-os-remember._
+_Format: `## [YYYY-MM-DD] [operation] | [description]`_
+_Operations: ingest | created | pattern | synthesis | remember | lint_
+
+```
