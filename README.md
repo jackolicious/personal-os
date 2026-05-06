@@ -86,6 +86,10 @@ Obsidian Sync for cross-device access. Set it up when ready. The vault works fin
 
 ## Quickstart
 
+**Fastest path:** Open this repo in Claude Code — it will read `personal-os-bootstrap.md` and walk you through setup automatically (~20 minutes).
+
+Or manually:
+
 ```bash
 # Clone and run setup (macOS)
 git clone https://github.com/jackolicious/personal-os.git
@@ -196,15 +200,9 @@ vault/
 
 ## Transcript tool setup
 
-| Tool | Setup |
-|------|-------|
-| [Granola](https://granola.ai) | Configure export folder to `Inbox/` |
-| [Fireflies.ai](https://fireflies.ai) | Webhook or Zapier → save to `Inbox/` |
-| [Zoom AI Companion](https://zoom.us) | Zoom MCP or manual export from zoom.us/recording → `Inbox/` |
-| [Otter.ai](https://otter.ai) | Download transcript as .txt → `Inbox/` |
-| [Fathom](https://fathom.video) | Auto-email summary → script to `Inbox/` |
+One rule: get transcripts into `Inbox/`. The nightly job handles everything from there.
 
-`setup.sh` will prompt you to choose and configure your tool.
+Most tools support this directly — configure your export folder, webhook, or auto-download to point at `Inbox/`. Tested with Granola, Fireflies, Zoom AI Companion, Otter, and Fathom. `setup.sh` walks you through the config for your tool.
 
 ---
 
