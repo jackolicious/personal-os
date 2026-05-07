@@ -29,9 +29,7 @@ Split into 9 phase files for maintainability. Each phase has one responsibility 
 
 ## After bootstrap
 
-Run `bash _bootstrap/archive.sh` to move this directory to `_system/bootstrap-archive/` and record the completion timestamp.
-
-To re-edit later: `mv _system/bootstrap-archive/<date> _bootstrap`
+Phase 9 will prompt you to clean up bootstrap files automatically (saves design rationale to wiki, then deletes `_bootstrap/` and `personal-os-bootstrap.md`). If you skipped that prompt, run `bash _bootstrap/archive.sh` to clean up manually.
 
 ---
 
@@ -62,4 +60,4 @@ Phases to dispatch in order:
 
 Start Phase 1 immediately. No preview. Confirm each phase with one line before proceeding.
 
-After all phases complete: run `bash _bootstrap/archive.sh` to clean up root.
+Phase 9 will prompt you to clean up bootstrap files at the end.
