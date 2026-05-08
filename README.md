@@ -30,6 +30,8 @@ Dead simple. One script, one file, about 20 minutes. [→ Quickstart](#quickstar
 | 5am daily | Morning brief generated: open loops, today's meetings, recent decisions, relationship health, coaching insight |
 | Sunday 8pm | Week-ahead brief generated: 7-day calendar scan, meetings needing prep flagged, focus blocks suggested for deep-work loops |
 
+All three run inside `run-nightly.sh`. **Required Mac setting:** System Settings → Battery → Options → "Prevent automatic sleeping when on power adapter"
+
 ### On demand
 
 | Command | What it does |
@@ -47,22 +49,6 @@ Dead simple. One script, one file, about 20 minutes. [→ Quickstart](#quickstar
 
 - **Sources are sacred.** Raw transcripts and PDFs are never modified after ingestion.
 - **Context-efficient.** Each tier is loaded at the right abstraction level. A daily briefing costs ~3k tokens in context, not 50k.
-
----
-
-## Automation
-
-Three jobs run unattended on an always-on Mac:
-
-| Time | Job | What it does |
-|------|-----|--------------|
-| 2:00 AM | Nightly synthesis | Processes new transcripts/PDFs, updates wiki, flags patterns, refreshes all `_index.md` files |
-| 5:00 AM | Daily briefing | Generates `_system/briefings/YYYY-MM-DD.md` from current state |
-| Sunday 8:00 PM | Week-ahead | Generates `_system/briefings/week-ahead-YYYY-MM-DD.md` with calendar scan and focus block suggestions |
-
-All three run inside a single `run-nightly.sh` loop. `setup.sh` also installs a launchd plist as a fallback if the terminal session is closed.
-
-**Required Mac setting:** System Settings → Battery → Options → "Prevent automatic sleeping when on power adapter"
 
 ---
 
