@@ -1,22 +1,21 @@
 # Personal OS
-
-A bootstrap meta-prompt that turns Claude Code + Obsidian into a second brain.
-
 **Remember everything. Miss nothing. Become a superhuman version of yourself.**
+
+A bootstrap meta-prompt that turns Claude Code + Obsidian into a second brain that keeps your work life on track.
 
 **What it is**
 
-Personal OS is built for leaders who are time-poor and information-dense. It ingests your meetings, relationships, decisions, and open loops, keeps them organized, and surfaces them when they matter.
+Personal OS is built for leaders who are time-poor and information-dense. It ingests your meetings, relationships, decisions, and open loops, keeps them organized, and surfaces them proactively when they matter.
 
 **Getting set up**
 
-Dead simple. One script, one file, about 20 minutes. [→ Quickstart](#quickstart)
+Dead simple. All you need to do is point Claude Code here. [→ Quickstart](#quickstart)
 
 **Using it**
 
-- Drop meetings, recordings, links, documents, and notes into `Inbox/` and the system processes everything automatically.
-- Ask questions, surface open loops, and prep for 1-on-1s using the built-in slash commands.
-- It keeps itself current, learns what matters, and proactively flags relationship drift, stale commitments, and patterns across your work.
+- Drop meeting notes, recordings, links, documents, and random ideas into `Inbox/` and the system processes everything automatically.
+- Ask questions, surface open loops, and prep for meetings using the built-in slash commands.
+- It keeps itself current, learns what matters, and proactively flags stale commitments, relationship drift, and other patterns across your work.
 
 ---
 
@@ -37,9 +36,9 @@ All three run inside `run-nightly.sh`. **Required Mac setting:** System Settings
 | Command | What it does |
 |---------|-------------|
 | `/personal-os-remember` | Tell the system something important — a decision, a commitment, a relationship note — and it files it correctly |
-| `/personal-os-week-ahead` | Run the week-ahead review any time, not just Sunday |
 | `/personal-os-open-loops [filter]` | Review commitments filtered by person, project, priority, or staleness |
 | `/personal-os-1on1-prep [name]` | Pre-read with open loops, last sessions, and a probing question you haven't asked yet |
+| `/personal-os-week-ahead` | Run the week-ahead review any time, not just Sunday |
 | `/personal-os-cascade` | Draft weekly updates for direct reports, cross-functional partners, and the C-suite |
 | `/personal-os-career-evidence` | Review captured accomplishments, star entries, generate a brag doc |
 
