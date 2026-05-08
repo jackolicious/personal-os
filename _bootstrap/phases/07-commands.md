@@ -58,7 +58,7 @@ $ARGUMENTS contains the URL.
 1. Fetch the URL content
 2. Save raw to `Inbox/links/[slug].md`
 3. Annotate using `_system/templates/source-annotation.md`
-4. Save annotated to `Knowledge/sources/[slug].md`
+4. Save annotated to `Knowledge/annotated/[slug].md`
 5. Update `_system/data/synthesis-log.json`
 6. Move `Inbox/links/[slug].md` to `Inbox/archive/links/[slug].md`
 7. Report: title, key concepts extracted, connections identified
