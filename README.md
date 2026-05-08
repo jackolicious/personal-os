@@ -52,24 +52,6 @@ All three run inside `run-nightly.sh`. **Required Mac setting:** System Settings
 
 ---
 
-## People tracking
-
-Every stakeholder has a `Last contact` field updated automatically when a session note is processed. The daily briefing flags anyone overdue:
-
-- Direct reports: more than 14 days without contact
-- Stakeholders: more than 21 days without contact
-
-Output: `"Haven't connected with [Name] in X days — open loops: N"`
-
-
----
-
-## Mobile
-
-Obsidian Sync for cross-device access. Set it up when ready. The vault works fine without it on Day 1. For quick capture and briefing delivery to your phone, configure Telegram (`/telegram:configure` in Claude Code).
-
----
-
 ## Quickstart
 
 **Fastest path:** Open this repo in Claude Code — it will read `personal-os-bootstrap.md` and walk you through setup automatically (~20 minutes).
@@ -129,6 +111,24 @@ Drop any of these directly into `Inbox/` — no subfolders needed:
 | Link files | A `.md` file with one or more URLs — the nightly job fetches and annotates each one |
 
 The nightly router reads each file once, classifies it, and applies the right workflow. Anything it can't classify lands in `Inbox/_unrouted.md` and is surfaced in your morning briefing.
+
+---
+
+## People tracking
+
+Every stakeholder has a `Last contact` field updated automatically when a session note is processed. The daily briefing flags anyone overdue:
+
+- Direct reports: more than 14 days without contact
+- Stakeholders: more than 21 days without contact
+
+Output: `"Haven't connected with [Name] in X days — open loops: N"`
+
+
+---
+
+## Mobile
+
+Obsidian Sync for cross-device access. Set it up when ready. The vault works fine without it on Day 1. For quick capture and briefing delivery to your phone, configure Telegram (`/telegram:configure` in Claude Code).
 
 ---
 
