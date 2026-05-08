@@ -132,6 +132,28 @@ The nightly router reads each file once, classifies it, and applies the right wo
 
 ---
 
+## Transcript tool setup
+
+One rule: get transcripts into `Inbox/`. The nightly job handles everything from there.
+
+Most tools support this directly — configure your export folder, webhook, or auto-download to point at `Inbox/`. Tested with Granola, Fireflies, Zoom AI Companion, Otter, and Fathom. `setup.sh` walks you through the config for your tool.
+
+---
+
+## Why three-tier immutability
+
+Raw meeting transcripts run 5,000–15,000 tokens each. The three tiers solve context cost while preserving auditability:
+
+| Tier | Examples | Token cost | Rule |
+|------|----------|------------|------|
+| Sources | Transcripts, PDFs, raw URLs | 5k–15k each | Immutable after ingestion |
+| Summaries | Session summaries, source annotations | 300–800 each | Write-once, regeneratable |
+| Synthesis | Wiki, profiles, open-loops.json | 100–400 per entry | Append-only, never rewritten |
+
+Workflows load summaries and synthesis, not sources. If synthesis logic improves, any summary can be regenerated from its immutable source.
+
+---
+
 ## Architecture
 
 ```
@@ -140,7 +162,6 @@ vault/
 ├── GOALS.md               ← 30/60/90 objectives
 ├── HEARTBEAT.md           ← Current focus, upcoming meetings, synthesis state
 ├── PILLARS.md             ← Ongoing strategic focus areas with keywords
-├── BACKLOG.md             ← Ideas and feature requests, reviewed monthly
 ├── Inbox/                 ← Drop zone: transcripts, PDFs, markdown notes, link files
 │   ├── _index.md          ← Nightly-maintained queue: file, type, status, date added
 │   ├── _unrouted.md       ← Files the router couldn't classify (surfaced in daily briefing)
@@ -156,7 +177,7 @@ vault/
 ├── Projects/              ← Active initiatives
 ├── People/                ← Team roster + stakeholder map (with last_contact)
 ├── Knowledge/
-│   ├── sources/           ← Immutable annotated sources
+│   ├── sources/           ← Annotated versions of processed sources (immutable)
 │   └── wiki/
 │       └── _index.md      ← Wiki pages: concepts, sources, last updated
 ├── Interviews/
@@ -181,28 +202,6 @@ vault/
 ├── run-nightly.sh         ← Persistent loop: 2am synthesis, 5am briefing, Sunday 8pm week-ahead
 └── .claude/commands/      ← Slash commands: /personal-os-daily-briefing, /personal-os-cascade, etc.
 ```
-
----
-
-## Transcript tool setup
-
-One rule: get transcripts into `Inbox/`. The nightly job handles everything from there.
-
-Most tools support this directly — configure your export folder, webhook, or auto-download to point at `Inbox/`. Tested with Granola, Fireflies, Zoom AI Companion, Otter, and Fathom. `setup.sh` walks you through the config for your tool.
-
----
-
-## Why three-tier immutability
-
-Raw meeting transcripts run 5,000–15,000 tokens each. The three tiers solve context cost while preserving auditability:
-
-| Tier | Examples | Token cost | Rule |
-|------|----------|------------|------|
-| Sources | Transcripts, PDFs, raw URLs | 5k–15k each | Immutable after ingestion |
-| Summaries | Session summaries, source annotations | 300–800 each | Write-once, regeneratable |
-| Synthesis | Wiki, profiles, open-loops.json | 100–400 per entry | Append-only, never rewritten |
-
-Workflows load summaries and synthesis, not sources. If synthesis logic improves, any summary can be regenerated from its immutable source.
 
 ---
 
