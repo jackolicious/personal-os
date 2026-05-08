@@ -56,6 +56,9 @@ _Depends on: Phase 1 (directories must exist)_
 | `/personal-os-new-1on1 [name]` | Create 1on1 session |
 | `/personal-os-new-interview-role [role]` | Open a new interview role folder |
 | `/personal-os-interview-prep [role]` | Generate prep brief for next interview |
+| `/personal-os-career-evidence [range?]` | Review captured accomplishments, generate brag doc |
+| `/personal-os-week-ahead` | Generate week-ahead brief with calendar scan and focus blocks |
+| `/personal-os-remember` | File a decision, commitment, or relationship note to the wiki |
 
 ## Model routing
 | Task | Model |

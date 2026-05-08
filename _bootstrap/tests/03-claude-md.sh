@@ -55,14 +55,11 @@ check_present "personal-os-daily-briefing" "command: personal-os-daily-briefing"
 check_present "personal-os-cascade" "command: personal-os-cascade"
 check_present "personal-os-1on1-prep" "command: personal-os-1on1-prep"
 check_present "personal-os-nightly" "command: personal-os-nightly"
-check_present "personal-os-week-ahead\|personal-os-open-loops" \
-  "command: personal-os-open-loops"
-check_present "personal-os-open-loops" "command: personal-os-open-loops (exact)"
-check_present "personal-os-remember\|personal-os-new-1on1" \
-  "command: personal-os-remember or personal-os-new-1on1"
+check_present "personal-os-open-loops" "command: personal-os-open-loops"
 check_present "personal-os-new-1on1" "command: personal-os-new-1on1"
-check_present "personal-os-career-evidence\|personal-os-interview-prep" \
-  "command: personal-os-career-evidence or interview prep equivalent"
+check_present "personal-os-career-evidence" "command: personal-os-career-evidence"
+check_present "personal-os-week-ahead" "command: personal-os-week-ahead"
+check_present "personal-os-remember" "command: personal-os-remember"
 
 echo ""
 echo "-- Root CLAUDE.md: system map directories --"
