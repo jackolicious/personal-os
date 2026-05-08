@@ -103,7 +103,75 @@ Report any missing files or errors before marking setup complete.
 
 ---
 
-## Archive bootstrap (optional)
+## Clean up bootstrap files
 
-Once setup is confirmed, run `bash _bootstrap/archive.sh` to move `_bootstrap/` out of root.
-This is optional — keep `_bootstrap/` if you plan to keep editing it as a codebase.
+After validation passes, ask the user:
+
+> "Bootstrap complete and validated. Clean up now? This will save the system design rationale to your wiki, then permanently delete `_bootstrap/` and `personal-os-bootstrap.md`. [Y/n]"
+
+**If yes:**
+
+1. Create `Knowledge/wiki/system-design.md` with exactly this content (substitute today's date for `[TODAY]`):
+
+```markdown
+---
+source_type: design-document
+ingested: [TODAY]
+---
+
+# Personal OS — System Design
+
+_Design rationale for the Personal OS. For your personal context, see CLAUDE.md._
+
+## Design constraints
+
+- Bootstrappable from any machine (self-contained, no external dependencies at setup)
+- Non-destructive: sources are sacred, synthesis is append-only
+- Context-efficient: CLAUDE.md files are lean doc-indexes, not instruction manuals
+- Incremental: nightly synthesis processes only the delta, never reruns everything
+- Index-first: every directory has an `_index.md`; workflows read the index, then targeted files — never full directory scans
+
+## Why three-tier immutability
+
+Raw transcripts and PDFs can run 5,000–15,000 tokens each. If any workflow had to
+read raw sources to answer a question, you'd exhaust your context window before
+reaching synthesis. The three tiers solve this by keeping each layer at the right
+abstraction and token cost:
+
+| Tier | Examples | Token footprint | Rule |
+|------|----------|-----------------|------|
+| **Sources** | Transcripts, PDFs, raw URLs | 5k–15k each | Immutable after ingestion |
+| **Summaries** | 1on1 session summaries, source annotations | 300–800 each | Write-once, regeneratable |
+| **Synthesis** | Wiki pages, profiles, briefings, open-loops.json | 100–400 per entry | Append-only, never rewritten |
+
+**Context efficiency**: Workflows load summaries and synthesis only — not sources.
+A `/personal-os-1on1-prep` reading 3 summaries uses ~2k tokens, not 45k.
+
+**Reproducibility**: Sources never change, so any summary can be regenerated from
+ground truth if synthesis logic improves.
+
+**Incremental trust**: The hash-based `synthesis-log.json` only works if sources are
+immutable. Mutable sources would require reprocessing everything on every change.
+
+**Compounding**: Each tier accumulates independently. New sessions create summaries;
+summaries feed wiki pages; wiki pages compound into strategic themes. A single change
+anywhere lower would invalidate the layers above it.
+
+Automation runs nightly via persistent terminal loop on an always-on Mac.
+```
+
+2. Append to `Knowledge/wiki/_index.md`:
+   ```
+   | system-design.md | immutability, incremental, index-first | 0 | [TODAY] |
+   ```
+
+3. Append to `Knowledge/wiki/log.md`:
+   ```
+   ## [TODAY] ingest | system-design.md — Personal OS design rationale ingested from bootstrap
+   ```
+
+4. Run: `rm -rf _bootstrap`
+
+5. Run: `rm -f personal-os-bootstrap.md`
+
+**If no:** Skip cleanup. Run `bash _bootstrap/archive.sh` later to clean up manually.
