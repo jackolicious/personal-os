@@ -277,7 +277,7 @@ Run as a separate subprocess per file.
    - Metadata block, summary, key concepts, inferences, open questions
    - Identify connections to existing wiki pages
 
-4. **File** annotated version to `Knowledge/sources/[slug].md`
+4. **File** annotated version to `Knowledge/annotated/[slug].md`
 
 5. **Queue for nightly wiki synthesis** — connections made during nightly run
 
@@ -309,12 +309,12 @@ When the Inbox router classifies a file as `note`.
    - Open questions raised
    - Connections to existing wiki pages
 
-3. **File** annotated version to `Knowledge/sources/[slug].md`
+3. **File** annotated version to `Knowledge/annotated/[slug].md`
    - Slug: lowercase title with spaces replaced by hyphens, max 50 chars
 
 4. **Queue wiki connections** — list connection targets in the annotation's `connections` metadata field for Pass 3
 
-5. **Update synthesis-log.json** — log the file with processing_type: "annotation", output_files: [Knowledge/sources/[slug].md]
+5. **Update synthesis-log.json** — log the file with processing_type: "annotation", output_files: [Knowledge/annotated/[slug].md]
 
 6. **Update Inbox/_index.md** — set Type to `note`, Status to `processed`
 
@@ -344,14 +344,14 @@ A file is classified as `link` if it consists primarily of URLs (one or more), w
    a. Fetch page content using WebFetch
       - If fetch fails (any error): write a stub annotation with source_type: url,
         original: URL, processed_at: now, and a `fetch_error: "[error message]"` field.
-        File the stub to `Knowledge/sources/[slug].md` and continue to the next URL.
+        File the stub to `Knowledge/annotated/[slug].md` and continue to the next URL.
         Do not halt the workflow.
    b. Extract title and body text
    c. Annotate using `_system/templates/source-annotation.md`:
       - Metadata block (source_type: url, original: URL, processed_at, relevance, key_concepts, connections, open_questions)
       - Summary, key concepts, relevant quotes, inferences, open questions
       - If the source file contained notes or context alongside this URL, include them in the `inferences` field
-   d. File annotated version to `Knowledge/sources/[slug].md`
+   d. File annotated version to `Knowledge/annotated/[slug].md`
       - Slug: strip protocol and `www.` from domain, keep only the root
         (e.g., `nytimes.com` → `nytimes`). Take the page `<title>` tag,
         lowercase it, remove any site-name suffix after the last `|` or `—`,
@@ -747,7 +747,7 @@ If yes, post the brief to the configured Telegram chat.
 4. Check for:
    a. **Orphan pages** — no inbound links from any other wiki page
    b. **Stale pages** — `last_updated` > 60 days AND no sources with `status: pending` in `Inbox/_index.md`
-   c. **Concept gaps** — terms appearing 3+ times across `Knowledge/sources/` metadata `key_concepts` fields but with no wiki page
+   c. **Concept gaps** — terms appearing 3+ times across `Knowledge/annotated/` metadata `key_concepts` fields but with no wiki page
    d. **Unlinked entities** — a person mentioned in 3+ 1on1 summaries (scan `1on1s/*/sessions/_index.md` Key topic column) but no wiki page exists under their name
    e. **Possible contradictions** — two pages referencing the same entity with claims that look inconsistent by date (flag for human review — never auto-resolve)
 

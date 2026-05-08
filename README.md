@@ -177,7 +177,7 @@ vault/
 ├── Projects/              ← Active initiatives
 ├── People/                ← Team roster + stakeholder map (with last_contact)
 ├── Knowledge/
-│   ├── sources/           ← Annotated versions of processed sources (immutable)
+│   ├── annotated/         ← Annotated versions of processed sources (immutable)
 │   └── wiki/
 │       └── _index.md      ← Wiki pages: concepts, sources, last updated
 ├── Interviews/

@@ -13,7 +13,7 @@ Projects/product-strategy/
 Projects/product-strategy/inputs/
 Projects/product-strategy/drafts/
 Knowledge/
-Knowledge/sources/
+Knowledge/annotated/
 Knowledge/wiki/
 Knowledge/wiki/concepts/
 Knowledge/wiki/market/

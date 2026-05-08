@@ -65,7 +65,7 @@ _Depends on: Phase 1 (directories must exist)_
 
 ## Rules
 - Check `_system/data/synthesis-log.json` before processing any file
-- Never modify files in `Knowledge/sources/` or `Inbox/transcripts/`
+- Never modify files in `Knowledge/annotated/` or `Inbox/transcripts/`
 - Open loops: append only — archive, never delete
 - Wiki pages: append dated sections, never rewrite core content
 - Load `profile/preferences/synthesis.md` for any briefing or synthesis; workflows load their own specific preference module
@@ -103,7 +103,7 @@ File naming convention: `YYYY-MM-DD [Meeting Title].md`
 
 ## Processing rules
 - Never modify originals — outputs go to `Meetings/` or `1on1s/`
-- PDFs: convert with markitdown → annotate → file to `Knowledge/sources/`
+- PDFs: convert with markitdown → annotate → file to `Knowledge/annotated/`
 - After processing any file: log it in `_system/data/synthesis-log.json`, then move the original to `Inbox/archive/[subfolder]/`
 - Originals in `archive/` are immutable — they are never modified or reprocessed
 - If unsure where something belongs, file to `scratch/` and flag in `HEARTBEAT.md`
@@ -194,11 +194,11 @@ Karpathy-style: sources are immutable, wiki is LLM-synthesized and append-only.
 ## Layers
 | Layer | Path | Rules |
 |-------|------|-------|
-| Sources | `sources/` | Immutable after annotation. Never modified. |
+| Annotated | `annotated/` | Immutable after annotation. Never modified. |
 | Wiki | `wiki/` | Append-only. Dated sections. Never rewrite. |
 
 ## Source annotation format
-Every file in `sources/` has a metadata block at top:
+Every file in `annotated/` has a metadata block at top:
 ```
 ---
 source_type: [pdf | url | transcript | note]
