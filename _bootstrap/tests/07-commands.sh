@@ -150,6 +150,22 @@ check_present "$FILE" "_system/workflows/wiki-remember\.md"   "remember referenc
 
 echo ""
 
+# ---------------------------------------------------------------------------
+# personal-os-meeting-prep
+# ---------------------------------------------------------------------------
+echo "-- personal-os-meeting-prep --"
+
+check_present "$FILE" "personal-os-meeting-prep" \
+  "meeting-prep: command defined"
+
+check_present "$FILE" "meeting-prep.md" \
+  "meeting-prep: command references workflow"
+
+check_present "$FILE" "ARGUMENTS" \
+  "meeting-prep: command handles arguments"
+
+echo ""
+
 # --- Forbidden references ---
 
 check_absent  "$FILE" "Knowledge/sources/"                    "does not reference Knowledge/sources/"

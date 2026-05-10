@@ -88,6 +88,16 @@ Per-file extraction (Steps 1–3) is already complete for tonight. Stop." \
   if [ "$HOUR" = "05" ] && [ "$BRIEFING_DONE_DATE" != "$TODAY" ]; then
     BRIEF_FILE="$VAULT_DIR/_system/briefings/$TODAY.md"
     if [ ! -f "$BRIEF_FILE" ]; then
+      LOG="$VAULT_DIR/_system/logs/nightly.log"
+
+      # Meeting prep pass — runs first so briefing can link to prep docs
+      echo "$(date): Generating meeting prep docs..." | tee -a "$LOG"
+      mkdir -p "$VAULT_DIR/Meetings/prep"
+      claude --model claude-sonnet-4-6 --print \
+        "$(cat "$VAULT_DIR/.claude/commands/personal-os-meeting-prep.md")" \
+        >> "$LOG" 2>&1
+      echo "$(date): Meeting prep complete." | tee -a "$LOG"
+
       echo "$(date): Generating daily briefing..."
       claude --model claude-sonnet-4-6 --print \
         "$(cat "$VAULT_DIR/.claude/commands/personal-os-daily-briefing.md")" \
