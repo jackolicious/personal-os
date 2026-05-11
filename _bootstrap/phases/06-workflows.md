@@ -66,10 +66,18 @@ makes connections, and recommends one clear action for the day.
      ```
    - If distribution is healthy or fewer than 5 tagged loops exist, omit this section
 
-3. **Meeting awareness**
-   - Check `HEARTBEAT.md` for 1on1s today or tomorrow
-   - If a 1on1 is today: surface last session summary + open loops for that person
-   - Suggest running `/personal-os-1on1-prep [name]` if not already done
+3. **Meetings today**
+   - Scan `Meetings/prep/` for files matching today's date: `YYYY-MM-DD-*.md`
+   - For each file found: read the first line (title) and second line (date · time · duration) to extract title and start time
+   - Sort by start time ascending
+   - Format as:
+     ```
+     ### Meetings today
+     - [TIME] · [Title] → Meetings/prep/[filename]
+     ```
+   - If no prep files for today:
+     - If `profile/preferences/calendar.md` exists with a source set: "Prep not yet generated — runs at 5am"
+     - If no calendar configured: "No calendar connected — run `/personal-os-meeting-prep` to generate prep manually"
 
 3.5 **Recent decisions**
    - Read `_system/data/decisions.json`
@@ -109,7 +117,8 @@ makes connections, and recommends one clear action for the day.
 [One sentence from current HEARTBEAT priority]
 
 ### Meetings today
-[1on1s or key meetings with prep status]
+- [TIME] · [Title] → Meetings/prep/[filename]
+[One line per meeting, sorted by start time — omit section if no calendar and no prep files exist]
 
 ### Recent decisions
 [Decisions from last 7 days + any with overdue review dates — omitted if empty]
@@ -825,4 +834,132 @@ The system does not write anything without explicit user confirmation.
 
 5. **Confirm**
    Report: "Filed [N] insight(s) to: [page1.md, page2.md]. Logged in wiki/log.md."
+```
+
+### `_system/workflows/meeting-prep.md`
+
+```markdown
+# Meeting Prep Workflow
+
+## Model: Sonnet
+Context synthesis and meeting classification require reasoning.
+
+## Trigger
+1. Automatically: 5am in run-nightly.sh, before daily briefing generation
+2. On-demand: `/personal-os-meeting-prep [slug]`
+
+---
+
+## Step 1: Load calendar source
+
+Read `profile/preferences/calendar.md` if it exists.
+- Extract: calendar_source (google | apple | none)
+- If file doesn't exist or calendar_source = none:
+  Output exactly: `NO_CALENDAR`
+  Stop — the 5am run will note this in the briefing.
+
+## Step 2: Pull today's events
+
+If calendar_source = google:
+  Use Google Calendar MCP to list events for today (all-day and timed).
+  For each event collect: title, start time, end time, attendees (name + email).
+
+If calendar_source = apple:
+  Use macOS Calendar MCP if available.
+  If unavailable: output `NO_CALENDAR` and stop.
+
+If running on-demand ($ARGUMENTS provided):
+  Treat $ARGUMENTS as the meeting title or slug.
+  Ask: "Who are the attendees? (name and role, one per line — or press enter to skip)"
+  Proceed with whatever is provided.
+
+Skip all-day events with no attendees (holidays, OOO blocks).
+
+## Step 3: Classify each event
+
+Evaluate rules in this order — first match wins:
+
+1. executive: any attendee title contains CEO, CFO, CTO, COO, President, VP of Engineering,
+   VP of Product; OR attendee is flagged as C-suite in People/stakeholders.md
+2. 1on1: exactly 2 attendees (including Jack)
+3. team: title (case-insensitive) contains "standup", "all-hands", "team sync",
+   "sprint review", "sprint retro", "all hands"
+4. external: at least one attendee email domain differs from Jack's domain
+5. cross-functional: 3+ attendees, all internal (same email domain)
+6. unknown: none of the above
+
+## Step 4: Load vault context for each event
+
+Load only what exists — skip gracefully if files are missing.
+Do not error on missing files; omit that context type.
+
+For all meeting types:
+- Open loops: read _system/data/open-loops.json — filter where context_person matches
+  any attendee name (case-insensitive). Skip if file missing.
+- Decisions: read _system/data/decisions.json — filter where date >= 30 days ago
+  AND any attendee appears in made_by field. Skip if file missing.
+- Wiki: read Knowledge/wiki/_index.md — identify pages where concept column
+  matches attendee name or meeting title keywords. Skip if file missing.
+
+For 1on1 type additionally:
+- Read 1on1s/[Name]/ready-note.md if it exists. If it does, use it as the primary
+  context source — skip re-deriving what is already there.
+
+For team type additionally:
+- Read 1on1s/_index.md — identify team members with sessions in the last 14 days.
+- For each: read their most recent session summary (via sessions/_index.md).
+  Do not scan all sessions. Load max 3 people.
+
+## Step 5: Generate prep doc for each event
+
+Use _system/templates/meeting-prep.md as the structure.
+Apply base layer for all meetings, then add the type overlay.
+
+### Base layer (all types)
+
+Fill each section from context loaded in Step 4.
+Brevity rules — enforce strictly:
+- Any section with no content: OMIT IT ENTIRELY (no "none yet", no empty bullets)
+- Max 3 bullets per section
+- Goals: specific to this meeting — not generic
+- Cold start (no vault context on any attendee): generate goals/questions from
+  meeting title + roles, framed for a new CPO in listening/learning posture.
+  Add footer line: "No prior context on [Name] — run `/personal-os-remember` after."
+
+### Type overlays (append after base)
+
+**1on1 (direct report)**
+Pull from ready-note if it exists:
+- Their open commitments to you (open loops, owner = them)
+- Your open commitments to them (open loops, owner = Jack)
+- One probing question not yet asked
+
+**Cross-functional / executive**
+Append:
+- Their stake: what they care about (from stakeholders.md or inferred from role)
+- What you need: specific ask, unblock, or decision — omit section if none
+
+**Team / all-hands**
+Append:
+- Pulse from recent 1on1s: key themes, max 3 bullets — OMIT IF EMPTY
+- What the team needs to hear: 1-2 bullets from HEARTBEAT.md priorities
+
+**External**
+Append:
+- Research: from Knowledge/annotated/ matching attendee/company — OMIT IF EMPTY
+- Relationship goal: what you want from this relationship
+
+**Unknown**
+Base layer only. Append: "Could not classify — review attendee list."
+
+## Step 6: Save each prep doc
+
+Path: Meetings/prep/YYYY-MM-DD-[slug].md
+Slug: title lowercased, spaces to hyphens, non-alphanumeric removed, max 40 chars.
+Create Meetings/prep/ if it doesn't exist. Overwrite if file already exists.
+
+## Step 7: Output
+
+Print one line per prep doc: PREP: Meetings/prep/[filename]
+If no calendar: print NO_CALENDAR
 ```

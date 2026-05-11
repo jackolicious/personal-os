@@ -172,3 +172,19 @@ File insights from this session into the wiki.
 Follow `_system/workflows/wiki-remember.md` exactly.
 If nothing from this session meets the bar for wiki filing, say so directly — do not force it.
 ```
+
+### `.claude/commands/personal-os-meeting-prep.md`
+
+```markdown
+Generate meeting prep docs.
+
+Usage: /personal-os-meeting-prep [optional: meeting name or slug]
+
+$ARGUMENTS may contain a meeting name or slug to generate prep for a single meeting.
+If $ARGUMENTS is empty, generate prep for all of today's meetings.
+
+Follow _system/workflows/meeting-prep.md exactly.
+
+After completing, report each file created:
+"Prep ready: Meetings/prep/[filename]"
+```

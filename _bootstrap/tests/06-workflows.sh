@@ -409,6 +409,34 @@ check_present "$FILE" "Knowledge/wiki/log.md" \
 echo ""
 
 # ---------------------------------------------------------------------------
+# meeting-prep
+# ---------------------------------------------------------------------------
+echo "-- meeting-prep --"
+
+check_present "$FILE" "meeting-prep" \
+  "meeting-prep: workflow file defined"
+
+check_present "$FILE" "meeting-prep.md" \
+  "meeting-prep: references workflow file path"
+
+check_present "$FILE" "calendar_source" \
+  "meeting-prep: calendar source handling present"
+
+check_present "$FILE" "NO_CALENDAR" \
+  "meeting-prep: NO_CALENDAR graceful degradation defined"
+
+check_present "$FILE" "executive" \
+  "meeting-prep: meeting type classification defined"
+
+check_present "$FILE" "Meetings/prep" \
+  "meeting-prep: output path defined"
+
+check_present "$FILE" "OMIT\|brevity\|Brevity" \
+  "meeting-prep: brevity rules present"
+
+echo ""
+
+# ---------------------------------------------------------------------------
 # Forbidden patterns
 # ---------------------------------------------------------------------------
 echo "-- forbidden patterns --"
