@@ -962,4 +962,134 @@ Create Meetings/prep/ if it doesn't exist. Overwrite if file already exists.
 
 Print one line per prep doc: PREP: Meetings/prep/[filename]
 If no calendar: print NO_CALENDAR
+
+---
+
+## `_system/workflows/ghostwriter-init.md`
+
+```markdown
+# Ghostwriter Init Workflow
+
+## Model: Sonnet
+Style synthesis requires reasoning.
+
+## Trigger
+On-demand: `/personal-os-ghostwriter-init`
+
+---
+
+## Step 1: Load samples
+
+Read `Knowledge/writing/samples.md`.
+If the file doesn't exist:
+  Output: "NO_SAMPLES — create Knowledge/writing/samples.md with writing examples first."
+  Stop.
+
+## Step 2: Analyze samples
+
+Read all samples carefully. For each sample, observe:
+- How sentences are structured
+- When bullets vs prose is used
+- How messages open and close
+- Tone: formal vs informal, warmth level, use of humor
+- Recurring phrases or constructions
+- How opinions are expressed
+- Typical message length by content type
+
+Derive observations entirely from the samples. Do not apply generic voice frameworks.
+
+## Step 3: Synthesize style guide
+
+Write a compact style guide to `Knowledge/writing/style-guide.md`.
+
+Requirements:
+- Under 500 words
+- Derived entirely from the samples — no generic writing advice
+- Specific enough to reproduce the voice in new writing
+- Human-readable and directly editable
+- Organized as: Voice, Structure, Tone, Per-context notes
+
+## Step 4: Confirm
+
+Output: "Style guide written to Knowledge/writing/style-guide.md"
 ```
+```
+
+### `_system/workflows/ghostwriter.md`
+
+````markdown
+# Ghostwriter Workflow
+
+## Model: Sonnet
+
+## Trigger
+Proactively when Jack asks to write, draft, compose, or polish any content.
+Explicitly via `/personal-os-ghostwriter`.
+
+---
+
+## Step 1: Load style guide
+
+Read `Knowledge/writing/style-guide.md`.
+If missing: output "Run /personal-os-ghostwriter-init first to generate your style guide." and stop.
+
+## Step 2: Detect mode
+
+Examine the input:
+- Short prompt or instruction (under ~50 words, imperative or request form): DRAFT mode
+- Substantial authored text (multiple sentences, clearly written content): POLISH mode
+- Ambiguous: ask once — "Are you giving me a prompt to draft from, or text to polish?"
+
+## Step 3: Detect content type
+
+Look for signals in the input:
+- "slack", "DM", "channel", "thread", "post" -> slack
+- "cascade", "all-hands", "town hall", "all hands" -> cascade
+- "PRD", "spec", "product requirements", "requirements doc" -> prd
+- "email", "external", "customer", "partner", "press release" -> external
+
+If no clear type signal:
+- DRAFT mode: infer from context, default to generic if still unclear
+- POLISH mode: ask once — "What type of content is this: slack, cascade, PRD, or external?"
+
+## Step 4: Generate or rewrite
+
+### DRAFT mode
+Generate a first draft using:
+- Base voice and structure from style guide
+- Per-type overlay:
+  - slack: informal, short, ICYMI/FYI framing ok, no formal sign-off needed
+  - cascade: structured, serious, goal-oriented, key points in bullets
+  - prd: headers and bullets, include goals and anti-goals where useful
+  - external: selling voice, lead with value or outcome, tight
+  - generic: base style only
+
+### POLISH mode
+Rewrite the provided text:
+- Preserve core content and intent, not the original phrasing
+- Apply base voice from style guide
+- Apply same per-type overlay as above
+
+## Step 5: Humanizer pass
+
+Scan the draft and remove AI writing patterns:
+- Em dashes: replace with a comma, period, or restructure the sentence
+- Rule of three: vary the structure instead of always grouping in threes
+- Inflated symbolism: "journey", "tapestry", "landscape" used metaphorically
+- AI vocabulary: "delve", "foster", "leverage" (used generically), "utilize", "robust",
+  "holistic", "seamlessly", "groundbreaking", "transformative" (used hyperbolically)
+- Vague attributions: "studies show", "experts say", "research indicates"
+- Excessive conjunctive transitions: "Furthermore,", "Moreover,", "Additionally,"
+- Negative parallelisms: "not only X but also Y"
+- Uniform sentence rhythm: vary length and structure
+
+Then check for soul. If the draft reads like a press release or Wikipedia article, add:
+- A specific opinion or reaction where appropriate
+- First-person perspective where natural ("I think...", "Here's what I keep coming back to...")
+- Concrete details over vague statements
+- Rhythm variation: short punchy sentences mixed with longer analytical ones
+
+## Step 6: Output
+
+Print the final draft as clean text. No preamble. No "Here's your draft:". Just the content.
+````

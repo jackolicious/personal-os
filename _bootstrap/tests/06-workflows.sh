@@ -437,6 +437,59 @@ check_present "$FILE" "OMIT\|brevity\|Brevity" \
 echo ""
 
 # ---------------------------------------------------------------------------
+# ghostwriter-init
+# ---------------------------------------------------------------------------
+echo "-- ghostwriter-init --"
+
+check_present "$FILE" "ghostwriter-init" \
+  "ghostwriter-init: workflow file defined"
+
+check_present "$FILE" "ghostwriter-init\.md" \
+  "ghostwriter-init: references workflow file path"
+
+check_present "$FILE" "Knowledge/writing/samples\.md" \
+  "ghostwriter-init: reads Knowledge/writing/samples.md"
+
+check_present "$FILE" "Knowledge/writing/style-guide\.md" \
+  "ghostwriter-init: writes Knowledge/writing/style-guide.md"
+
+check_present "$FILE" "NO_SAMPLES" \
+  "ghostwriter-init: NO_SAMPLES graceful degradation defined"
+
+echo ""
+
+# ---------------------------------------------------------------------------
+# ghostwriter
+# ---------------------------------------------------------------------------
+echo "-- ghostwriter --"
+
+check_present "$FILE" "ghostwriter\.md" \
+  "ghostwriter: workflow file defined"
+
+check_present "$FILE" "style-guide\.md" \
+  "ghostwriter: reads style-guide.md"
+
+check_present "$FILE" "DRAFT" \
+  "ghostwriter: DRAFT mode defined"
+
+check_present "$FILE" "POLISH" \
+  "ghostwriter: POLISH mode defined"
+
+check_present "$FILE" "slack" \
+  "ghostwriter: slack content type defined"
+
+check_present "$FILE" "external" \
+  "ghostwriter: external content type defined"
+
+check_present "$FILE" "em dash\|Em dash\|em-dash" \
+  "ghostwriter: humanizer pass removes em dashes"
+
+check_present "$FILE" "AI vocab\|AI writing\|delve\|utilize" \
+  "ghostwriter: humanizer pass removes AI vocabulary"
+
+echo ""
+
+# ---------------------------------------------------------------------------
 # Forbidden patterns
 # ---------------------------------------------------------------------------
 echo "-- forbidden patterns --"

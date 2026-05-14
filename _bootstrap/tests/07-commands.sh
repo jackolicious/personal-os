@@ -166,6 +166,38 @@ check_present "$FILE" "ARGUMENTS" \
 
 echo ""
 
+# ---------------------------------------------------------------------------
+# personal-os-ghostwriter-init
+# ---------------------------------------------------------------------------
+echo "-- personal-os-ghostwriter-init --"
+
+check_present "$FILE" "personal-os-ghostwriter-init" \
+  "ghostwriter-init: command defined"
+
+check_present "$FILE" "ghostwriter-init\.md" \
+  "ghostwriter-init: command references workflow"
+
+echo ""
+
+# ---------------------------------------------------------------------------
+# personal-os-ghostwriter
+# ---------------------------------------------------------------------------
+echo "-- personal-os-ghostwriter --"
+
+check_present "$FILE" "personal-os-ghostwriter" \
+  "ghostwriter: command defined"
+
+check_present "$FILE" "ghostwriter\.md" \
+  "ghostwriter: command references workflow"
+
+check_present "$FILE" "ARGUMENTS" \
+  "ghostwriter: command handles arguments"
+
+check_present "$FILE" "proactively\|draft\|polish\|write" \
+  "ghostwriter: command includes proactive trigger description"
+
+echo ""
+
 # --- Forbidden references ---
 
 check_absent  "$FILE" "Knowledge/sources/"                    "does not reference Knowledge/sources/"
