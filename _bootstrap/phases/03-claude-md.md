@@ -67,6 +67,7 @@ _Depends on: Phase 1 (directories must exist)_
 | Synthesize / reason / draft | `claude-sonnet-4-6` — reads structured outputs only |
 
 ## Rules
+- Search local vault files before using web search, MCPs, or training knowledge — ask before looking externally
 - Check `_system/data/synthesis-log.json` before processing any file
 - Never modify files in `Knowledge/annotated/` or `Inbox/transcripts/`
 - Open loops: append only — archive, never delete
