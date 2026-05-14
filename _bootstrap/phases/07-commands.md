@@ -188,3 +188,24 @@ Follow _system/workflows/meeting-prep.md exactly.
 After completing, report each file created:
 "Prep ready: Meetings/prep/[filename]"
 ```
+
+### `.claude/commands/personal-os-ghostwriter-init.md`
+
+```markdown
+Synthesize Jack's writing style guide from samples.
+
+Run once after setup to generate Knowledge/writing/style-guide.md.
+Re-run whenever Knowledge/writing/samples.md changes.
+
+Follow _system/workflows/ghostwriter-init.md exactly.
+```
+
+### `.claude/commands/personal-os-ghostwriter.md`
+
+```markdown
+Write in Jack's voice. Use proactively whenever Jack asks to write, draft, compose, or polish any communication: Slack posts, cascades, PRDs, emails, external comms. Trigger on: "draft a...", "write a...", "help me write...", "polish this...", "rewrite this...", or any writing request.
+
+$ARGUMENTS may contain a prompt to draft from or text to polish.
+
+Follow _system/workflows/ghostwriter.md exactly.
+```
