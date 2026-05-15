@@ -55,6 +55,7 @@ check_present "$FILE" "personal-os-interview-prep"     "defines personal-os-inte
 check_present "$FILE" "personal-os-career-evidence"    "defines personal-os-career-evidence"
 check_present "$FILE" "personal-os-week-ahead"         "defines personal-os-week-ahead"
 check_present "$FILE" "personal-os-remember"           "defines personal-os-remember"
+check_present "$FILE" "personal-os-query"              "defines personal-os-query"
 
 echo ""
 
@@ -196,6 +197,22 @@ check_present "$FILE" "ARGUMENTS" \
 
 check_present "$FILE" "proactively\|draft\|polish\|write" \
   "ghostwriter: command includes proactive trigger description"
+
+echo ""
+
+# ---------------------------------------------------------------------------
+# personal-os-query
+# ---------------------------------------------------------------------------
+echo "-- personal-os-query --"
+
+check_present "$FILE" "personal-os-query" \
+  "query: command defined"
+
+check_present "$FILE" "wiki-query\.md" \
+  "query: command references wiki-query.md workflow"
+
+check_present "$FILE" "ARGUMENTS" \
+  "query: command handles arguments"
 
 echo ""
 

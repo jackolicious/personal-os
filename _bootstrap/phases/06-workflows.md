@@ -788,6 +788,61 @@ If yes, post the brief to the configured Telegram chat.
    `## [DATE] lint | [N] orphans, [N] stale, [N] gaps — Knowledge/wiki/_lint-report.md`
 ````
 
+### `_system/workflows/wiki-query.md`
+
+```markdown
+# Wiki Query Workflow
+
+## Model: Sonnet
+Synthesis across multiple knowledge sources requires reasoning.
+
+## Trigger: `/personal-os-query [question]`
+
+## Steps
+
+### Step 1: Parse query
+$ARGUMENTS contains the question or topic.
+If $ARGUMENTS is empty: ask once — "What do you want to know?"
+
+### Step 2: Index scan (always first)
+Read `Knowledge/wiki/_index.md`.
+Scan the Concepts column for terms matching the query — exact match, partial match, or semantic overlap.
+Rank matched pages: exact concept match > partial match > topic overlap.
+Select the top 5 pages by relevance.
+
+If `Knowledge/wiki/log.md` exists: skim the last 20 lines — note recent activity on candidate pages.
+
+### Step 3: Read matched wiki pages
+Read each matched page in full.
+For each `[[wikilink]]` referenced in those pages: read the linked page too (one hop only — do not recurse further).
+Cap the total reading list at 10 pages.
+
+### Step 4: Annotated sources (conditional)
+Only run this step if wiki pages don't fully answer the query, or the query references a specific source, event, or person not yet synthesized into the wiki:
+- Grep `Knowledge/annotated/` for files whose `key_concepts:` metadata contains terms from the query
+- Read the top 3 most relevant annotated sources
+
+If wiki pages give a complete answer: skip this step.
+
+### Step 5: Synthesize answer
+Match format to question type:
+- **Factual** — direct answer with citations
+- **Comparison** — table or structured list
+- **Exploration** — narrative connecting concepts, with linked references
+- **List/catalog** — bulleted list with one-line descriptions
+
+Cite wiki pages as `[[page.md]]` and annotated sources as `[source-slug.md]`.
+
+If nothing in the wiki or annotated sources matches: say exactly —
+"Nothing in the wiki covers this yet. To build knowledge here, run `/personal-os-process-inbox` or `/personal-os-ingest-url`."
+Do not generate an answer from general knowledge when the knowledge base has nothing.
+
+### Step 6: Offer to save
+If the answer produced a synthesis, comparison, or new connection worth keeping:
+> "This synthesis might be worth filing. Run `/personal-os-remember` to add it to the wiki."
+If it was a simple factual lookup with no novel synthesis: omit this offer.
+```
+
 ### `_system/workflows/wiki-remember.md`
 
 ```markdown

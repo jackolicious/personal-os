@@ -384,6 +384,34 @@ check_present "$FILE" "Knowledge/wiki/log.md" \
 echo ""
 
 # ---------------------------------------------------------------------------
+# wiki-query
+# ---------------------------------------------------------------------------
+echo "-- wiki-query --"
+
+check_present "$FILE" "wiki-query" \
+  "wiki-query: workflow file defined"
+
+check_present "$FILE" "personal-os-query" \
+  "wiki-query: trigger is /personal-os-query"
+
+check_present "$FILE" "Rank matched pages\|Rank" \
+  "wiki-query: ranks pages by relevance"
+
+check_present "$FILE" "one hop only" \
+  "wiki-query: wikilink traversal bounded to one hop"
+
+check_present "$FILE" "conditional\|Conditional\|Only run this step" \
+  "wiki-query: annotated source fallback is conditional"
+
+check_present "$FILE" "Nothing in the wiki" \
+  "wiki-query: no-match case returns explicit message"
+
+check_present "$FILE" "personal-os-remember" \
+  "wiki-query: offers to save via /personal-os-remember"
+
+echo ""
+
+# ---------------------------------------------------------------------------
 # wiki-remember
 # ---------------------------------------------------------------------------
 echo "-- wiki-remember --"

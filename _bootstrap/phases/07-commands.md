@@ -189,6 +189,17 @@ After completing, report each file created:
 "Prep ready: Meetings/prep/[filename]"
 ```
 
+### `.claude/commands/personal-os-query.md`
+
+```markdown
+Answer a question against the knowledge base. Usage: /personal-os-query [question]
+
+$ARGUMENTS contains the question or topic to explore.
+If no arguments provided, ask: "What do you want to know?"
+
+Follow _system/workflows/wiki-query.md exactly.
+```
+
 ### `.claude/commands/personal-os-ghostwriter-init.md`
 
 ```markdown
