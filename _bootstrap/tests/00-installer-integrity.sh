@@ -66,9 +66,10 @@ check_absent_dir "Archive"          "Archive/ not present"
 echo ""
 echo "-- No installed .claude/ content --"
 
+# .claude/commands and settings.json are vault runtime artifacts — must not be committed.
+# settings.local.json is gitignored dev tooling (local permission shortcuts) — allowed on disk.
 check_absent_dir ".claude/commands"            ".claude/commands/ not present (vault slash commands)"
 check_absent_file ".claude/settings.json"      ".claude/settings.json not present (vault runtime permissions)"
-check_absent_file ".claude/settings.local.json" ".claude/settings.local.json not present (vault local overrides)"
 
 echo ""
 echo "-- No vault personal content files --"

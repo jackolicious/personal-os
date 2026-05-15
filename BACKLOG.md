@@ -1,5 +1,5 @@
 # Personal OS — CPO Chief of Staff Backlog
-_Local only — not committed to git. Last updated: 2026-05-10_
+_Development backlog for the bootstrap project. Last updated: 2026-05-10_
 
 ## Design principles (established 2026-05-10)
 - Connection-type agnostic: workflows define what's needed (calendar events, messages, context), not how to get it
