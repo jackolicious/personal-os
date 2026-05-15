@@ -19,8 +19,8 @@ Process all new items in the Inbox.
 
 1. Load `Inbox/CLAUDE.md` and `_system/data/synthesis-log.json`
 2. Scan each Inbox subfolder for files not in synthesis-log
-3. For each new file, determine type and apply correct workflow from `_system/workflows/`
-4. Process one file at a time, update synthesis-log after each
+3. Classify each new file: link | transcript | pdf | note | unrouted
+4. For each file, complete all steps in the matching workflow from `_system/workflows/` — each workflow ends with updating synthesis-log.json, setting Status in `Inbox/_index.md`, and moving the original to `Inbox/_archive/[filename]`. Do not advance to the next file until all workflow steps are done.
 5. Report: N files processed, N skipped, any errors
 ```
 
