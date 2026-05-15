@@ -85,8 +85,8 @@ claude
 **Day 1 — seed your system:**
 Drop any existing notes, transcripts, or PDFs into `Inbox/`. The next nightly run (2am) processes everything automatically — no pre-sorting required.
 
-**Importing an existing vault?**
-Drop its contents directly into `Inbox/`. The router classifies and files everything. Check `Inbox/_unrouted.md` the next morning for anything it couldn't place.
+**Installing into an existing Obsidian vault?**
+Not recommended — Personal OS adds its own folders and files at the vault root, and a pre-existing `CLAUDE.md` or `.gitignore` may conflict. `setup.sh` will detect this and warn you before proceeding. If you continue, your existing notes won't be touched. Migrate content into `Inbox/` gradually as you want it ingested; don't dump everything in at once.
 
 ---
 

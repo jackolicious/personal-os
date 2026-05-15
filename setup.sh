@@ -52,7 +52,19 @@ VAULT_PATH="${VAULT_PATH:-$DEFAULT_VAULT}"
 VAULT_PATH="${VAULT_PATH/#\~/$HOME}"
 
 if [ -d "$VAULT_PATH" ] && [ "$(ls -A "$VAULT_PATH" 2>/dev/null)" ]; then
-  echo -e "${YELLOW}Warning: $VAULT_PATH already exists and is not empty.${NC}"
+  if [ -d "$VAULT_PATH/.obsidian" ] || ls "$VAULT_PATH"/*.md &>/dev/null 2>&1; then
+    echo ""
+    echo -e "${YELLOW}⚠  This looks like an existing Obsidian vault.${NC}"
+    echo ""
+    echo "   Personal OS will add its folders and files alongside your content."
+    echo "   Your existing notes won't be touched, but you should review any"
+    echo "   CLAUDE.md or .gitignore conflicts after setup completes."
+    echo ""
+    echo "   Recommended: point Personal OS at a new empty folder instead."
+  else
+    echo -e "${YELLOW}Warning: $VAULT_PATH already exists and is not empty.${NC}"
+  fi
+  echo ""
   echo -n "Continue anyway? [y/N]: "
   read -r CONFIRM
   [[ "$CONFIRM" =~ ^[Yy]$ ]] || exit 0
