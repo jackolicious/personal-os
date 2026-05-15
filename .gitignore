@@ -4,16 +4,18 @@
 !personal-os-bootstrap.md
 !README.md
 !CONTRIBUTING.md
+!CLAUDE.md
+!BACKLOG.md
 !_bootstrap/*.md
 !_bootstrap/phases/*.md
-!docs/**/*.md
-docs/superpowers/
+!docs/superpowers/plans/*.md
+!docs/superpowers/specs/*.md
 
 # Claude Code local settings (personal overrides)
 .claude/settings.local.json
 .claude/settings.json
 
-# Vault directories (personal content)
+# Vault directories (personal content — must not exist in installer repo)
 Inbox/
 Notes/
 People/
@@ -24,6 +26,10 @@ Archive/
 Memory/
 Daily/
 Weekly/
+Knowledge/
+1on1s/
+Meetings/
+Interviews/
 
 # Processed/synthesized content
 Synthesis/

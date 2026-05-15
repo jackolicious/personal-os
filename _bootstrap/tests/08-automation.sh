@@ -126,7 +126,35 @@ phase_present 'Prevent automatic sleeping\|power adapter' \
 check_present "_bootstrap/phases/06-workflows.md" 'pip install markitdown' \
   "pip install markitdown mentioned (in pdf-ingestion workflow)"
 phase_present 'run-nightly.sh' \
-  "run-nightly.sh startup instructions present"
+  "run-nightly.sh defined in phase"
+
+# --- launchd plist (Step 3) ---
+phase_present 'com.personalos.loop' \
+  "launchd label com.personalos.loop defined"
+phase_present 'KeepAlive' \
+  "launchd plist uses KeepAlive"
+phase_present 'PathState' \
+  "launchd plist uses PathState guard (starts only when run-nightly.sh exists)"
+phase_present 'RunAtLoad' \
+  "launchd plist uses RunAtLoad"
+phase_present 'WorkingDirectory' \
+  "launchd plist sets WorkingDirectory"
+phase_present 'loop.log\|loop-error.log' \
+  "launchd plist defines log output paths"
+phase_present 'launchctl load' \
+  "launchctl load command specified"
+phase_present 'launchctl list\|launchctl unload\|launchctl kickstart' \
+  "launchctl management commands documented"
+
+# --- Consistency: setup.sh must match ---
+check_present "setup.sh" 'com.personalos.loop' \
+  "setup.sh creates same plist label (com.personalos.loop) as phase spec"
+check_present "setup.sh" 'KeepAlive' \
+  "setup.sh plist uses KeepAlive (matches phase spec)"
+check_present "setup.sh" 'PathState' \
+  "setup.sh plist uses PathState (matches phase spec)"
+check_present "setup.sh" 'run-nightly.sh' \
+  "setup.sh references run-nightly.sh (matches phase spec)"
 
 echo ""
 echo "Results: $PASS passed, $FAIL failed"

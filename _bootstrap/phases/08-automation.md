@@ -6,8 +6,8 @@ _Depends on: Phase 1 (directories must exist)_
 ```bash
 #!/bin/bash
 # Personal OS — persistent automation loop
-# Run in a dedicated terminal tab on your always-on Mac.
-# Prerequisite: System Settings > Battery > Options > "Prevent automatic sleeping when on power adapter"
+# Launched automatically by launchd (com.personalos.loop) — see Phase 8 Step 3.
+# To run manually: bash run-nightly.sh
 
 set -euo pipefail
 VAULT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -157,3 +157,63 @@ Create `.claude/settings.json` with this content so automated `claude --print` c
   }
 }
 ```
+
+---
+
+## Step 3: Register the automation loop with launchd
+
+This registers `run-nightly.sh` as a persistent macOS service. launchd starts it
+automatically at login and restarts it if it exits. The `PathState` guard means
+launchd only keeps it alive once `run-nightly.sh` exists — so it is safe to load
+this plist before the script is created.
+
+```bash
+VAULT_DIR="$(pwd)"
+PLIST_LABEL="com.personalos.loop"
+PLIST_PATH="$HOME/Library/LaunchAgents/${PLIST_LABEL}.plist"
+CLAUDE_BIN="$(command -v claude)"
+
+cat > "$PLIST_PATH" << PLIST
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>${PLIST_LABEL}</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/bin/bash</string>
+    <string>${VAULT_DIR}/run-nightly.sh</string>
+  </array>
+  <key>RunAtLoad</key>
+  <true/>
+  <key>KeepAlive</key>
+  <dict>
+    <key>PathState</key>
+    <dict>
+      <key>${VAULT_DIR}/run-nightly.sh</key>
+      <true/>
+    </dict>
+  </dict>
+  <key>WorkingDirectory</key>
+  <string>${VAULT_DIR}</string>
+  <key>StandardOutPath</key>
+  <string>${VAULT_DIR}/_system/logs/loop.log</string>
+  <key>StandardErrorPath</key>
+  <string>${VAULT_DIR}/_system/logs/loop-error.log</string>
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>PATH</key>
+    <string>/usr/local/bin:/usr/bin:/bin:/opt/homebrew/bin</string>
+  </dict>
+</dict>
+</plist>
+PLIST
+
+launchctl load "$PLIST_PATH"
+echo "Automation loop registered. It will start automatically once run-nightly.sh exists."
+```
+
+To check status: `launchctl list | grep personalos`
+To stop: `launchctl unload "$HOME/Library/LaunchAgents/com.personalos.loop.plist"`
+To restart: `launchctl kickstart gui/$(id -u)/com.personalos.loop`

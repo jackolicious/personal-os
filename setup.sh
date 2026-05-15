@@ -127,18 +127,17 @@ case "$TRANSCRIPT_TOOL" in
     ;;
 esac
 
-# ── Daily briefing automation ─────────────────────────────────────────────────
+# ── Automation loop ───────────────────────────────────────────────────────────
 
 echo ""
-echo -n "Automate daily briefing at 5:00 AM via launchd? [Y/n]: "
-read -r AUTO_BRIEF
+echo -n "Register the nightly automation loop via launchd (auto-starts on login)? [Y/n]: "
+read -r AUTO_LOOP
 
-if [[ ! "$AUTO_BRIEF" =~ ^[Nn]$ ]]; then
-  PLIST_LABEL="com.personalos.morning"
+if [[ ! "$AUTO_LOOP" =~ ^[Nn]$ ]]; then
+  PLIST_LABEL="com.personalos.loop"
   PLIST_PATH="$HOME/Library/LaunchAgents/${PLIST_LABEL}.plist"
   CLAUDE_BIN="$(command -v claude)"
-  BRIEFINGS_DIR="$VAULT_PATH/_system/briefings"
-  mkdir -p "$BRIEFINGS_DIR"
+  mkdir -p "$VAULT_PATH/_system/logs"
 
   cat > "$PLIST_PATH" << PLIST
 <?xml version="1.0" encoding="UTF-8"?>
@@ -150,21 +149,24 @@ if [[ ! "$AUTO_BRIEF" =~ ^[Nn]$ ]]; then
   <key>ProgramArguments</key>
   <array>
     <string>/bin/bash</string>
-    <string>-l</string>
-    <string>-c</string>
-    <string>cd "$VAULT_PATH" &amp;&amp; "$CLAUDE_BIN" --model claude-sonnet-4-6 --print "\$(cat .claude/commands/personal-os-daily-briefing.md)" &gt; "$BRIEFINGS_DIR/\$(date +%Y-%m-%d).md" 2&gt;&amp;1</string>
+    <string>$VAULT_PATH/run-nightly.sh</string>
   </array>
-  <key>StartCalendarInterval</key>
+  <key>RunAtLoad</key>
+  <true/>
+  <key>KeepAlive</key>
   <dict>
-    <key>Hour</key>
-    <integer>5</integer>
-    <key>Minute</key>
-    <integer>0</integer>
+    <key>PathState</key>
+    <dict>
+      <key>$VAULT_PATH/run-nightly.sh</key>
+      <true/>
+    </dict>
   </dict>
+  <key>WorkingDirectory</key>
+  <string>$VAULT_PATH</string>
   <key>StandardOutPath</key>
-  <string>$VAULT_PATH/_system/logs/morning.log</string>
+  <string>$VAULT_PATH/_system/logs/loop.log</string>
   <key>StandardErrorPath</key>
-  <string>$VAULT_PATH/_system/logs/morning-error.log</string>
+  <string>$VAULT_PATH/_system/logs/loop-error.log</string>
   <key>EnvironmentVariables</key>
   <dict>
     <key>PATH</key>
@@ -174,19 +176,11 @@ if [[ ! "$AUTO_BRIEF" =~ ^[Nn]$ ]]; then
 </plist>
 PLIST
 
-  launchctl load "$PLIST_PATH" 2>/dev/null && ok "Daily briefing scheduled at 5:00 AM" || warn "launchctl load failed — briefing plist saved at $PLIST_PATH, load manually"
+  launchctl load "$PLIST_PATH" 2>/dev/null && ok "Automation loop registered — starts automatically once bootstrap creates run-nightly.sh" || warn "launchctl load failed — plist saved at $PLIST_PATH, load manually after bootstrap"
+  echo ""
+  echo "  Mac sleep must be disabled for overnight runs:"
+  echo "  System Settings > Battery > Options > Prevent automatic sleeping when on power adapter"
 fi
-
-# ── Nightly synthesis ─────────────────────────────────────────────────────────
-
-echo ""
-echo "The nightly synthesis runs at 2:00 AM in a persistent terminal session."
-echo "After Claude finishes setting up your vault, start it with:"
-echo ""
-echo -e "  ${BLUE}bash $VAULT_PATH/run-nightly.sh${NC}"
-echo ""
-echo "Keep this running in a dedicated terminal tab. Mac sleep must be disabled:"
-echo "  System Settings > Battery > Options > Prevent automatic sleeping when on power"
 
 # ── Finish ────────────────────────────────────────────────────────────────────
 
