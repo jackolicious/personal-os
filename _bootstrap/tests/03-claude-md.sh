@@ -78,6 +78,7 @@ check_present "GOALS\.md" "always load: GOALS.md"
 check_present "HEARTBEAT\.md" "always load: HEARTBEAT.md"
 check_present "PILLARS\.md" "always load: PILLARS.md"
 check_present "profile/preferences/synthesis\.md" "always load: profile/preferences/synthesis.md"
+check_present "profile/preferences/communication\.md" "always load: profile/preferences/communication.md"
 
 # ── Inbox/CLAUDE.md ─────────────────────────────────────────────────────────
 
@@ -149,6 +150,18 @@ check_present "_index\.md" "interviews: references _index.md"
 check_present "role-context\.md" "interviews: references role-context.md"
 check_present "question-bank\.md" "interviews: references question-bank.md"
 check_present "notes/" "interviews: references notes/"
+
+# ── profile/preferences/communication.md ────────────────────────────────────
+
+echo ""
+echo "-- communication.md template --"
+
+check_present "No em dashes\|no em dashes" "communication: rule no em dashes"
+check_present "No adverbs\|no adverbs\|No -ly words\|no.*adverb" "communication: rule no adverbs"
+check_present "passive voice\|Passive voice" "communication: rule no passive voice"
+check_present "false agency\|False agency" "communication: rule no false agency"
+check_present "sycophancy\|No sycophancy\|no sycophancy" "communication: rule no sycophancy"
+check_present "throat-clearing\|throat.clearing" "communication: rule no throat-clearing"
 
 # ── Forbidden ───────────────────────────────────────────────────────────────
 

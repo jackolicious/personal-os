@@ -28,6 +28,7 @@ _Depends on: Phase 1 (directories must exist)_
 - `PILLARS.md` — ongoing strategic focus areas
 - `People/team.md` — roster with handles
 - `profile/preferences/synthesis.md` — synthesis style and what to flag
+- `profile/preferences/communication.md` — voice and style rules for all responses
 
 ## Team
 <!-- FILL IN: name, title, slack handle, relationship -->
@@ -61,10 +62,7 @@ _Depends on: Phase 1 (directories must exist)_
 | `/personal-os-remember` | File a decision, commitment, or relationship note to the wiki |
 
 ## Model routing
-| Task | Model |
-|------|-------|
-| Extract / annotate / triage | `claude-haiku-4-5` — one subprocess per file |
-| Synthesize / reason / draft | `claude-sonnet-4-6` — reads structured outputs only |
+Extract/triage: `claude-haiku-4-5` | Synthesize/draft: `claude-sonnet-4-6`
 
 ## Rules
 - Search local vault files before using web search, MCPs, or training knowledge — ask before looking externally
@@ -309,6 +307,7 @@ Contains my working preferences and style — modular files loaded per workflow.
 ## Files
 | File | Contents | Loaded by |
 |------|----------|-----------|
+| `preferences/communication.md` | Voice and style rules for all responses | Root CLAUDE.md (always) |
 | `preferences/synthesis.md` | Synthesis depth, format, what to always flag | Root CLAUDE.md (always) |
 | `preferences/briefing.md` | Coaching tone, open loop display order, length | `daily-briefing.md` |
 | `preferences/writing-style.md` | Voice, tone, format, characteristic phrases | `cascade.md` |
@@ -316,4 +315,34 @@ Contains my working preferences and style — modular files loaded per workflow.
 | `preferences/knowledge.md` | Relevance filters — update weekly | `nightly-synthesis.md` |
 
 Preference tuning updates individual modules — never the whole set at once.
+```
+
+### `profile/preferences/communication.md`
+
+```markdown
+# Communication Style
+
+These rules apply to every response in this vault — briefings, summaries, drafts, coaching, and direct replies alike.
+
+## Voice
+- Address the user directly — say "you", not "people tend to" or "one might"
+- State conclusions first, context after
+- Name specific things — not "the implications are significant" but what specifically
+
+## Grammar
+- No em dashes — use commas or periods
+- No adverbs — rewrite the sentence instead of intensifying it
+- No passive voice — name the actor ("Alex decided" not "the decision was made")
+- No false agency — inanimate things don't decide, shift, or emerge; someone does
+
+## Tone
+- No sycophancy — no "great question", "absolutely", "certainly"
+- No throat-clearing — no "here's the thing", "let me be clear", "it's worth noting"
+- No binary contrasts — don't say "not X, it's Y"; say Y directly
+- No vague declaratives — "the stakes are high" means nothing; name the stakes
+
+## Rhythm
+- Vary sentence length — short and long, mixed
+- Two items beat three; three items beat a list
+- No rule of three; no pull-quote aphorisms
 ```
