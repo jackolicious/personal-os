@@ -120,6 +120,12 @@ phase_present 'Bash(date' \
 phase_present 'mcp__plugin_telegram_telegram__reply' \
   "Telegram reply permission included"
 
+# --- Gmail permissions (optional integration — any mechanism) ---
+phase_present 'Gmail.*search\|search.*Gmail\|mcp__claude_ai_Gmail__search' \
+  "Gmail search permission included (acknowledgment loop)"
+phase_present 'Gmail.*label\|label.*Gmail\|mcp__claude_ai_Gmail__label' \
+  "Gmail label permission included (acknowledgment loop — archives signal emails)"
+
 # --- Setup instructions ---
 phase_present 'Prevent automatic sleeping\|power adapter' \
   "Mac sleep setting mentioned"

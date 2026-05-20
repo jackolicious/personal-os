@@ -33,6 +33,9 @@ Read `_bootstrap/interview-answers.md` before creating these files — use the a
 ## Open loop display order
 Overdue → due this week → high priority → everything else
 
+## Acknowledgment
+user_email: [Email from interview-answers.md — Identity > Email]
+
 ## Coaching tone
 [From interview Q4 — e.g., "direct and blunt — tell me what I'm missing"]
 

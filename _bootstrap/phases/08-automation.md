@@ -152,7 +152,13 @@ Create `.claude/settings.json` with this content so automated `claude --print` c
       "Bash(cat *)",
       "Bash(grep *)",
       "Bash(date *)",
-      "mcp__plugin_telegram_telegram__reply"
+      "mcp__plugin_telegram_telegram__reply",
+      "mcp__claude_ai_Gmail__search_threads",
+      "mcp__claude_ai_Gmail__label_message",
+      "mcp__claude_ai_Gmail__label_thread",
+      "mcp__claude_ai_Gmail__unlabel_message",
+      "mcp__claude_ai_Gmail__create_label",
+      "mcp__claude_ai_Gmail__list_labels"
     ]
   }
 }

@@ -139,6 +139,20 @@ case "$TRANSCRIPT_TOOL" in
     ;;
 esac
 
+# ── Optional integrations ────────────────────────────────────────────────────
+
+echo ""
+echo "Optional integrations (configure after bootstrap — Phase 9 has the checklist):"
+echo ""
+echo -e "  ${BLUE}Acknowledgment loop:${NC} open loops in your morning briefing include a"
+echo "  tap-to-close link. Tapping it sends a self-email; the next briefing"
+echo "  detects it and marks the loop done. Requires Gmail access via any"
+echo "  supported mechanism (MCP, Google CLI, or equivalent). Skips gracefully"
+echo "  if not connected."
+echo ""
+echo -e "  ${BLUE}Calendar:${NC} week-ahead brief and meeting prep require Google Calendar"
+echo "  or Apple Calendar access. Skips gracefully if not connected."
+
 # ── Automation loop ───────────────────────────────────────────────────────────
 
 echo ""

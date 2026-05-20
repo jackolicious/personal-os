@@ -26,7 +26,7 @@ Dead simple. All you need to do is point Claude Code here. [→ Quickstart](#qui
 | When | What happens |
 |------|-------------|
 | 2am nightly | New notes and transcripts processed into summaries, commitments extracted to open loops, wiki connections made, patterns flagged, indexes refreshed |
-| 5am daily | Morning brief generated: open loops, today's meetings, recent decisions, relationship health, coaching insight |
+| 5am daily | Morning brief generated: open loops with tap-to-close links, today's meetings, recent decisions, relationship health, coaching insight |
 | Sunday 8pm | Week-ahead brief generated: 7-day calendar scan, meetings needing prep flagged, focus blocks suggested for deep-work loops |
 
 All three run inside `run-nightly.sh`. **Required Mac setting:** System Settings → Battery → Options → "Prevent automatic sleeping when on power adapter"
@@ -48,6 +48,7 @@ All three run inside `run-nightly.sh`. **Required Mac setting:** System Settings
 
 - **Sources are sacred.** Raw transcripts and PDFs are never modified after ingestion.
 - **Context-efficient.** Each tier is loaded at the right abstraction level. A daily briefing costs ~3k tokens in context, not 50k.
+- **Loops close where they open.** Every open loop in the morning briefing includes a tap-to-close link. Tap it on your phone — your mail app opens with a pre-filled subject, you send, and the next morning's briefing marks it done. No manual tracking, no re-surfacing things you already handled. Requires Gmail access (any mechanism — MCP, CLI, or equivalent). Skips gracefully if not connected.
 
 ---
 

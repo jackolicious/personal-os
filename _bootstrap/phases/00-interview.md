@@ -8,6 +8,12 @@ ONE AT A TIME. Wait for each answer before proceeding.
 
 ## Questions
 
+**Q0:** What's your email address?
+
+_(Used for the acknowledgment loop: open loops in your daily briefing include a tap-to-close link that fires a self-email. Example: "you@example.com")_
+
+---
+
 **Q1:** What's your name, role, and company — and what's your start date there?
 
 _(Example: "Alex Chen, Head of Product at Acme, started March 2026")_
@@ -71,6 +77,7 @@ _Captured during bootstrap setup_
 - Role: [Q1 answer — role]
 - Company: [Q1 answer — company]
 - Start date: [Q1 answer — date]
+- Email: [Q0 answer — email address]
 
 ## Direct Reports
 [Q2 answer — one line per person]

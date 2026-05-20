@@ -82,12 +82,14 @@ Review open loops. Usage: /personal-os-open-loops [optional filter]
 $ARGUMENTS may contain a person name or project name.
 
 1. Read `_system/data/open-loops.json`
-2. Filter if argument provided (context_person or project match)
-3. Sort: overdue first → due this week → critical priority → high priority → rest
-4. Display each: title, owner, priority, due date, days open, source
-5. Flag any loop open >14 days without a note update
-6. Ask: "Do you want to update or archive any of these?"
-7. For each confirmed closure: set status="archived", closed_date=today
+2. Read `profile/preferences/briefing.md` — extract `user_email:` for mailto links
+3. Filter if argument provided (context_person or project match)
+4. Sort: overdue first → due this week → critical priority → high priority → rest
+5. Display each: title, owner, priority, due date, days open, source
+   For each loop with a non-null slug, append on a new line: `[✓ Done?](mailto:[user_email]?subject=EXO_DONE%3A%3A[slug])`
+6. Flag any loop open >14 days without a note update
+7. Ask: "Do you want to update or archive any of these?"
+8. For each confirmed closure: set status="archived", closed_date=today
 ```
 
 ### `.claude/commands/personal-os-new-1on1.md`

@@ -56,6 +56,11 @@ After scaffold is built, confirm each item before first use.
 - [ ] Confirm pillars were pre-filled from interview Q7
 - [ ] Add keywords for each pillar (used for auto-tagging loops)
 
+**Gmail access (optional — for acknowledgment loop):**
+- [ ] Connect Gmail via any supported mechanism (MCP, Google CLI, or equivalent) — the acknowledgment scan works with any method that can search and label mail
+- [ ] Confirm `profile/preferences/briefing.md` has `user_email:` filled in (pre-filled from interview Q0 if answered)
+- [ ] Test: run `/personal-os-daily-briefing` and confirm the scan either closes matched loops or reports gracefully when no EXO_DONE emails exist — if Gmail is not connected, it skips silently
+
 **Calendar integration (optional):**
 - [ ] If using Google Calendar: confirm Google Calendar MCP is connected in Claude Code
 - [ ] If using Apple Calendar: confirm macOS Calendar access is granted to Claude Code
@@ -68,6 +73,7 @@ After scaffold is built, confirm each item before first use.
 **`profile/preferences/`:**
 - [ ] All 5 modules pre-filled by Phase 0 interview — verify each file has real content, not placeholders
 - [ ] Set start_date in `_system/data/synthesis-log.json` preference_tuning section to today
+- [ ] Confirm `profile/preferences/briefing.md` has `user_email:` filled in (used for acknowledgment loop mailto links)
 
 ### First week rituals
 
@@ -94,7 +100,7 @@ After completing all phases, run these checks:
 2. `cat _system/data/synthesis-log.json` — should be valid JSON with empty processed_files
 3. `cat _system/data/open-loops.json` — should be valid JSON with empty loops array
 4. `ls .claude/commands/` — should show 11 command files (including personal-os-week-ahead.md)
-5. `ls _system/workflows/` — should show 8 workflow files (including week-ahead.md)
+5. `ls _system/workflows/` — should show 9 workflow files (including week-ahead.md and acknowledgment-scan.md)
 6. `ls profile/preferences/` — should show 5 files: synthesis.md, briefing.md, writing-style.md, 1on1.md, knowledge.md
 7. `bash run-nightly.sh` in a separate tab — confirm it starts without error
 8. `cat PILLARS.md` — should show 4–6 pillar sections with keywords

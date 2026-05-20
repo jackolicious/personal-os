@@ -182,6 +182,9 @@ check_present "$FILE" "## What to always include"   "briefing.md section: ## Wha
 check_present "$FILE" "## Commitment load thresholds" "briefing.md section: ## Commitment load thresholds"
 check_present "$FILE" "critical"                     "briefing.md threshold: critical"
 check_present "$FILE" "high"                         "briefing.md threshold: high"
+check_present "$FILE" "user_email"                   "briefing.md field: user_email (acknowledgment loop)"
+check_present "$FILE" "interview-answers\|Interview.*Email\|Email.*interview" \
+                                                     "briefing.md user_email sourced from interview answers"
 echo ""
 
 # ---------------------------------------------------------------------------

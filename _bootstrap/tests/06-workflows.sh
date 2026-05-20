@@ -44,6 +44,30 @@ echo ""
 # ---------------------------------------------------------------------------
 # daily-briefing
 # ---------------------------------------------------------------------------
+echo "-- acknowledgment-scan --"
+
+check_present "$FILE" "acknowledgment-scan" \
+  "acknowledgment-scan: workflow file defined"
+
+check_present "$FILE" "EXO_DONE" \
+  "acknowledgment-scan: EXO_DONE slug pattern defined"
+
+check_present "$FILE" "SKIP" \
+  "acknowledgment-scan: SKIP graceful degradation defined"
+
+check_present "$FILE" "48 hours\|newer_than:2d" \
+  "acknowledgment-scan: scan window defined"
+
+check_present "$FILE" "archived" \
+  "acknowledgment-scan: closes loops by setting status to archived"
+
+check_present "$FILE" "Archive\|archive\|label.*EXO_DONE\|EXO_DONE.*label" \
+  "acknowledgment-scan: archives signal emails after processing"
+
+check_present "$FILE" "user_email\|profile/preferences/briefing" \
+  "acknowledgment-scan: reads user_email from briefing.md"
+
+echo ""
 echo "-- daily-briefing --"
 
 check_present "$FILE" "daily-briefing" \
@@ -96,6 +120,15 @@ check_present "$FILE" "### Open loops requiring action" \
 
 check_present "$FILE" "_system/briefings/" \
   "daily-briefing: outputs to _system/briefings/"
+
+check_present "$FILE" "acknowledgment-scan\|Step 0\|Acknowledgment scan" \
+  "daily-briefing: Step 0 acknowledgment scan defined"
+
+check_present "$FILE" "EXO_DONE\|mailto" \
+  "daily-briefing: mailto acknowledgment links in open loops output"
+
+check_present "$FILE" "Loops closed\|CLOSED\|loops closed" \
+  "daily-briefing: Loops closed section in output format"
 
 echo ""
 
@@ -152,6 +185,9 @@ check_present "$FILE" "raw.md" \
 
 check_present "$FILE" "open-loops.json" \
   "meeting-notes: updates open-loops.json"
+
+check_present "$FILE" "slug" \
+  "meeting-notes: generates slug on loop creation"
 
 check_present "$FILE" "Inbox/archive/" \
   "meeting-notes: archives to Inbox/archive/"

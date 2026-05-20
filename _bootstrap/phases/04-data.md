@@ -15,6 +15,7 @@ Schema for each loop entry:
 {
   "id": "loop-001",
   "title": "string — the commitment or open question",
+  "slug": "string | null — URL-safe acknowledgment identifier, auto-generated on creation (e.g. 'prep-q3-roadmap'); null for entries created before this feature",
   "canonical_id": "string | null — null for canonical entries; loop ID of parent for merged duplicates",
   "owner": "string — who owns resolution",
   "context_person": "string | null",

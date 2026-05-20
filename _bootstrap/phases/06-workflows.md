@@ -1,6 +1,51 @@
 # Phase 6: Workflow Playbooks
 _Depends on: Phase 1 (_system/workflows/ must exist)_
 
+### `_system/workflows/acknowledgment-scan.md`
+
+```markdown
+# Acknowledgment Scan Workflow
+
+## Model: Haiku
+Simple read and match — no reasoning needed.
+
+## Purpose
+Scan Gmail for EXO_DONE signal emails and close matched open loops.
+Runs as Step 0 of the daily briefing. Designed to fail gracefully — a degraded scan never blocks the briefing.
+
+## Prerequisites
+Gmail MCP must be connected. If Gmail is unavailable, return `SKIP` immediately and proceed.
+
+## Steps
+
+### Step 1: Read user email
+Read `profile/preferences/briefing.md` — extract the `user_email:` field.
+
+### Step 2: Gmail scan
+Search Gmail for emails with subject starting `EXO_DONE::` received in the last 48 hours.
+Use search query: `subject:EXO_DONE newer_than:2d`.
+If Gmail MCP is unavailable or the search fails: return `SKIP`.
+
+### Step 3: Match and close loops
+For each matching email:
+1. Extract the slug: everything after `EXO_DONE::` in the subject, trimmed.
+2. Read `_system/data/open-loops.json`.
+3. Find the first loop where `slug` matches (case-insensitive). Only match canonical entries (canonical_id = null) with status open or in-progress.
+4. If matched: set `status` to `archived`, set `closed_date` to today, append `| [today] | Closed via acknowledgment link |` to `notes`. Write updated open-loops.json.
+5. If no match: record the slug as unmatched.
+
+### Step 4: Archive signal emails
+For each processed EXO_DONE email:
+- Label it "EXO_DONE" (create the label if it doesn't exist).
+- Archive the email (remove from inbox).
+If labeling fails: skip — do not block.
+
+### Step 5: Return summary
+- `CLOSED: [title1], [title2] | UNMATCHED: [slug1]` if anything happened
+- `NONE` if no EXO_DONE emails found
+- `SKIP` if Gmail was unavailable
+```
+
 ### `_system/workflows/daily-briefing.md`
 
 ```markdown
@@ -16,6 +61,11 @@ makes connections, and recommends one clear action for the day.
 ## Trigger: `/personal-os-daily-briefing`
 
 ## Steps
+
+0. **Acknowledgment scan**
+   Run `_system/workflows/acknowledgment-scan.md`.
+   Hold the result — it feeds into the output format below.
+   If result is `SKIP`: omit the "Loops closed" section and continue normally.
 
 1. **Load context**
    - Read `HEARTBEAT.md` (current focus, upcoming 1on1s)
@@ -35,10 +85,14 @@ makes connections, and recommends one clear action for the day.
 
 2. **Open loops triage**
    - Read `_system/data/open-loops.json`
+   - Read `profile/preferences/briefing.md` — extract `user_email:` field for mailto links
    - Filter to canonical entries only (canonical_id = null, status ≠ merged)
    - Categorize: overdue → due this week → high priority → everything else
    - Flag any loop open >14 days without a status update
    - For critical/overdue loops: draft a one-line suggested action
+   - For each loop with a non-null `slug`: generate a mailto acknowledgment link:
+     `mailto:[user_email]?subject=EXO_DONE%3A%3A[slug]`
+     Render as: `[✓ Done?](mailto:[user_email]?subject=EXO_DONE%3A%3A[slug])`
 
 2.5 **Commitment load check**
    - Count loops where status = open or in-progress and canonical_id = null
@@ -123,8 +177,14 @@ makes connections, and recommends one clear action for the day.
 ### Recent decisions
 [Decisions from last 7 days + any with overdue review dates — omitted if empty]
 
+### Loops closed since last briefing
+[Only shown when acknowledgment scan returned CLOSED loops]
+- ✓ [loop title]
+[UNMATCHED slugs shown here if any: "Unknown slug: [slug] — no matching loop found"]
+
 ### Open loops requiring action
 [Overdue / due today / high priority — with suggested action]
+[Each loop with a slug: append `[✓ Done?](mailto:[user_email]?subject=EXO_DONE%3A%3A[slug])` on a new line]
 
 ### Pillar balance
 [Only shown when one pillar holds >60% of tagged loops]
@@ -253,6 +313,7 @@ When a new Granola transcript appears in `Inbox/transcripts/`
 
 5. **Update open loops**
    - New commitments → append to `_system/data/open-loops.json` with priority and due date
+   - For each new loop: generate `slug` — lowercase title, spaces to hyphens, strip all chars except a-z/0-9/hyphens, truncate to 40 chars. If not unique in open-loops.json, append -2, -3.
    - Closed commitments → set status to "archived"
 
 6. **Update action items** → append to `Meetings/action-items.md`
@@ -514,6 +575,7 @@ Loops with `pillar` already set are not re-tagged (preserve manual overrides).
 
 ### Step 5: Open loop maintenance
 - Scan tonight's summaries for new commitments → append to open-loops.json with priority
+- For each new loop: generate `slug` — lowercase title, spaces to hyphens, strip all chars except a-z/0-9/hyphens, truncate to 40 chars. If not unique in open-loops.json, append -2, -3.
 - Flag loops where due_date < today and status = open or in-progress
 - Flag loops where status = open and opened_date > 14 days ago (no update)
 

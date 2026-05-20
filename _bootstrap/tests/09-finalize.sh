@@ -54,7 +54,7 @@ phase_present 'open-loops.json' \
   "open-loops.json validation present"
 phase_present '11 command\|command.*11\|commands/.*11\|11.*command' \
   "Command files count check (>=11) present"
-phase_present '8 workflow\|workflow.*8\|workflows/.*8\|8.*workflow' \
+phase_present '[89] workflow\|workflow.*[89]\|workflows/.*[89]\|[89].*workflow' \
   "Workflow files count check (>=8) present"
 phase_present '5 files\|5 file\|show 5\|five files\|preferences/.*5' \
   "Preference files count check (5 files) present"
@@ -62,6 +62,12 @@ phase_present 'run-nightly.sh.*executable\|executable.*run-nightly\|bash run-nig
   "run-nightly.sh executable/startup check present"
 phase_present 'PILLARS.md' \
   "PILLARS.md content check present"
+
+phase_present 'Gmail\|gmail\|acknowledgment loop\|acknowledgment' \
+  "Gmail optional integration mentioned in setup checklist"
+
+phase_present 'user_email\|briefing\.md.*email\|email.*briefing\.md' \
+  "user_email fill-in confirmed in setup checklist"
 
 # --- Cleanup: save design rationale ---
 phase_present 'Knowledge/wiki/system-design.md' \

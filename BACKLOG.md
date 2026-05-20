@@ -1,13 +1,17 @@
 # Personal OS — CPO Chief of Staff Backlog
-_Development backlog for the bootstrap project. Last updated: 2026-05-10_
+_Development backlog for the bootstrap project. Last updated: 2026-05-20_
 
 ## Design principles (established 2026-05-10)
 - Connection-type agnostic: workflows define what's needed (calendar events, messages, context), not how to get it
 - Graceful degradation: each workflow has a fallback mode that works without any integration
 - Auto-resolve policy: follow clawchief resolution model — auto-resolve low-risk operational tasks, draft-and-ask for judgment calls, escalate-without-acting when authority is unclear
 - Integration setup is the user's responsibility (MCP, API, CLI, etc.)
+- Drop-zone model is intentional: no auto-ingestion of communications. The acknowledgment loop closes loops; it does not open them.
 
 ## Active sprint
+
+### P. Acknowledgment loop [DONE — 2026-05-20]
+EXO_DONE mailto mechanism. Tapping a link on mobile sends a self-email; Step 0 of the daily briefing scans Gmail for matches and closes the loop in open-loops.json. Auto-archives signal emails. Gracefully skips if Gmail is unavailable.
 
 ### A. Proactive meeting prep [IN PROGRESS — brainstorming]
 Extend 1on1 prep to all calendar meetings. Proactive trigger (before meetings start or in daily briefing). Connection-agnostic calendar scanning with graceful degradation.
@@ -61,4 +65,6 @@ Compact daily output: top 3 priorities, key meetings, one focus metric. Telegram
 ---
 
 ## Completed
-_(nothing yet)_
+
+### P. Acknowledgment loop (2026-05-20)
+EXO_DONE mailto mechanism borrowed from POHA. Open loops in daily briefing and `/personal-os-open-loops` include a tappable `[✓ Done?]` mailto link. Tapping sends a self-email; Step 0 of the daily briefing scans Gmail for matches and closes the loop. Auto-archives signal emails. Gracefully skips if Gmail is unavailable. Slugs auto-generated on loop creation.

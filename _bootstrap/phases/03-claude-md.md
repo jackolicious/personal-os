@@ -289,6 +289,7 @@ Questions are tagged by type so prep can pull the most relevant:
 | Workflow | When to use | File |
 |----------|------------|------|
 | daily-briefing | Each morning | `daily-briefing.md` |
+| acknowledgment-scan | Step 0 of daily briefing | `acknowledgment-scan.md` |
 | cascade | Weekly, Friday | `cascade.md` |
 | meeting-notes | After any meeting with transcript | `meeting-notes.md` |
 | 1on1-prep | Before any 1on1 | `1on1-prep.md` |
