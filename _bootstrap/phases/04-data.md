@@ -161,6 +161,14 @@ Nightly synthesis updates these after processing each file (see Step 7).
 | 2026-04-28 | All-Hands | team | 12 | 2 | yes |
 ```
 
+**`Knowledge/annotated/_index.md`** — one row per annotated source, append-only:
+```markdown
+| Source | Type | Key concepts | Filed |
+|--------|------|--------------|-------|
+| product-strategy-frameworks.md | url | roadmap, prioritization | 2026-04-28 |
+```
+Type values: `note` | `pdf` | `url` (mirrors the `source_type:` field in each annotation).
+
 Rule: if a workflow needs to know what's in a directory, it reads `_index.md` first.
 It only opens individual files when it knows specifically which ones it needs.
 
@@ -178,5 +186,5 @@ Statuses: `pending` → `processed` (or `flagged` for unrouted)
 
 The nightly shell step adds new files with Type `unknown` and Status `pending`. Pass 1 updates both Type and Status after processing.
 
-Create empty `_index.md` files in: `1on1s/`, `Meetings/`, `Knowledge/wiki/`, `Interviews/`.
+Create empty `_index.md` files in: `1on1s/`, `Meetings/`, `Knowledge/wiki/`, `Knowledge/annotated/`, `Interviews/`.
 `Inbox/_index.md` and `Inbox/_unrouted.md` are created in Phase 1 with their initial content.

@@ -45,6 +45,8 @@ check_present "## Model routing" "model routing table present"
 check_present "## Rules" "rules section present"
 check_present "synthesis-log\.json" "rule: check synthesis-log.json before processing"
 check_present "Knowledge/annotated/" "rule: never modify Knowledge/annotated/"
+check_present "wiki-query\.md.*before answering\|General or factual questions" \
+  "rule: general questions route through wiki-query.md before answering"
 check_present "Open loops.*append only\|append only.*open loops\|Open loops: append only" \
   "rule: open loops append only"
 check_present "append dated sections" "rule: wiki pages append dated sections"
@@ -98,6 +100,7 @@ echo ""
 echo "-- Knowledge/CLAUDE.md template --"
 
 check_present "annotated/" "knowledge: layers table has annotated/"
+check_present "annotated/_index.md" "knowledge: points to annotated/_index.md for source lookup"
 check_present "source_type" "knowledge: annotation metadata field source_type"
 check_present "original:" "knowledge: annotation metadata field original"
 check_present "processed_at" "knowledge: annotation metadata field processed_at"

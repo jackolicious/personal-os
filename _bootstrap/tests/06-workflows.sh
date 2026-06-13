@@ -267,6 +267,9 @@ check_present "$FILE" "Inbox/_archive/" \
 check_present "$FILE" "synthesis-log.json" \
   "link-ingestion: logs to synthesis-log.json"
 
+check_count_gte "$FILE" "Knowledge/annotated/_index.md" 5 \
+  "annotated index written by ingestion workflows and read by query/nightly"
+
 echo ""
 
 # ---------------------------------------------------------------------------
@@ -438,6 +441,12 @@ check_present "$FILE" "one hop only" \
 
 check_present "$FILE" "conditional\|Conditional\|Only run this step" \
   "wiki-query: annotated source fallback is conditional"
+
+check_present "$FILE" "Read \`Knowledge/annotated/_index.md\`" \
+  "wiki-query: reads annotated index before grepping"
+
+check_present "$FILE" "default path for general or factual questions" \
+  "wiki-query: noted as default path for general questions"
 
 check_present "$FILE" "Nothing in the wiki" \
   "wiki-query: no-match case returns explicit message"
