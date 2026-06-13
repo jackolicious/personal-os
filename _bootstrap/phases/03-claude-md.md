@@ -65,7 +65,8 @@ _Depends on: Phase 1 (directories must exist)_
 Extract/triage: `claude-haiku-4-5` | Synthesize/draft: `claude-sonnet-4-6`
 
 ## Rules
-- Search local vault files before using web search, MCPs, or training knowledge — ask before looking externally
+- General or factual questions: follow `_system/workflows/wiki-query.md` (vault index-first) before answering. Do not answer from training knowledge when the vault may cover it; if nothing matches, say so
+- Search local vault files before web search or MCPs; ask before looking externally
 - Check `_system/data/synthesis-log.json` before processing any file
 - Never modify files in `Knowledge/annotated/` or `Inbox/transcripts/`
 - Open loops: append only — archive, never delete
@@ -198,6 +199,8 @@ Karpathy-style: sources are immutable, wiki is LLM-synthesized and append-only.
 |-------|------|-------|
 | Annotated | `annotated/` | Immutable after annotation. Never modified. |
 | Wiki | `wiki/` | Append-only. Dated sections. Never rewrite. |
+
+Read `annotated/_index.md` first to find sources without scanning the directory.
 
 ## Source annotation format
 Every file in `annotated/` has a metadata block at top:

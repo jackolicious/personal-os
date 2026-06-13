@@ -349,11 +349,13 @@ Run as a separate subprocess per file.
 
 4. **File** annotated version to `Knowledge/annotated/[slug].md`
 
-5. **Queue for nightly wiki synthesis** — connections made during nightly run
+5. **Update `Knowledge/annotated/_index.md`** — append a row: `| [slug].md | pdf | [top 3–5 key_concepts] | [today] |`
 
-6. **Log in synthesis-log.json**
+6. **Queue for nightly wiki synthesis** — connections made during nightly run
 
-7. **Archive original** → move PDF and converted .md to `Inbox/archive/pdfs/[filename]`
+7. **Log in synthesis-log.json**
+
+8. **Archive original** → move PDF and converted .md to `Inbox/archive/pdfs/[filename]`
 ```
 
 ### `_system/workflows/note-ingestion.md`
@@ -386,9 +388,11 @@ When the Inbox router classifies a file as `note`.
 
 5. **Update synthesis-log.json** — log the file with processing_type: "annotation", output_files: [Knowledge/annotated/[slug].md]
 
-6. **Update Inbox/_index.md** — set Type to `note`, Status to `processed`
+6. **Update `Knowledge/annotated/_index.md`** — append a row: `| [slug].md | note | [top 3–5 key_concepts] | [today] |`
 
-7. **Archive original** → move file to `Inbox/_archive/[filename]`
+7. **Update Inbox/_index.md** — set Type to `note`, Status to `processed`
+
+8. **Archive original** → move file to `Inbox/_archive/[filename]`
 ```
 
 ### `_system/workflows/link-ingestion.md`
@@ -434,9 +438,11 @@ A file is classified as `link` if it consists primarily of URLs (one or more), w
 
 5. **Update synthesis-log.json** — log the source file with processing_type: "annotation", output_files: [all Knowledge/sources paths created]
 
-6. **Update Inbox/_index.md** — set Type to `link`, Status to `processed`
+6. **Update `Knowledge/annotated/_index.md`** — append one row per annotated file created: `| [slug].md | url | [top 3–5 key_concepts] | [today] |`
 
-7. **Archive original** → move file to `Inbox/_archive/[filename]`
+7. **Update Inbox/_index.md** — set Type to `link`, Status to `processed`
+
+8. **Archive original** → move file to `Inbox/_archive/[filename]`
 ```
 
 ### `_system/workflows/1on1-prep.md`
@@ -631,6 +637,7 @@ After all files are processed, refresh each `_index.md`:
 - `1on1s/_index.md` — update last session date, session count, last contact for any person touched tonight
 - `1on1s/[Name]/sessions/_index.md` — append row for each new session processed
 - `Knowledge/wiki/_index.md` — append row for each new wiki page created; update source count for existing
+- `Knowledge/annotated/_index.md` — append a row for each annotated source filed tonight (if the per-file workflow did not already)
 - `Meetings/_index.md` — append row for each meeting processed
 Never rewrite the full index — append or update only the rows that changed.
 
@@ -859,6 +866,7 @@ If yes, post the brief to the configured Telegram chat.
 Synthesis across multiple knowledge sources requires reasoning.
 
 ## Trigger: `/personal-os-query [question]`
+Also the default path for general or factual questions asked in the vault (see root CLAUDE.md Rules), not only the explicit command.
 
 ## Steps
 
@@ -881,8 +889,8 @@ Cap the total reading list at 10 pages.
 
 ### Step 4: Annotated sources (conditional)
 Only run this step if wiki pages don't fully answer the query, or the query references a specific source, event, or person not yet synthesized into the wiki:
-- Grep `Knowledge/annotated/` for files whose `key_concepts:` metadata contains terms from the query
-- Read the top 3 most relevant annotated sources
+- Read `Knowledge/annotated/_index.md`. Scan the Key concepts column for terms matching the query, rank by relevance, and read only the top 3 matched source files.
+- Fallback: if `Knowledge/annotated/_index.md` is missing (a vault predating it), grep `Knowledge/annotated/` for files whose `key_concepts:` metadata contains terms from the query, then read the top 3.
 
 If wiki pages give a complete answer: skip this step.
 

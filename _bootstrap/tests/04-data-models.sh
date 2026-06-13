@@ -166,6 +166,11 @@ check_present "$FILE" 'Type'                        "Meetings/_index.md: Type co
 check_present "$FILE" 'Participants'                "Meetings/_index.md: Participants column defined"
 check_present "$FILE" 'Action items'                "Meetings/_index.md: Action items column defined"
 
+check_present "$FILE" 'Knowledge/annotated/_index\.md' "Knowledge/annotated/_index.md referenced"
+check_present "$FILE" 'Key concepts'                "annotated/_index.md: Key concepts column defined"
+check_present "$FILE" 'Filed'                        "annotated/_index.md: Filed column defined"
+check_present "$FILE" 'Knowledge/annotated/`, `Interviews/' "annotated/_index.md created with other indexes at scaffold"
+
 check_present "$FILE" 'Inbox/_index\.md'            "Inbox/_index.md referenced"
 check_present "$FILE" 'File'                        "Inbox/_index.md: File column defined"
 check_present "$FILE" 'Status'                      "Inbox/_index.md: Status column defined"

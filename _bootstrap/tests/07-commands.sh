@@ -84,6 +84,7 @@ echo ""
 # --- personal-os-ingest-url content ---
 
 check_present "$FILE" "Knowledge/annotated/"                  "ingest-url saves to Knowledge/annotated/"
+check_present "$FILE" "Knowledge/annotated/_index.md"        "ingest-url updates annotated/_index.md"
 check_present "$FILE" "Inbox/archive"                         "ingest-url moves file to Inbox/archive"
 check_present "$FILE" "_archive/\|_archive\b"                 "process-inbox moves file to Inbox/_archive"
 
