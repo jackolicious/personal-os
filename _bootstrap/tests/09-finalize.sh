@@ -46,18 +46,22 @@ phase_present() {
 echo "=== 09-finalize.sh ==="
 
 # --- Validation checklist ---
-phase_present 'CLAUDE.md.*7\+\|7+ CLAUDE\|7.*CLAUDE.md\|CLAUDE.md.*7' \
-  "CLAUDE.md count check (>=7) present"
+# These asserted the literal numbers Phase 9 happened to state, which pinned the drift in
+# place: the counts were wrong for months and this suite stayed green on them. Assert that a
+# count check EXISTS here, and let test 16 own whether the number is right, since it derives
+# every count from the phases that create the files.
+phase_present 'CLAUDE.md files' \
+  "CLAUDE.md count check present"
 phase_present 'synthesis-log.json' \
   "synthesis-log.json validation present"
 phase_present 'open-loops.json' \
   "open-loops.json validation present"
-phase_present '11 command\|command.*11\|commands/.*11\|11.*command' \
-  "Command files count check (>=11) present"
-phase_present '[89] workflow\|workflow.*[89]\|workflows/.*[89]\|[89].*workflow' \
-  "Workflow files count check (>=8) present"
-phase_present '5 files\|5 file\|show 5\|five files\|preferences/.*5' \
-  "Preference files count check (5 files) present"
+phase_present 'command files' \
+  "Command files count check present"
+phase_present 'workflow files' \
+  "Workflow files count check present"
+phase_present 'profile/preferences/' \
+  "Preference files count check present"
 phase_present 'run-nightly.sh.*executable\|executable.*run-nightly\|bash run-nightly' \
   "run-nightly.sh executable/startup check present"
 phase_present 'PILLARS.md' \
