@@ -164,6 +164,100 @@ Create `.claude/settings.json` with this content so automated `claude --print` c
 }
 ```
 
+
+## Step 2b: Install the prose guard hook
+
+The vault's writing rules (Phase 3, `profile/preferences/communication.md`) ban em dashes. A rule
+stated in prose is followed when convenient. Install a `PreToolUse` hook so a Write or Edit that
+introduces an em dash is blocked and retried.
+
+Create `.claude/hooks/no-em-dashes.sh`:
+
+```bash
+#!/bin/bash
+# PreToolUse hook: block a Write/Edit to a markdown file that introduces an em dash.
+# The vault's writing rules ban them (profile/preferences/communication.md).
+set -u
+
+INPUT=$(cat)
+FILE=$(printf '%s' "$INPUT" | jq -r '.tool_input.file_path // ""')
+
+# Markdown prose only.
+case "$FILE" in
+  *.md) ;;
+  *) exit 0 ;;
+esac
+
+# The style guide quotes the banned character as an example, do not lint it.
+case "$FILE" in
+  */profile/preferences/communication.md) exit 0 ;;
+esac
+
+# Raw captured content is not the vault owner's prose.
+case "$FILE" in
+  */Inbox/*|*-transcript.md) exit 0 ;;
+esac
+
+CONTENT=$(printf '%s' "$INPUT" | jq -r '
+  if .tool_input.content then .tool_input.content
+  elif .tool_input.new_string then .tool_input.new_string
+  elif .tool_input.edits then [.tool_input.edits[].new_string] | join("\n")
+  else ""
+  end
+')
+
+case "$CONTENT" in
+  *—*)
+    cat >&2 <<MSG
+BLOCKED: em dash (—) detected in $FILE.
+
+The vault's writing rules ban em dashes. Replace each one with a comma, a period, or rephrase.
+Retry the Write/Edit with no em dashes.
+MSG
+    exit 2 ;;
+esac
+
+exit 0
+```
+
+Make it executable:
+
+```bash
+chmod +x .claude/hooks/no-em-dashes.sh
+```
+
+Then add the `hooks` block to `.claude/settings.json` alongside `permissions`:
+
+```json
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Write|Edit|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/no-em-dashes.sh"
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+**Quote `$CLAUDE_PROJECT_DIR`.** This is not cosmetic. Most vaults live on a path with a space in
+it (`~/Google Drive/My Drive/...`, `~/Library/Mobile Documents/...`, `~/OneDrive/My Notes`). Written
+unquoted as `$CLAUDE_PROJECT_DIR/.claude/hooks/no-em-dashes.sh`, the shell splits on the space,
+tries to execute `/Users/you/Google`, and fails. A `PreToolUse` hook that fails to launch does not
+block the tool, so the guard silently protects nothing and looks correctly configured while doing
+it. Verify after install:
+
+```bash
+CLAUDE_PROJECT_DIR="$(pwd)" sh -c '"$CLAUDE_PROJECT_DIR"/.claude/hooks/no-em-dashes.sh' </dev/null
+echo "exit=$?  # 0 means the script launched"
+```
+
 ---
 
 ## Step 3: Register the automation loop with launchd

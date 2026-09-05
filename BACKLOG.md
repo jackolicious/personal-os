@@ -68,3 +68,13 @@ Compact daily output: top 3 priorities, key meetings, one focus metric. Telegram
 
 ### P. Acknowledgment loop (2026-05-20)
 EXO_DONE mailto mechanism borrowed from POHA. Open loops in daily briefing and `/personal-os-open-loops` include a tappable `[✓ Done?]` mailto link. Tapping sends a self-email; Step 0 of the daily briefing scans Gmail for matches and closes the loop. Auto-archives signal emails. Gracefully skips if Gmail is unavailable. Slugs auto-generated on loop creation.
+
+## Prose rule cleanup in the template's own files
+
+The installer teaches "no em dashes" and its own source carries 394 of them, 40 of those inside
+`_bootstrap/phases/03-claude-md.md`, the file that states the rule. The self-refuting line is fixed
+and the guard now ships to installed vaults (Phase 8 Step 2b, test 10). The template's own prose is
+still unclean.
+
+Worth doing as a mechanical sweep with a ratchet test so the count can only fall. Shell scripts need
+care, since an em dash inside a `grep` pattern is load bearing while one inside an `echo` is not.
