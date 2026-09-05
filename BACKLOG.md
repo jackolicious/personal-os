@@ -23,8 +23,16 @@ Write in Jack's voice for Slack posts, cascade drafts, PRDs, external comms. Inc
 
 ## Backlog (roughly prioritized)
 
-### L. Decision Log
-Lightweight workflow to capture consequential decisions as they're made: what was decided, alternatives considered, rationale, expected outcome. Stored in `Decisions/` directory. Quarterly retrospective pass compares expected vs. actual outcomes. Solves re-litigation of settled debates and builds an institutional memory of product judgment calls.
+### L. Decision Log [DONE, 2026-09-05]
+Shipped as decision records. `Decisions/<slug>/decision.md` (standalone) or
+`Projects/<project>/decisions/<slug>/` (project-scoped), both indexed in `Decisions/_index.md`.
+DACI with exactly one accountable approver, reversibility classified first, roughly three
+options with who recommends what, an evidence bar, and an append-only decision log. Driven by
+`/personal-os-decide` and `_system/workflows/decision-record.md`, with principles the owner
+edits in `profile/preferences/decisions.md`. Guard: `_bootstrap/tests/14-decision-records.sh`.
+
+Still open from the original item: the quarterly retrospective pass that compares the expected
+outcome against what happened. The record has the fields for it, nothing reads them yet.
 
 ### M. Customer Signal Synthesis
 On ingestion of customer call transcripts, extract jobs-to-be-done, pain points, and feature signals and append to `Knowledge/customer-signals.md`. Quarterly rollup surfaces top themes for roadmap prioritization. Makes the three-tier compounding work for customer intel, not just internal 1:1s.

@@ -72,6 +72,136 @@ Match this style exactly when drafting Down, Lateral, and Up versions.
 Avoid corporate jargon unless that's explicitly my style.
 ```
 
+### `profile/preferences/decisions.md`
+
+```markdown
+# Decision-Making Principles
+
+How you make decisions, and how `/personal-os-decide` should behave on your behalf. Loaded at
+the start of every decision session. Edit this file to make the skill argue the way you do.
+
+## The principles
+
+**1. Two-way door, make the call.** Reversible decisions get speed. Spending one-way-door
+rigor on a two-way-door call is the waste to catch. Classify reversibility first, and when the
+call is reversible, say "the bar is decide and move" out loud rather than building an analysis
+nobody needed.
+
+**2. Push decisions to the edge.** Whoever is closest to the problem should decide.
+Aggregating decisions at the top is an org-scaling failure wearing the costume of control.
+
+**3. Empowerment is gated on context and ownership.** Principle 2 has a precondition. The
+person at the edge has to hold enough context and has to own the strategy, or the call goes
+wrong. Aspire to defer, then check that the owner can carry it.
+
+**4. The decider asks first.** When you are the approver, solicit the domain owner's
+recommendation before asserting your own. The owner says what the decision should be, then you
+decide.
+
+**5. Name escalations explicitly, and treat them as healthy.** An escalation is not throwing a
+peer under the bus. State the divergent recommendations, take it to the single accountable
+approver, and have them say why they called it that way, so everyone keeps the context.
+Escalating to break a tie is good. Staying stuck is the failure.
+
+**6. DACI, one accountable approver, log the why.** Use the lightest framework people will
+actually adopt. Every real decision has a Driver, exactly one Approver, Contributors, and
+Informed. The artifact is the decision, roughly three options, who recommends what, one
+result, and the reason it was called that way, written down.
+
+**7. Bias to action when no one owns it.** When a thing is unowned and reversible, the default
+is to move rather than wait for permission.
+
+## How the skill applies these
+
+- Lead with reversibility. Two-way door, push to decide. One-way door, hold the evidence bar
+  before sign-off.
+- Insist on exactly one approver. When the source names several sign-offs, surface the gap and
+  ask who is accountable.
+- Show the driver's recommendation, and for a contested call ask what the domain owner
+  recommends before offering a verdict.
+- Log disagreements and the final why as first-class content. Do not smooth them over.
+- Surface stuck decisions. A record sitting unmoved past its evidence bar is the thing to
+  flag, not to wait out.
+
+## Adoption note
+
+Keep the record short enough that a busy owner fills it in. A heavier artifact nobody
+completes is worse than a lighter one that gets used. If you find yourself skipping the
+record, cut a section from the template rather than skipping the record.
+```
+
+### `_system/templates/decision.md`
+
+````markdown
+---
+status: proposed          # proposed | in-review | decided | deferred | reversed
+reversibility:            # two-way | one-way | mixed
+driver:                   # who is running this decision
+approver:                 # exactly one accountable name
+contributors: []
+informed: []
+scope:                    # standalone | [project-name]
+source:                   # where this came from
+date_opened: YYYY-MM-DD
+date_decided:
+---
+
+# [Decision title]
+
+## Decision statement
+One line. The specific call being made, phrased so a yes or no is possible.
+
+## Reversibility
+two-way | one-way | mixed. If mixed, name which part is irreversible, because that part is
+the only part that earns the evidence bar.
+
+## DACI
+| Role | Who |
+|------|-----|
+| Driver | |
+| Approver | (exactly one) |
+| Contributors | |
+| Informed | |
+
+## Context
+What forced the decision, and what happens if nobody decides.
+
+## Options
+Roughly three, genuinely different.
+
+### Option A: [name]
+- What it is:
+- Who recommends it, and why:
+- Cost:
+
+### Option B: [name]
+### Option C: [name]
+
+## Implications
+Second and third-order effects, the precedent it sets, what it forecloses, what it depends on.
+This is the part a fast yes misses, so spend the effort here on one-way doors.
+
+## Evidence bar
+What has to be known or true before sign-off.
+- [ ]
+- [ ]
+
+## Escalations and disagreements
+Who diverged, on what, and how it resolved. Append, never overwrite.
+
+## Decision and why
+The call, the approver, and the reason it went that way. Written for someone reading it in six
+months with none of today's context.
+
+## Follow-through
+- [ ] Who needs to be told
+- [ ] What changes as a result
+
+## Decision log
+Append-only. One dated line per state change, position shift, or escalation.
+- YYYY-MM-DD: opened
+````
+
 ### `profile/preferences/1on1.md`
 
 ```markdown
