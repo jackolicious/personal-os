@@ -16,6 +16,7 @@ _Depends on: Phase 1 (directories must exist)_
 | `1on1s/` | Per-person: profile, open loops, session notes |
 | `Meetings/` | Summaries + master action item list |
 | `Projects/` | Active initiatives |
+| `Decisions/` | Decision records (DACI). Project-scoped ones live under `Projects/<project>/decisions/` |
 | `Knowledge/` | Sources (immutable) + wiki (synthesized) |
 | `People/` | Team roster + stakeholder map |
 | `Interviews/` | Active roles: per-role context, question bank, interview notes |
@@ -59,6 +60,7 @@ _Depends on: Phase 1 (directories must exist)_
 | `/personal-os-interview-prep [role]` | Generate prep brief for next interview |
 | `/personal-os-career-evidence [range?]` | Review captured accomplishments, generate brag doc |
 | `/personal-os-week-ahead` | Generate week-ahead brief with calendar scan and focus blocks |
+| `/personal-os-decide [title]` | Open, resume, or close a decision record |
 | `/personal-os-remember` | File a decision, commitment, or relationship note to the wiki |
 
 ## Model routing
@@ -72,6 +74,7 @@ Extract/triage: `claude-haiku-4-5` | Synthesize/draft: `claude-sonnet-4-6`
 - Never modify files in `Knowledge/annotated/` or `Inbox/transcripts/`
 - Open loops: append only — archive, never delete
 - Wiki pages: append dated sections, never rewrite core content
+- A real call (deal, price, scope, hire, org move, vendor, commitment) gets a decision record via `/personal-os-decide`, with exactly one accountable approver and the logged why
 - Load `profile/preferences/synthesis.md` for any briefing or synthesis; workflows load their own specific preference module
 - `_system/` is managed by automation — do not edit files there directly
 ```
@@ -206,6 +209,53 @@ Completed items move to `## Completed` section — never deleted.
   drafts/      ← versioned drafts (v0, v1, etc.)
   [final].md   ← current canonical version
 ```
+````
+
+### `Decisions/CLAUDE.md`
+
+````markdown
+# Decisions
+
+Decision records. One folder per decision, `decision.md` inside it is the canonical state.
+
+## Where a decision lives
+- **Standalone** (`Decisions/<slug>/`): a cross-cutting or one-off call. A vendor, a price, an
+  org move, a commitment that touches more than one initiative.
+- **Project-scoped** (`Projects/<project>/decisions/<slug>/`): a call that only makes sense
+  inside one live initiative. Add a `## Decisions` pointer to that project's `CLAUDE.md`.
+
+Both are indexed in `Decisions/_index.md`, so there is one portfolio view. Default to
+standalone when unsure.
+
+## The rules that carry the weight
+- **Classify reversibility first.** A two-way door gets speed. Spending one-way-door rigor on
+  a reversible call is the waste to catch, and the record should say the bar out loud.
+- **Exactly one accountable approver.** A decision with three sign-offs and no single owner is
+  a diffusion of responsibility. When the source names several, that gap is the first thing to
+  close, not a footnote.
+- **Log the why.** The reason a call went the way it did is the part that is worth re-reading
+  in six months. The options and the debate are supporting material.
+- **Log disagreement, do not dissolve it.** Divergent positions are the most useful content in
+  the record. Name them, resolve them at the approver, record both views.
+- **Do not relitigate a decided call.** Read the decision log before reopening. State the call
+  and its logged why first, and reopen only on a real change (status becomes `reversed`, with
+  the reason).
+
+## Status values
+`proposed` | `in-review` | `decided` | `deferred` | `reversed`
+
+## Index format
+`_index.md` carries one row per decision:
+
+| Decision | Scope | Status | Reversibility | Approver | Decided |
+|----------|-------|--------|---------------|----------|---------|
+| [slug](path/decision.md) | standalone \| project | proposed | two-way | [NAME] | |
+
+## Query patterns
+- "What is open?" then read `_index.md`, filter to `proposed` and `in-review`
+- "Why did we pick X?" then read that record's `## Decision and why`, no other section
+- "What is stuck?" then read `_index.md` for records whose evidence bar has been complete for
+  more than a week with no decision
 ````
 
 ### `Knowledge/CLAUDE.md`

@@ -12,6 +12,7 @@ Projects/
 Projects/product-strategy/
 Projects/product-strategy/inputs/
 Projects/product-strategy/drafts/
+Decisions/
 Knowledge/
 Knowledge/annotated/
 Knowledge/wiki/
