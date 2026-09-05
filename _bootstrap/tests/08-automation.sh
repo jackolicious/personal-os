@@ -66,11 +66,15 @@ phase_present '_system/briefings/week-ahead-' \
 phase_present '_system/briefings/\$TODAY' \
   "Daily briefing output saved to _system/briefings/"
 
-# --- Date tracking (run-once-per-day guards) ---
-phase_present 'NIGHTLY_DONE_DATE\|BRIEFING_DONE_DATE\|WEEK_AHEAD_DONE_DATE' \
-  "Date tracking variables present for run-once-per-day guards"
-phase_present 'DONE_DATE.*TODAY\|TODAY.*DONE_DATE' \
-  "Date tracking variables compared to TODAY"
+# --- Run-once-per-day guards ---
+# These asserted in-memory DONE_DATE variables until the loop stopped using them. A shell
+# variable loses its value on the launchd re-exec that follows any failure, so the restarted
+# loop re-ran every pass that had already completed. The guards are per-day marker FILES now,
+# which survive the restart. Test 11 covers the rest of the checkpointing contract.
+phase_present '\.pass-.*-done-\$TODAY\|briefings/\$TODAY\.md' \
+  "run-once-per-day guards are per-day marker files"
+phase_present 'TODAY="\$(date ' \
+  "the day key is recomputed each iteration"
 
 # --- Sleep interval ---
 phase_present 'sleep 300' \
