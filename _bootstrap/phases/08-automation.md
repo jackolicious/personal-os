@@ -314,6 +314,544 @@ mv "$keep" "$QUEUE"
 `chmod +x _system/scripts/notify-enqueue.sh _system/scripts/notify-drain.sh`
 ---
 
+## Step 0c: Create the prose linters
+
+Two Python scripts that read a draft and report defects by count and line number. The brief
+workflow runs both on every draft before handing it over, and either one is useful on its own
+against any markdown file.
+
+They are split because they see different things. `voice-lint.py` works on phrases and sentence
+shapes. `brief-lint.py` works on the shape of the document, which is the layer a phrase lint
+cannot reach: a doc that opens by introducing itself, a quotation sitting in the executive
+summary, a paragraph that turned into a story.
+
+Both are yours to tune. Edit the pattern lists to match the voice guide you actually wrote,
+and when you add a rule, produce a violation by hand first and check that the pattern catches
+it. A detector nobody tested against real output tends to score zero on real output.
+
+**`_system/scripts/voice-lint.py`**
+
+```python
+#!/usr/bin/env python3
+"""Detect the AI "tells" that a personal voice guide bans, plus the two grammar rules.
+
+Single source of truth for the low-false-positive patterns in
+profile/preferences/communication.md. Edit the pattern lists below to match your own guide.
+The rules are opinionated on purpose. A detector list that tries to please everyone catches
+nothing.
+
+  em_dash          em dash / horizontal bar anywhere, en dash used as a clause break
+  prose_semicolon  a semicolon outside code (use commas, periods, or two sentences)
+  sycophancy       opener flattery ("great question", "absolutely,", "you are absolutely right")
+  throat_clearing  filler preambles ("here's the thing", "it's worth noting")
+  binary_contrast  defining a claim against a negation, in four shapes:
+                     "it's not X, it's Y"          (leading)
+                     "X, not for Y"                (trailing, the most common)
+                     "was not X. It was Y."        (split across sentences)
+                     "not X, but Y"                (with or without "rather")
+  negative_listing stacking what a thing is not ("no fluff, no filler")
+  rhetorical_setup the self-posed question as a transition ("The problem? Nobody owns it.")
+  tee_up           announcing a sentence before saying it ("Importantly,")
+  structure_narration  narrating the argument's moves instead of making them
+  self_vouching    "To be direct", which implies the rest is not
+  meta_commentary  narrating the document instead of writing it ("let's dive in")
+  rule_of_three    short aphoristic three-item lists ("fast, cheap, and reliable.")
+  count_announcement  a list announcing its own length ("Two asks:")
+  unquantified_claim  a load-bearing claim carrying no number (opt-in)
+
+The trailing and split binary_contrast shapes were added after the original four patterns
+scored zero on five real violations produced in a live session. The lesson generalizes: a
+pattern list is only as good as the last time it was tested against actual output. When you add
+a rule, produce a violation by hand first and check that the pattern catches it.
+
+Fenced code blocks, inline code spans, and HTML entities are stripped before matching, so code
+and markup never trip a check.
+
+Usage:
+  voice-lint.py [--file F | (reads stdin)] [--categories a,b,c]
+      Prints one line per violation (CATEGORY  line N: snippet). Exit 1 if any, else 0.
+  voice-lint.py --count [--file F] [--categories ...]
+      Prints a single integer (total violations) to stdout. Exit 0 always.
+"""
+import argparse
+import re
+import sys
+
+FENCE_RE = re.compile(r"^\s*```")
+INLINE_RE = re.compile(r"`[^`]*`")
+ENTITY_RE = re.compile(r"&#?[a-zA-Z0-9]+;")
+
+# Each detector is (category, compiled_regex). Patterns are deliberately tight to keep false
+# positives near zero. Anchors and specific phrases matter more than breadth here.
+# Horizontal whitespace only, so a sentence-boundary match never spans a newline (that would
+# mis-attribute a line-2 opener to line 1). Line starts are covered by ^ under re.M.
+SENT_START = r"(?:^|[.!?][ \t]+|[-*][ \t]+|>[ \t]+)"
+
+# The two grammar rules. Keeping detection here means a file hook, a chat guard, and a manual run
+# all agree on what counts as a violation. Enforcement that lives in three places with three
+# pattern lists drifts, and the drift shows up as a rule that fires on files and never on chat.
+#
+# En dash is scoped tighter than em dash on purpose: "Q1-Q2" style ranges are legitimate typography,
+# a space-padded en dash is the same clause-break tell as an em dash wearing a smaller hat.
+EM_DASH = [
+    re.compile(r"[—―]"),
+    re.compile(r"(?:\s–|–\s)"),
+]
+
+# Semicolons inside fenced code, inline code spans, and HTML entities are already blanked by
+# strip_noncontent(), keeping the prose and code split consistent with any hook that reuses this file.
+PROSE_SEMICOLON = [
+    re.compile(r";"),
+]
+
+SYCOPHANCY = [
+    re.compile(SENT_START + r"(great|excellent|fantastic|wonderful|good)\s+(question|point|idea|catch)\b", re.I | re.M),
+    re.compile(SENT_START + r"(absolutely|certainly|of course|sure thing)[!,.]", re.I | re.M),
+    re.compile(r"\byou(?:'re| are)\s+absolutely\s+right\b", re.I),
+    re.compile(SENT_START + r"i'?d\s+be\s+happy\s+to\b", re.I | re.M),
+    re.compile(SENT_START + r"i'?d\s+be\s+glad\s+to\b", re.I | re.M),
+]
+
+THROAT_CLEARING = [
+    re.compile(r"\bhere'?s the thing\b", re.I),
+    re.compile(r"\bhere is the thing\b", re.I),
+    re.compile(r"\blet me be clear\b", re.I),
+    re.compile(r"\bit'?s worth noting\b", re.I),
+    re.compile(r"\bit is worth noting\b", re.I),
+    re.compile(r"\bworth noting that\b", re.I),
+    re.compile(r"\bit'?s important to note\b", re.I),
+    re.compile(r"\bit is important to note\b", re.I),
+    re.compile(r"\bimportant to note that\b", re.I),
+    re.compile(r"\bit'?s worth mentioning\b", re.I),
+    re.compile(r"\bneedless to say\b", re.I),
+    re.compile(r"\bat the end of the day\b", re.I),
+    re.compile(r"\bthat being said\b", re.I),
+    re.compile(r"\bit should be noted\b", re.I),
+    re.compile(r"\bas we all know\b", re.I),
+]
+
+# Function words that signal the RHETORICAL trailing contrast ("a backstop for links, not for
+# broken ones") rather than a plain factual correction ("send it to the design team, not legal").
+# Requiring one of these after "not" is what keeps this pattern quiet on real corrections.
+_CONTRAST_TAIL = (
+    r"(?:for|because|about|from|with|into|onto|toward|towards|against|"
+    r"a|an|the|to|by|in|on|at|that|when|where|how|why|what|"
+    r"just|only|merely|simply|some|any|every|his|her|their|its|our|your|my|"
+    # Spelled-out quantifiers. "Two clocks, not one" passed every check because the tail list
+    # held prepositions and articles and no numbers. Digits stay out, since "we need 3 reviewers,
+    # not 2" is a plain factual correction.
+    r"one|two|three|four|five|both)"
+)
+
+BINARY_CONTRAST = [
+    re.compile(r"\bit'?s not\b[^,.\n]{1,50},?\s+it'?s\b", re.I),
+    re.compile(r"\bisn'?t\b[^,.\n]{1,50},\s+it'?s\b", re.I),
+    re.compile(r"\bnot\b[^,.\n]{1,50},\s+but rather\b", re.I),
+    re.compile(r"\bnot just\b[^,.\n]{1,50},\s+but\b", re.I),
+    # Trailing form: "X, not for Y" / "X, not because Y" / "X, not a Y". The single most common
+    # shape and the one the original four patterns missed entirely.
+    re.compile(r",\s+not\s+" + _CONTRAST_TAIL + r"\b", re.I),
+    # Split across a sentence boundary: "was not X. It was Y." The comma-anchored patterns above
+    # cannot see this because they forbid a period inside the match.
+    re.compile(r"\b(?:is|was|are|were)\s+not\b[^.\n]{1,80}\.[\"'”’)\]]*\s+(?:It|That|They|This)\s+(?:is|was|are|were)\b"),
+    # "not X, but Y" without the word "rather".
+    re.compile(r"\bnot\b[^,.\n]{1,50},\s+but\s+(?!rather\b)", re.I),
+    # Leading with what a thing is NOT, which buries the lede. Say what it does have to do with.
+    re.compile(r"\b(?:has|have|had) nothing to do with\b", re.I),
+]
+
+# "No fluff, no filler." Defining a thing by stacking what it is not.
+NEGATIVE_LISTING = [
+    re.compile(r"\bno\s+\w+,\s+no\s+\w+", re.I),
+    re.compile(r"\bnot\s+\w+,\s+not\s+\w+,\s+not\s+\w+", re.I),
+]
+
+# The self-posed question used as a transition ("The problem? Nobody owns it.").
+RHETORICAL_SETUP = [
+    re.compile(SENT_START + r"(?:the|its|their|our|his|her)\s+\w+\?\s+[A-Z]", re.M),
+    re.compile(r"\bwhy does (?:this|that|it) matter\?", re.I),
+    re.compile(r"\bwhat does (?:this|that) mean\?", re.I),
+    re.compile(r"\bso what\?", re.I),
+    re.compile(r"\bthe (?:catch|kicker|twist|upshot|problem|result|reason)\?\s", re.I),
+]
+
+# Announcing a sentence before saying it. Say the thing instead.
+TEE_UP = [
+    re.compile(SENT_START + r"(importantly|notably|critically|crucially|significantly|interestingly)\s*,", re.I | re.M),
+    re.compile(r"\bthe key (?:point|thing|question|insight) (?:is|here)\b", re.I),
+    re.compile(r"\bwhat matters (?:here )?is\b", re.I),
+    re.compile(r"\bthe (?:real|important|interesting) (?:point|question|part) (?:is|here)\b", re.I),
+    re.compile(r"\bthe answer is simple\b", re.I),
+]
+
+# Narrating the argument's own moves instead of making them. No sentence exists only to describe
+# the document's own structure.
+STRUCTURE_NARRATION = [
+    re.compile(r"\b(?:two|three|four|five)\s+\w+\s+and\s+an?\s+conclusion\b", re.I),
+    re.compile(SENT_START + r"(?:two|three|four|five|six)\s*,\s+and\b", re.I | re.M),
+    # "Two things that follow", "Three points below". The comma-anchored pattern above only
+    # caught "Two, and", so the far more common no-comma form walked straight through.
+    re.compile(SENT_START + r"(?:two|three|four|five|six)\s+(?:things?|points?|items?|reasons?|implications?|takeaways?)\s+(?:that\s+)?(?:follow|below)\b", re.I | re.M),
+    # "Two things this deliberately does", narrating the passage's own behaviour.
+    re.compile(r"\b(?:two|three|four|five|six)\s+things?\s+(?:this|that|it)\s+(?:\w+\s+)?does\b", re.I),
+    re.compile(r"\bthis (?:distinction|point|section|part) (?:matters|is important)\b", re.I),
+    re.compile(r"\btake\s+[^,.\n]{1,60}\band (?:test|check|weigh) it\b", re.I),
+    re.compile(r"\bin an earlier draft\b", re.I),
+    re.compile(r"\bas (?:i|we) (?:said|noted|argued|showed) (?:above|earlier)\b", re.I),
+    re.compile(r"\bto recap\b", re.I),
+    re.compile(r"\bthe (?:honest|real) limit of this argument\b", re.I),
+]
+
+# Vouching for your own candor implies the rest is not candid.
+SELF_VOUCHING = [
+    re.compile(SENT_START + r"(?:honestly|frankly|truthfully)\s*,", re.I | re.M),
+    re.compile(r"\bto be (?:direct|honest|frank|clear)\b", re.I),
+    re.compile(r"\bin truth\b", re.I),
+    re.compile(r"\bi'?ll be honest\b", re.I),
+    re.compile(r"\bbeing honest about\b", re.I),
+]
+
+# Narrating the document instead of writing it.
+META_COMMENTARY = [
+    re.compile(r"\blet'?s (?:dive in|dig in|unpack|break (?:this|it) down|explore|take a look)\b", re.I),
+    re.compile(r"\bin this (?:section|post|document|brief|memo),?\s+(?:we|i)(?:'ll| will)\b", re.I),
+    re.compile(r"\bbuckle up\b", re.I),
+    re.compile(r"\bwithout further ado\b", re.I),
+    re.compile(r"\bby the end of this\b", re.I),
+]
+
+# Rule of three: a SHORT sentence whose tail is a three-item list of single lowercase words
+# ("fast, cheap, and reliable."). Requiring lowercase words excludes proper-noun lists
+# (a list of three teammates) and the short-sentence cap excludes long content lists.
+#
+# No re.I here, deliberately. The lowercase character class IS the proper-noun exemption, and a
+# case-insensitive flag silently cancels it, at which point "The reviewers are Ada, Grace, and
+# Katherine." reads as an engineered aphorism. Adding the flag back reopens that.
+RULE_OF_THREE = [
+    re.compile(r"\b[a-z]{3,},\s+[a-z]{3,},?\s+and\s+[a-z]{3,}[.!?]"),
+]
+
+# "Two asks:", "Three implications for the roadmap:". A list announces its own length instead
+# of just being a list.
+COUNT_ANNOUNCEMENT = [
+    re.compile(r"^[#>*\-\s]*(?:two|three|four|five|six|seven)\s+[a-z][a-z\s'-]{0,40}:\s*$", re.I | re.M),
+]
+
+# A load-bearing claim with no quantity behind it. "Our review found little evidence it is costing
+# us" can be the whole justification for accepting a gap while carrying no number, no window, and
+# no named source. "The stakes are high" means nothing. Name the stakes.
+#
+# Fires only when the sentence holds NO digit and NO percentage, so quantified versions stay quiet.
+# Opt-in, because a hedge is legitimate when the number genuinely does not exist yet. Reach for it
+# via --categories on a draft that makes a call.
+_UNQUANT = [
+    re.compile(r"\b(?:little|no|limited|scant|some|weak|not much)\s+(?:hard\s+)?(?:evidence|signal|data|proof|indication)\b", re.I),
+    re.compile(r"\b(?:costing|hurting|helping|impacting|moving the needle for)\s+(?:us|them|the business|the company)\b", re.I),
+    re.compile(r"\bthe stakes are high\b", re.I),
+    re.compile(r"\b(?:significant|substantial|material|meaningful)\s+(?:impact|risk|upside|downside|cost)\b", re.I),
+]
+_HAS_NUMBER = re.compile(r"\d|\bpercent\b|%", re.I)
+
+UNQUANTIFIED_CLAIM = _UNQUANT
+
+DETECTORS = {
+    "em_dash": EM_DASH,
+    "prose_semicolon": PROSE_SEMICOLON,
+    "sycophancy": SYCOPHANCY,
+    "throat_clearing": THROAT_CLEARING,
+    "binary_contrast": BINARY_CONTRAST,
+    "negative_listing": NEGATIVE_LISTING,
+    "rhetorical_setup": RHETORICAL_SETUP,
+    "tee_up": TEE_UP,
+    "structure_narration": STRUCTURE_NARRATION,
+    "self_vouching": SELF_VOUCHING,
+    "meta_commentary": META_COMMENTARY,
+    "rule_of_three": RULE_OF_THREE,
+    "count_announcement": COUNT_ANNOUNCEMENT,
+    "unquantified_claim": UNQUANTIFIED_CLAIM,
+}
+# Opt-in categories stay out of the default sweep, so unquantified_claim is a drafting aid rather
+# than a gate. Reach for it with --categories unquantified_claim.
+OPT_IN = {"unquantified_claim"}
+ALL_CATEGORIES = [c for c in DETECTORS if c not in OPT_IN]
+
+
+def strip_noncontent(text):
+    """Blank out fenced code, inline code, and HTML entities so they never match.
+
+    Lines are preserved (replaced in place) so reported line numbers stay accurate.
+    """
+    out = []
+    in_fence = False
+    for line in text.split("\n"):
+        if FENCE_RE.match(line):
+            in_fence = not in_fence
+            out.append("")
+            continue
+        if in_fence:
+            out.append("")
+            continue
+        line = INLINE_RE.sub(lambda m: " " * len(m.group(0)), line)
+        line = ENTITY_RE.sub(lambda m: " " * len(m.group(0)), line)
+        out.append(line)
+    return "\n".join(out)
+
+
+def unquantified_ok(text_line):
+    """Return the offending sentence only when it carries no number of its own."""
+    for sentence in re.split(r"(?<=[.!?])\s+", text_line):
+        for pat in UNQUANTIFIED_CLAIM:
+            if pat.search(sentence) and not _HAS_NUMBER.search(sentence):
+                return sentence.strip()
+    return None
+
+
+def rule_of_three_ok(text_line):
+    # Only flag the aphoristic form: the whole sentence containing the triple is short
+    # (<= 6 words). A longer sentence with a trailing list is legitimate content.
+    for sentence in re.split(r"(?<=[.!?])\s+", text_line):
+        if RULE_OF_THREE[0].search(sentence) and len(sentence.split()) <= 8:
+            return sentence.strip()
+    return None
+
+
+def find_violations(text, categories):
+    scanned = strip_noncontent(text)
+    lines = scanned.split("\n")
+    violations = []
+    for cat in categories:
+        if cat == "rule_of_three":
+            for i, line in enumerate(lines, 1):
+                hit = rule_of_three_ok(line)
+                if hit:
+                    violations.append((cat, i, hit))
+            continue
+        if cat == "unquantified_claim":
+            for i, line in enumerate(lines, 1):
+                hit = unquantified_ok(line)
+                if hit:
+                    violations.append((cat, i, hit[:80]))
+            continue
+        for rx in DETECTORS[cat]:
+            for m in rx.finditer(scanned):
+                line_no = scanned.count("\n", 0, m.start()) + 1
+                snippet = lines[line_no - 1].strip()[:80]
+                violations.append((cat, line_no, snippet))
+    # De-duplicate on (category, line) so two patterns hitting one line count once.
+    seen = set()
+    unique = []
+    for v in sorted(violations, key=lambda x: (x[1], x[0])):
+        key = (v[0], v[1])
+        if key in seen:
+            continue
+        seen.add(key)
+        unique.append(v)
+    return unique
+
+
+def main(argv):
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--file")
+    ap.add_argument("--categories", default=",".join(ALL_CATEGORIES))
+    ap.add_argument("--count", action="store_true")
+    args = ap.parse_args(argv)
+
+    cats = [c.strip() for c in args.categories.split(",") if c.strip() in DETECTORS]
+    if not cats:
+        cats = ALL_CATEGORIES
+
+    if args.file:
+        try:
+            text = open(args.file, encoding="utf-8").read()
+        except (OSError, UnicodeDecodeError):
+            print(0 if args.count else "", end="")
+            return 0
+    else:
+        text = sys.stdin.read()
+
+    violations = find_violations(text, cats)
+
+    if args.count:
+        print(len(violations))
+        return 0
+
+    for cat, line_no, snippet in violations:
+        print("%-16s line %d: %s" % (cat, line_no, snippet))
+    return 1 if violations else 0
+
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv[1:]))
+```
+
+**`_system/scripts/brief-lint.py`**
+
+```python
+#!/usr/bin/env python3
+"""Detect document-STRUCTURE defects in a brief, the layer voice-lint.py cannot see.
+
+voice-lint.py works on phrases and sentence shapes. This works on the shape of the document:
+where evidence sits, how long a paragraph runs, whether the doc opens by introducing itself.
+
+Every rule here traces to a comment a human reviewer had to leave on a real draft, because each
+defect survived a phrase-level lint and still had to be caught by hand.
+
+  preamble       A metadata or status block before the first section. The tool you publish in
+                 already carries author and timestamps, so a doc that opens by introducing
+                 itself spends the reader's first paragraph on nothing.
+  summary_quote  A long quotation inside the executive summary. A summary asserts claims, and
+                 the body carries the evidence. Link the source or state it later.
+  fat_summary    An executive-summary block long enough that it stopped summarizing.
+  long_para      A paragraph past the verbosity cap, where the argument is being told as a
+                 story rather than made.
+  abstract_label A risk or problem described by category instead of named plainly. "The
+                 residual risk is commercial" becomes "This is a marketing risk."
+
+Used by the brief workflow's audit pass and by _bootstrap/tests/15-brief-audit.sh.
+
+Usage:
+  brief-lint.py --file F            one line per finding (RULE  line N: detail). Exit 1 if any.
+  brief-lint.py --count --file F    a single integer. Exit 0 always.
+"""
+import argparse
+import re
+import sys
+
+SUMMARY_QUOTE_MIN_WORDS = 8
+FAT_SUMMARY_MAX_WORDS = 70
+LONG_PARA_MAX_WORDS = 90
+
+PREAMBLE_RE = re.compile(
+    r"(^|\s)(author:|status:\s*draft|internal brief|draft for the|^\*v\d)", re.I | re.M
+)
+
+ABSTRACT_LABEL_RE = re.compile(
+    r"\bthe (?:residual|real|actual|underlying|remaining) (?:risk|problem|issue|concern|question) "
+    r"(?:is|here is|becomes) (?:commercial|structural|technical|cultural|organizational|political|"
+    r"economic|architectural|operational)\b",
+    re.I,
+)
+
+FENCE_RE = re.compile(r"^\s*```")
+
+
+def blocks(lines):
+    """Yield (start_line_no, [lines]) for each blank-line-separated block, skipping code fences."""
+    buf, start, in_fence = [], None, False
+    for i, line in enumerate(lines, 1):
+        if FENCE_RE.match(line):
+            in_fence = not in_fence
+            continue
+        if in_fence:
+            continue
+        if line.strip():
+            if start is None:
+                start = i
+            buf.append(line)
+        elif buf:
+            yield start, buf
+            buf, start = [], None
+    if buf:
+        yield start, buf
+
+
+def word_count(text):
+    # Strip markdown links to their labels and drop bold markers before counting.
+    text = re.sub(r"\[([^\]]*)\]\([^)]*\)", r"\1", text)
+    text = text.replace("**", "").replace("*", "")
+    return len(text.split())
+
+
+def find_findings(text):
+    lines = text.split("\n")
+    findings = []
+
+    # --- preamble: any metadata block before the first "## " heading ---
+    first_section = next(
+        (i for i, l in enumerate(lines, 1) if l.startswith("## ")), len(lines) + 1
+    )
+    head = "\n".join(lines[: first_section - 1])
+    m = PREAMBLE_RE.search(head)
+    if m:
+        line_no = head.count("\n", 0, m.start()) + 1
+        findings.append(
+            ("preamble", line_no, "metadata block before the first section: %r" % m.group(0).strip())
+        )
+
+    # --- section-scoped rules ---
+    in_summary = False
+    for start, buf in blocks(lines):
+        body = "\n".join(buf)
+        heading = buf[0].strip() if buf[0].startswith("#") else None
+
+        if heading:
+            in_summary = bool(re.match(r"^#+\s*executive summary\b", heading, re.I))
+            continue
+
+        wc = word_count(body)
+
+        if in_summary:
+            for qm in re.finditer(r"[\"“]([^\"”]{20,})[\"”]", body):
+                if len(qm.group(1).split()) >= SUMMARY_QUOTE_MIN_WORDS:
+                    findings.append(
+                        (
+                            "summary_quote",
+                            start,
+                            "%d-word quotation in the executive summary, move it to the body or link it"
+                            % len(qm.group(1).split()),
+                        )
+                    )
+                    break
+            if wc > FAT_SUMMARY_MAX_WORDS:
+                findings.append(
+                    ("fat_summary", start, "summary block is %d words (> %d)" % (wc, FAT_SUMMARY_MAX_WORDS))
+                )
+        else:
+            # Lists and tables are not paragraphs.
+            if not re.match(r"^\s*([-*+]|\d+\.|\|)", buf[0]) and wc > LONG_PARA_MAX_WORDS:
+                findings.append(
+                    ("long_para", start, "paragraph is %d words (> %d)" % (wc, LONG_PARA_MAX_WORDS))
+                )
+
+        for am in ABSTRACT_LABEL_RE.finditer(body):
+            findings.append(
+                ("abstract_label", start, "name it plainly instead: %r" % am.group(0).strip())
+            )
+
+    return sorted(findings, key=lambda f: (f[1], f[0]))
+
+
+def main(argv):
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--file", required=True)
+    ap.add_argument("--count", action="store_true")
+    args = ap.parse_args(argv)
+
+    try:
+        text = open(args.file, encoding="utf-8").read()
+    except (OSError, UnicodeDecodeError):
+        print(0 if args.count else "", end="")
+        return 0
+
+    findings = find_findings(text)
+
+    if args.count:
+        print(len(findings))
+        return 0
+
+    for rule, line_no, detail in findings:
+        print("%-15s line %d: %s" % (rule, line_no, detail))
+    return 1 if findings else 0
+
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv[1:]))
+```
+
+`chmod +x _system/scripts/voice-lint.py _system/scripts/brief-lint.py`
+
+---
+
 ## Step 1: Create `run-nightly.sh`
 
 ```bash
