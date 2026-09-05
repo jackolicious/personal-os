@@ -22,6 +22,11 @@ echo "=== 14-decision-records ==="
 
 # --- Wiring: every layer the type needs ---
 check "_bootstrap/phases/01-scaffold.md"  '^Decisions/$'          "scaffold creates Decisions/"
+# The workflow reads _index.md on an argument-less invocation, and Decisions/CLAUDE.md
+# documents its format. A scaffold that creates the directory and not the index leaves the
+# first "what is open" query reading a file that does not exist.
+check "_bootstrap/phases/01-scaffold.md"  'Decisions/_index\.md' "scaffold creates Decisions/_index.md"
+check "_bootstrap/phases/01-scaffold.md"  'Reversibility \| Approver' "the index ships with its header row"
 check "_bootstrap/phases/03-claude-md.md" '\| `Decisions/` \|'    "root CLAUDE.md system map lists Decisions/"
 check "_bootstrap/phases/03-claude-md.md" 'personal-os-decide'    "root CLAUDE.md commands table lists the command"
 check "_bootstrap/phases/03-claude-md.md" '# Decisions'           "Decisions/CLAUDE.md exists"

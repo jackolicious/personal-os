@@ -51,6 +51,17 @@ Files the nightly router couldn't classify. Rename or move them to help it next 
 
 ```
 
+**`Decisions/_index.md`**
+```markdown
+# Decisions
+
+_One row per decision record. Standalone records live in `Decisions/<slug>/`, project-scoped
+ones in `Projects/<project>/decisions/<slug>/`. Both are indexed here._
+
+| Decision | Scope | Status | Reversibility | Approver | Decided |
+|----------|-------|--------|---------------|----------|---------|
+```
+
 **`Knowledge/wiki/log.md`**
 ```markdown
 # Wiki Activity Log
