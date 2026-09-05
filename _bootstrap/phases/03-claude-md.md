@@ -62,7 +62,7 @@ _Depends on: Phase 1 (directories must exist)_
 | `/personal-os-remember` | File a decision, commitment, or relationship note to the wiki |
 
 ## Model routing
-Extract/triage: `claude-haiku-4-5` | Synthesize/draft: `claude-sonnet-4-6`
+Extract/triage: `claude-haiku-4-5` | Synthesize/draft: `claude-sonnet-5`
 
 ## Rules
 - General or factual questions: follow `_system/workflows/wiki-query.md` (vault index-first) before answering. Do not answer from training knowledge when the vault may cover it; if nothing matches, say so
