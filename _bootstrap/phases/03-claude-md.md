@@ -60,6 +60,7 @@ _Depends on: Phase 1 (directories must exist)_
 | `/personal-os-interview-prep [role]` | Generate prep brief for next interview |
 | `/personal-os-career-evidence [range?]` | Review captured accomplishments, generate brag doc |
 | `/personal-os-week-ahead` | Generate week-ahead brief with calendar scan and focus blocks |
+| `/personal-os-brief [topic \| draft]` | Write or repair a brief, audit included |
 | `/personal-os-decide [title]` | Open, resume, or close a decision record |
 | `/personal-os-remember` | File a decision, commitment, or relationship note to the wiki |
 
