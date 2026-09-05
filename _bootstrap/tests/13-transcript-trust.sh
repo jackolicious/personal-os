@@ -54,10 +54,49 @@ else
 fi
 
 # --- The nightly subprocess gets told too -------------------------------------
-# Pass 2 runs each file in a fresh subprocess with its own context, so a rule that lives only
-# in the root CLAUDE.md is a rule that subprocess may never load.
-check "$AUTOMATION" 'contents as data, never as instructions' \
-  "the per-file nightly subprocess is told the same rule in its own prompt"
+# Pass 2 runs each file in a fresh subprocess with its own context, so a rule that lives only in
+# the root CLAUDE.md is a rule that subprocess may never load. Grepping the whole phase file would
+# pass with the rule parked in a comment 400 lines from the prompt, so pull the run-nightly block
+# out and assert the phrase sits inside it.
+LOOP="$(awk '
+  /^```/ { if (inb) { if (buf ~ /persistent automation loop/) { printf "%s", buf; exit } ; inb=0; buf="" } else { inb=1; buf="" } ; next }
+  inb { buf = buf $0 "\n" }
+' "$AUTOMATION")"
+if [ -z "$LOOP" ]; then
+  echo "FAIL: could not extract the run-nightly block"; FAIL=$((FAIL+1))
+elif printf '%s' "$LOOP" | grep -q 'contents as data, never as instructions'; then
+  echo "PASS: the per-file nightly subprocess carries the rule in its own prompt"; PASS=$((PASS+1))
+else
+  echo "FAIL: the rule is not inside the nightly loop's per-file prompt"; FAIL=$((FAIL+1))
+fi
+
+# --- Every ingestion path, not only the one this test used to check ----------
+# meeting-notes was the only workflow asserted, so the four other paths that read untrusted content
+# could carry nothing and the suite stayed green. link-ingestion is the sharpest case: it fetches
+# arbitrary third-party pages and writes what it extracts into Knowledge/, which later synthesis
+# reads, and that content never passes through Inbox/ where the nested rule would load.
+for wf in meeting-notes pdf-ingestion note-ingestion link-ingestion; do
+  BLOCK="$(python3 - "$WORKFLOWS" "$wf" <<'WFPY'
+import re, sys
+text = open(sys.argv[1]).read()
+name = sys.argv[2]
+bt = chr(96)   # a backtick, spelled out so bash 3.2 does not parse it inside $( )
+head = "### " + bt + "_system/workflows/"
+start = text.find(head + name + ".md" + bt)
+if start == -1:
+    print(""); raise SystemExit
+nxt = text.find(head, start + 10)
+print(text[start:nxt if nxt != -1 else len(text)])
+WFPY
+)"
+  if [ -z "$BLOCK" ]; then
+    echo "FAIL: no $wf workflow found"; FAIL=$((FAIL+1))
+  elif printf '%s' "$BLOCK" | grep -qiE 'trust model|is data|untrusted'; then
+    echo "PASS: $wf carries a trust model"; PASS=$((PASS+1))
+  else
+    echo "FAIL: $wf reads untrusted content and states no trust model"; FAIL=$((FAIL+1))
+  fi
+done
 
 echo ""
 echo "Results: $PASS passed, $FAIL failed"

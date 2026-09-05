@@ -53,8 +53,16 @@ LOOP="$(extract_block 'Personal OS, persistent automation loop')"
 if [ -z "$LOOP" ]; then
   echo "FAIL: could not find the run-nightly.sh block"; FAIL=$((FAIL+1))
 else
-  # `|| true` on each stage: a grep that matches nothing exits 1, and pipefail would abort here.
-  unwrapped="$( { printf '%s' "$LOOP" | grep -nE '(^|[^_a-z-])claude --model' || true; } | { grep -vE 'with_timeout' || true; } | wc -l | tr -d ' ')"
+  # Normalise before matching, because the naive line-wise version of this check was defeated by
+  # three ordinary things: the short `-m` flag, a trailing comment mentioning with_timeout, and a
+  # backslash continuation that put `claude` on its own line one line below its wrapper.
+  # Strip comments, join continuations, then look for any claude invocation with no wrapper.
+  unwrapped="$(printf '%s' "$LOOP" \
+    | sed -e 's/[[:space:]]#[^"]*$//' \
+    | sed -e ':a' -e '/\\$/N; s/\\\n[[:space:]]*/ /; ta' \
+    | { grep -nE '(^|[^_[:alnum:]-])claude[[:space:]]+(-m|--model)[[:space:]]' || true; } \
+    | { grep -vE 'with_timeout|with-timeout\.sh' || true; } \
+    | wc -l | tr -d ' ')"
   if [ "$unwrapped" = "0" ]; then
     echo "PASS: every claude call in the loop runs under a timeout"; PASS=$((PASS+1))
   else

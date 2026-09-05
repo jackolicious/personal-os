@@ -22,6 +22,7 @@ set -uo pipefail
 secs="${1:-}"; shift || true
 case "$secs" in
   ''|*[!0-9]*) echo "with-timeout: first arg must be an integer number of seconds" >&2; exit 2;;
+  0) echo "with-timeout: 0 means no timeout in both backends, refusing" >&2; exit 2;;
 esac
 [ "$#" -ge 1 ] || { echo "with-timeout: no command given" >&2; exit 2; }
 
@@ -35,10 +36,22 @@ if command -v caffeinate >/dev/null 2>&1; then
   caffeinate -i -w "$$" >/dev/null 2>&1 &
 fi
 
-if command -v timeout >/dev/null 2>&1; then
-  exec timeout -k 5 "$secs" "$@"
-elif command -v gtimeout >/dev/null 2>&1; then
-  exec gtimeout -k 5 "$secs" "$@"
+# coreutils reports a SIGKILLed child as 137. The caller branches on 124, so normalise it,
+# and keep every other exit code untouched.
+if command -v timeout >/dev/null 2>&1 || command -v gtimeout >/dev/null 2>&1; then
+  tcmd=timeout; command -v timeout >/dev/null 2>&1 || tcmd=gtimeout
+  "$tcmd" -k 5 "$secs" "$@"
+  rc=$?
+  [ "$rc" -eq 137 ] && rc=124
+  exit "$rc"
+fi
+
+# No coreutils and no perl: run the command unbounded rather than not at all. An exec onto a
+# missing interpreter returns 126 without ever starting the command, which turns every pass
+# into three failed attempts and a give-up. Unbounded and logged beats never running.
+if [ ! -x /usr/bin/perl ]; then
+  echo "with-timeout: no timeout(1) and no perl, running unbounded" >&2
+  exec "$@"
 fi
 
 # Fallback: perl alarm shim. Fork the command. On SIGALRM send TERM, grace, then KILL, and
@@ -168,9 +181,21 @@ message="$(san "$message")"; open_url="$(san "$open_url")"; sound="$(san "$sound
 mkdir -p "$(dirname "$QUEUE")"
 
 # Portable mutex: macOS has no flock, and mkdir is atomic.
+# Break a stale lock. mkdir is the mutex, and a process killed inside the critical section
+# (a panic, a launchctl bootout mid-write, a drive unmount) leaves the directory behind
+# forever. Every caller then fails, and because the loop calls the bus with `|| true`, the
+# failure is invisible: notifications stop and nothing says so. Any lock older than 120s
+# outlived its writer, since no bus operation takes more than a few milliseconds.
 tries=0
 while ! mkdir "$LOCK" 2>/dev/null; do
   tries=$((tries + 1))
+  if [ "$tries" -eq 20 ]; then
+    lock_age=$(( $(date +%s) - $(stat -f %m "$LOCK" 2>/dev/null || stat -c %Y "$LOCK" 2>/dev/null || date +%s) ))
+    if [ "$lock_age" -gt 120 ]; then
+      echo "notify-enqueue: breaking a stale lock (${lock_age}s old)" >&2
+      rmdir "$LOCK" 2>/dev/null || true
+    fi
+  fi
   [ "$tries" -gt 50 ] && { echo "notify-enqueue: lock timeout" >&2; exit 1; }
   sleep 0.1
 done
@@ -209,9 +234,21 @@ ts() { date -u +%Y-%m-%dT%H:%M:%SZ; }
 
 [ -f "$QUEUE" ] || exit 0
 
+# Break a stale lock. mkdir is the mutex, and a process killed inside the critical section
+# (a panic, a launchctl bootout mid-write, a drive unmount) leaves the directory behind
+# forever. Every caller then fails, and because the loop calls the bus with `|| true`, the
+# failure is invisible: notifications stop and nothing says so. Any lock older than 120s
+# outlived its writer, since no bus operation takes more than a few milliseconds.
 tries=0
 while ! mkdir "$LOCK" 2>/dev/null; do
   tries=$((tries + 1))
+  if [ "$tries" -eq 20 ]; then
+    lock_age=$(( $(date +%s) - $(stat -f %m "$LOCK" 2>/dev/null || stat -c %Y "$LOCK" 2>/dev/null || date +%s) ))
+    if [ "$lock_age" -gt 120 ]; then
+      echo "notify-drain: breaking a stale lock (${lock_age}s old)" >&2
+      rmdir "$LOCK" 2>/dev/null || true
+    fi
+  fi
   [ "$tries" -gt 50 ] && { echo "notify-drain: lock timeout" >&2; exit 1; }
   sleep 0.1
 done
@@ -301,6 +338,11 @@ until [ -r "$_SELF_DIR/run-nightly.sh" ] || [ "$_mount_waits" -ge 30 ]; do
   _mount_waits=$((_mount_waits + 1))
 done
 
+if [ ! -r "$_SELF_DIR/run-nightly.sh" ]; then
+  echo "$(date): vault not readable after 5 minutes of waiting, exiting for launchd to retry." >&2
+  exit 0
+fi
+
 VAULT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 mkdir -p "$VAULT_DIR/_system/logs" "$VAULT_DIR/_system/briefings" "$VAULT_DIR/_system/queues"
 LOG="$VAULT_DIR/_system/logs/nightly.log"
@@ -311,7 +353,7 @@ LOG="$VAULT_DIR/_system/logs/nightly.log"
 # bash once the file changes on disk, which removes the "I edited the loop and nothing
 # happened" trap and the manual launchctl bootout it otherwise requires.
 SCRIPT_FILE="${BASH_SOURCE[0]}"
-SCRIPT_MTIME_AT_START="$(stat -f %m "$SCRIPT_FILE" 2>/dev/null || stat -c %Y "$SCRIPT_FILE")"
+SCRIPT_MTIME_AT_START="$(stat -f %m "$SCRIPT_FILE" 2>/dev/null || stat -c %Y "$SCRIPT_FILE" 2>/dev/null || echo 0)"
 
 # --- Run mode ------------------------------------------------------------------------------
 # Default is the persistent launchd loop. `--once` runs the same state-aware sequence one time,
@@ -322,7 +364,8 @@ case "$MODE" in --once|once|catchup) ONCE=1;; esac
 
 if [ "$ONCE" = 1 ]; then
   echo "Personal OS catch-up at $(date): running today's pending work synchronously."
-  caffeinate -i -w "$$" >/dev/null 2>&1 &   # hold off idle sleep while this run is in flight
+  # hold off idle sleep while this run is in flight
+  command -v caffeinate >/dev/null 2>&1 && caffeinate -i -w "$$" >/dev/null 2>&1 &
   ONCE_ITERS=0; ONCE_MAX=30
 else
   echo "Personal OS loop started at $(date) (mtime $SCRIPT_MTIME_AT_START). Ctrl+C to stop."
@@ -401,6 +444,19 @@ while true; do
   # Fire any due desktop notifications. Cheap, local, every iteration.
   bash "$VAULT_DIR/_system/scripts/notify-drain.sh" >/dev/null 2>&1 || true
 
+  # Sweep the per-day markers and queues once a day. They are keyed by date and nothing else
+  # deletes them, so at four to six files a night they reach a couple of thousand inside a year,
+  # in a directory most vaults have syncing to a cloud drive.
+  SWEPT="$VAULT_DIR/_system/logs/.swept-$TODAY"
+  if [ ! -f "$SWEPT" ]; then
+    find "$VAULT_DIR/_system/logs" -maxdepth 1 \( -name '.pass-*' -o -name '.file-*' -o -name '.swept-*' -o -name 'nightly-queue-*' \) -mtime +14 -delete 2>/dev/null || true
+    # Keep the tail of the log rather than letting it grow without bound.
+    if [ -f "$LOG" ] && [ "$(wc -c < "$LOG" 2>/dev/null || echo 0)" -gt 10000000 ]; then
+      tail -c 2000000 "$LOG" > "$LOG.trim" 2>/dev/null && mv "$LOG.trim" "$LOG"
+    fi
+    date > "$SWEPT"
+  fi
+
   # Nightly synthesis at 02:00, three-pass pipeline
   if [ "$HOUR" = "02" ] || [ "$ONCE" = 1 ]; then
     QUEUE="$VAULT_DIR/_system/logs/nightly-queue-$TODAY.txt"
@@ -433,6 +489,12 @@ Output one file path per line for each file where Status=pending and not already
       echo "$(date): Pass 2, per-file extraction..." | tee -a "$LOG"
       while IFS= read -r FILE; do
         [ -z "$FILE" ] && continue
+        # Per-file done marker. The synthesis-log hash check inside the subprocess makes a replay
+        # harmless, and it still costs a full model call. Without this marker Pass 2 re-walks the
+        # whole queue on every 5-minute iteration for the rest of the hour once Pass 3 has given up.
+        FILE_KEY="$(printf '%s' "$FILE" | shasum -a 256 2>/dev/null | cut -c1-16)"
+        FILE_MARK="$VAULT_DIR/_system/logs/.file-$FILE_KEY-done-$TODAY"
+        [ -f "$FILE_MARK" ] && continue
         echo "$(date): Processing $FILE" | tee -a "$LOG"
         with_timeout "$PASS_TIMEOUT" claude --model claude-haiku-4-5 --print \
           "Classify this file using these rules:
@@ -455,7 +517,8 @@ If the file is already in synthesis-log (hash match), skip immediately.
 After processing: update Inbox/_index.md, set Type to the classified type and Status to processed.
 
 File: $FILE" \
-          >> "$LOG" 2>&1 || echo "$(date): $FILE failed or timed out, leaving it queued." | tee -a "$LOG"
+          >> "$LOG" 2>&1 && date > "$FILE_MARK" \
+          || echo "$(date): $FILE failed or timed out, leaving it queued." | tee -a "$LOG"
       done < "$QUEUE"
 
       # Pass 3 (Sonnet): connections, patterns, coaching, index updates
@@ -478,7 +541,18 @@ Per-file extraction (Steps 1-3) is already complete for tonight. Stop." || true
       run_pass meeting-prep claude-sonnet-5 \
         "$(cat "$VAULT_DIR/.claude/commands/personal-os-meeting-prep.md")" || true
 
-      echo "$(date): Generating daily briefing..." | tee -a "$LOG"
+      # Counted like every other pass, so a briefing that fails all night gives up loudly instead
+      # of retrying 12 times in silence. The headline output dying quietly is the outage this
+      # whole step exists to prevent.
+      brief_att_f="$VAULT_DIR/_system/logs/.pass-briefing-attempts-$TODAY"
+      brief_att="$(cat "$brief_att_f" 2>/dev/null || echo 0)"
+      if [ "$brief_att" -ge 3 ]; then
+        hold_awake_stop
+        continue
+      fi
+      echo "$((brief_att + 1))" > "$brief_att_f"
+
+      echo "$(date): Generating daily briefing (attempt $((brief_att + 1))/3)..." | tee -a "$LOG"
       if with_timeout "$PASS_TIMEOUT" claude --model claude-sonnet-5 --print \
         "$(cat "$VAULT_DIR/.claude/commands/personal-os-daily-briefing.md")" \
         > "$BRIEF_FILE.partial" 2>> "$LOG"; then
@@ -491,7 +565,12 @@ Per-file extraction (Steps 1-3) is already complete for tonight. Stop." || true
         echo "$(date): Briefing saved to $BRIEF_FILE" | tee -a "$LOG"
       else
         rm -f "$BRIEF_FILE.partial"
-        echo "$(date): Briefing failed or timed out, will retry next iteration." | tee -a "$LOG"
+        echo "$(date): Briefing failed or timed out (attempt $((brief_att + 1))/3)." | tee -a "$LOG"
+        if [ "$((brief_att + 1))" -ge 3 ]; then
+          bash "$VAULT_DIR/_system/scripts/notify-enqueue.sh" --now \
+            --id "briefing-failed-$TODAY" --title "Personal OS: no briefing today" \
+            --message "3 attempts failed. See _system/logs/nightly.log." >/dev/null 2>&1 || true
+        fi
       fi
 
       hold_awake_stop
@@ -521,6 +600,10 @@ Per-file extraction (Steps 1-3) is already complete for tonight. Stop." || true
       hold_awake_stop
       exit 0
     fi
+    # Back off before re-entering. Without this the `continue` skips the sleep at the bottom of
+    # the loop, so a catch-up run whose passes keep failing fast (expired auth, no network) fires
+    # every pass 30 times in a few seconds, which is dozens of CLI launches back to back.
+    sleep 30
     continue
   fi
 
