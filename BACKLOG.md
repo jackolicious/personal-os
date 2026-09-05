@@ -31,8 +31,11 @@ options with who recommends what, an evidence bar, and an append-only decision l
 `/personal-os-decide` and `_system/workflows/decision-record.md`, with principles the owner
 edits in `profile/preferences/decisions.md`. Guard: `_bootstrap/tests/14-decision-records.sh`.
 
-Still open from the original item: the quarterly retrospective pass that compares the expected
-outcome against what happened. The record has the fields for it, nothing reads them yet.
+Still open from the original item: the quarterly retrospective pass itself. The fields it needs
+now exist (`expected_outcome` and `review_date`, in both the markdown record and the JSON index,
+with the daily briefing already flagging an overdue `review_date`), and nothing yet runs the
+comparison and writes up what it found. An earlier draft of this line claimed the fields were
+already there when they were not.
 
 ### M. Customer Signal Synthesis
 On ingestion of customer call transcripts, extract jobs-to-be-done, pain points, and feature signals and append to `Knowledge/customer-signals.md`. Quarterly rollup surfaces top themes for roadmap prioritization. Makes the three-tier compounding work for customer intel, not just internal 1:1s.

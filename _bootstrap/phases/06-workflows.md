@@ -513,6 +513,8 @@ Context synthesis and probing question generation require reasoning.
 # Decision Record Workflow
 
 ## Model: Sonnet
+Judgment work, and the output is short. Reversibility, implications, and the strongest objection
+all need reasoning rather than extraction.
 ## Trigger: `/personal-os-decide [title | slug | project/slug]`
 
 ## Purpose
@@ -532,22 +534,31 @@ first, push to the edge, one accountable approver, ask the domain owner before a
 escalations, log the why. This workflow runs those principles on a specific call.
 
 ## Step 1: Resolve the decision
+Read `Decisions/_index.md` first, in every branch. It indexes both standalone and
+project-scoped records, so it answers "does this exist" without a directory scan.
+
 `$ARGUMENTS` is a title, an existing slug, or `project/slug`.
-- Matches a record under `Decisions/` or `Projects/*/decisions/` then resume it. Read
-  `decision.md`, show the statement, status, the open evidence bar, and any unresolved
-  disagreement, then ask where to pick up.
-- Names a live project then scaffold under `Projects/<project>/decisions/<slug>/` and read
-  that project's `CLAUDE.md` for context.
-- Nothing matches then confirm the slug and the scope, and scaffold from
+- No argument -> list what the index shows as `proposed` or `in-review`, and ask which to resume.
+- The index has a matching row -> resume it. Read that row's `decision.md`, show the statement,
+  status, the open evidence bar, and any unresolved disagreement, then ask where to pick up.
+- `$ARGUMENTS` names a live project (`Projects/<project>/CLAUDE.md` exists) -> ask for the slug
+  if the argument did not carry one, read that project's `CLAUDE.md` for context, and scaffold
+  under `Projects/<project>/decisions/<slug>/`. Add a `## Decisions` pointer to the project's
+  `CLAUDE.md` if it has none.
+- Nothing matches -> confirm the slug and the scope, and scaffold from
   `_system/templates/decision.md`.
-- No argument then read `Decisions/_index.md`, list what is open, and ask which to resume.
+
+On any scaffold, append the row to `Decisions/_index.md` immediately, with status `proposed`.
+A decision opened and abandoned before Step 9 has to be findable, and that is the case where
+being findable matters most.
 
 ## Step 2: State it in one line, and classify reversibility
 Write the decision so a yes or no is possible. Then classify:
-- **Two-way door** then say "this is reversible, the bar is decide and move," and keep the
-  analysis proportionate. Stop early. A reversible call does not earn the rest of this
-  workflow.
-- **One-way door or mixed** then name which part is irreversible. That part earns the evidence
+- **Two-way door** -> say "this is reversible, the bar is decide and move," then skip Steps 5
+  through 7 and go to Step 8. Still bank the record in Step 9. A one-paragraph record of a
+  reversible call is the point, since the cost of writing it is a minute and the cost of
+  relitigating it in three months is an hour.
+- **One-way door or mixed** -> name which part is irreversible. That part earns the evidence
   bar, and the rest does not.
 
 ## Step 3: Name the single approver
@@ -573,18 +584,32 @@ What must be known or true before sign-off, as a checklist. This is what a later
 tell whether the decision is ready.
 
 ## Step 8: Prep the room, or make the call
-- **Decided in a room** then produce room prep: your position in one line, what you will
-  concede and what you will not, the line in the sand, and the one question that has to be
-  answered live. Keep it to what fits in your head.
-- **Decided now** then record it. Status becomes `decided`, write the call and the approver's
-  reason, set `date_decided`.
+Ask which, in one line, unless the owner already said. The answer follows from Step 3: when the
+approver is someone else, the call gets made in a room.
+
+- **Decided in a room** -> produce room prep: your position in one line, what you will concede
+  and what you will not, the line in the sand, and the one question that has to be answered
+  live. Keep it to what fits in your head. Set status to `in-review`.
+- **Decided now** -> record it. Status becomes `decided`, write the call and the approver's
+  reason, set `date_decided`, and set `review_date` and `## Expected outcome` so a later
+  retrospective has something to compare against.
+- **Blocked on an input that has no date** -> set status to `deferred` and name what unblocks it.
+
+Reopening a `decided` record later sets status to `reversed`, with the reason appended to the
+decision log. The prior call and its why stay in the file.
 
 ## Step 9: Close by banking the state
 1. Refresh `decision.md`: status, evidence-bar checkboxes, options as they shifted.
 2. Append dated one-liners to `## Decision log` for every state change or position shift.
 3. Append to `## Escalations and disagreements` if anything diverged.
 4. Update the row in `Decisions/_index.md`.
-5. Leave one next move: resolve the approver, get the missing input, take it to the room.
+5. **When status became `decided`, append an entry to `_system/data/decisions.json`** with
+   `decision`, `date`, `made_by` (the approver), `context` (the logged why in one or two
+   sentences), `alternatives_considered`, `review_date`, and `record` set to the path of this
+   `decision.md`. The daily briefing reads that file for its `Recent decisions` section and
+   flags an overdue `review_date`, so a decision that lands only in the markdown record never
+   reaches the morning brief. The JSON is the index, this record is the long form.
+6. Leave one next move: resolve the approver, get the missing input, take it to the room.
 
 ## Hard rules
 - **Vault-local.** A decision record is your working state. Never auto-write it to a shared

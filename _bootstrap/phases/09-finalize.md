@@ -105,6 +105,10 @@ After completing all phases, run these checks:
 7. `bash run-nightly.sh` in a separate tab — confirm it starts without error
 8. `cat PILLARS.md` — should show 4–6 pillar sections with keywords
 
+9. `cat profile/preferences/decisions.md` — read the seven decision principles and rewrite any you
+   do not hold. They ship as defaults and no interview question fills them in, so they are one
+   person's operating style until you edit them.
+
 Report any missing files or errors before marking setup complete.
 
 ---

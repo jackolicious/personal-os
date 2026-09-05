@@ -204,9 +204,10 @@ Completed items move to `## Completed` section — never deleted.
 ## Project folder structure
 ```
 [project-name]/
-  CLAUDE.md    ← project context and status
+  CLAUDE.md    ← project context and status, plus a ## Decisions pointer when decisions/ exists
   inputs/      ← excerpts from 1on1s and research feeding this project
   drafts/      ← versioned drafts (v0, v1, etc.)
+  decisions/   ← project-scoped decision records, indexed in Decisions/_index.md
   [final].md   ← current canonical version
 ```
 ````
@@ -216,46 +217,45 @@ Completed items move to `## Completed` section — never deleted.
 ````markdown
 # Decisions
 
-Decision records. One folder per decision, `decision.md` inside it is the canonical state.
+Read `_index.md` before any other operation. It indexes standalone and project-scoped records
+both, so it answers "what exists" without a directory scan.
 
-## Where a decision lives
-- **Standalone** (`Decisions/<slug>/`): a cross-cutting or one-off call. A vendor, a price, an
-  org move, a commitment that touches more than one initiative.
-- **Project-scoped** (`Projects/<project>/decisions/<slug>/`): a call that only makes sense
-  inside one live initiative. Add a `## Decisions` pointer to that project's `CLAUDE.md`.
+## Structure
+```
+_index.md                              ← portfolio of every decision, standalone and scoped
+[slug]/
+  decision.md                          ← canonical record
+  inputs/                              ← optional curated source excerpts
+Projects/[project]/decisions/[slug]/   ← same shape, for a call that only makes sense in-project
+```
 
-Both are indexed in `Decisions/_index.md`, so there is one portfolio view. Default to
-standalone when unsure.
+Default to standalone when unsure. A project-scoped record gets a `## Decisions` pointer in that
+project's `CLAUDE.md`.
 
-## The rules that carry the weight
-- **Classify reversibility first.** A two-way door gets speed. Spending one-way-door rigor on
-  a reversible call is the waste to catch, and the record should say the bar out loud.
-- **Exactly one accountable approver.** A decision with three sign-offs and no single owner is
-  a diffusion of responsibility. When the source names several, that gap is the first thing to
-  close, not a footnote.
-- **Log the why.** The reason a call went the way it did is the part that is worth re-reading
-  in six months. The options and the debate are supporting material.
-- **Log disagreement, do not dissolve it.** Divergent positions are the most useful content in
-  the record. Name them, resolve them at the approver, record both views.
-- **Do not relitigate a decided call.** Read the decision log before reopening. State the call
-  and its logged why first, and reopen only on a real change (status becomes `reversed`, with
-  the reason).
+## Principles
+`profile/preferences/decisions.md` holds them, and `_system/workflows/decision-record.md` applies
+them. Two carry most of the weight: classify reversibility before analyzing, and name exactly one
+accountable approver.
 
 ## Status values
 `proposed` | `in-review` | `decided` | `deferred` | `reversed`
 
 ## Index format
-`_index.md` carries one row per decision:
+| Decision | Scope | Status | Reversibility | Approver | Opened | Decided | Review |
+|----------|-------|--------|---------------|----------|--------|---------|--------|
+| [slug](path/decision.md) | standalone \| project | proposed | two-way | [NAME] | YYYY-MM-DD | | |
 
-| Decision | Scope | Status | Reversibility | Approver | Decided |
-|----------|-------|--------|---------------|----------|---------|
-| [slug](path/decision.md) | standalone \| project | proposed | two-way | [NAME] | |
+## Relationship to `_system/data/decisions.json`
+The JSON is the index the daily briefing reads, and it holds every decision including those the
+nightly extractor pulls from meeting notes. A record here is the long form for a decision worth
+one, and it back-links through the JSON entry's `record` field. A decided record writes both.
 
 ## Query patterns
-- "What is open?" then read `_index.md`, filter to `proposed` and `in-review`
-- "Why did we pick X?" then read that record's `## Decision and why`, no other section
-- "What is stuck?" then read `_index.md` for records whose evidence bar has been complete for
-  more than a week with no decision
+- "What is open?" → read `_index.md`, filter `Status` to `proposed` or `in-review`
+- "Why did we pick X?" → read that record's `## Decision and why`, no other section
+- "What is stuck?" → read `_index.md` for rows with an `Opened` date more than two weeks old and
+  no `Decided` date
+- "What is due for review?" → read `_index.md` for a `Review` date at or before today
 ````
 
 ### `Knowledge/CLAUDE.md`
@@ -387,6 +387,7 @@ Contains my working preferences and style — modular files loaded per workflow.
 | `preferences/briefing.md` | Coaching tone, open loop display order, length | `daily-briefing.md` |
 | `preferences/writing-style.md` | Voice, tone, format, characteristic phrases | `cascade.md` |
 | `preferences/1on1.md` | Focus areas for 1on1 synthesis | `1on1-prep.md` |
+| `preferences/decisions.md` | Decision principles, reversibility, DACI, one approver | `decision-record.md` |
 | `preferences/knowledge.md` | Relevance filters — update weekly | `nightly-synthesis.md` |
 
 Preference tuning updates individual modules — never the whole set at once.

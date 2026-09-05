@@ -53,9 +53,16 @@ Schema for each decision entry:
   "context": "string — why",
   "alternatives_considered": "string | null",
   "source_file": "path",
-  "review_date": "YYYY-MM-DD | null"
+  "review_date": "YYYY-MM-DD | null",
+  "expected_outcome": "string | null — what should be true by review_date if this call was right",
+  "record": "path | null — the Decisions/<slug>/decision.md long form, when one exists"
 }
 ```
+
+This file is the INDEX the daily briefing reads. A decision that also has a full record under
+`Decisions/` carries a `record` back-link to it. `expected_outcome` plus `review_date` are what a
+quarterly retrospective compares against, so fill both when a decision is made rather than
+reconstructing them later.
 
 ### `_system/data/career-evidence.json`
 

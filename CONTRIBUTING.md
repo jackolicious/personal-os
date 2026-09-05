@@ -30,7 +30,13 @@ Personal OS is a meta prompt — a single file you paste into Claude Code to sca
 
 - The three-tier immutability model (sources sacred, synthesis append-only)
 - The incremental processing design (nightly synthesis must never reprocess already-processed files)
-- The root CLAUDE.md line limit (≤70 lines — it's loaded on every session)
+- The root CLAUDE.md line limit (≤80 lines, it's loaded on every session, and `_bootstrap/tests/03-claude-md.sh` enforces this number)
+
+  Raised from 70 to 80 on 2026-09-05, because the file had reached 69 lines with no test on it and
+  the next feature to touch the always-loaded index would have broken a limit nobody could see.
+  The budget is real, so it now has a guard reading this line. If you would rather hold 70, the
+  Commands table is where the room is: it runs 15 rows and duplicates `.claude/commands/`, which
+  the harness discovers on its own.
 - The Phase 10 personalization checklist — it must stay accurate for first-time setup
 
 ## Issues

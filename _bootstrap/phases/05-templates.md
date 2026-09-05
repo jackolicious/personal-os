@@ -144,6 +144,8 @@ scope:                    # standalone | [project-name]
 source:                   # where this came from
 date_opened: YYYY-MM-DD
 date_decided:
+review_date:              # when to check whether this call was right
+record_synced:            # date this was mirrored into _system/data/decisions.json
 ---
 
 # [Decision title]
@@ -192,6 +194,11 @@ Who diverged, on what, and how it resolved. Append, never overwrite.
 ## Decision and why
 The call, the approver, and the reason it went that way. Written for someone reading it in six
 months with none of today's context.
+
+## Expected outcome
+What should be true by `review_date` if this call was right, phrased so you could be wrong.
+"Support tickets on onboarding drop below 10 a week" beats "onboarding improves". A retrospective
+with nothing falsifiable to check against turns into a rationalization of whatever happened.
 
 ## Follow-through
 - [ ] Who needs to be told

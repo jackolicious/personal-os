@@ -58,8 +58,8 @@ Files the nightly router couldn't classify. Rename or move them to help it next 
 _One row per decision record. Standalone records live in `Decisions/<slug>/`, project-scoped
 ones in `Projects/<project>/decisions/<slug>/`. Both are indexed here._
 
-| Decision | Scope | Status | Reversibility | Approver | Decided |
-|----------|-------|--------|---------------|----------|---------|
+| Decision | Scope | Status | Reversibility | Approver | Opened | Decided | Review |
+|----------|-------|--------|---------------|----------|--------|---------|--------|
 ```
 
 **`Knowledge/wiki/log.md`**
