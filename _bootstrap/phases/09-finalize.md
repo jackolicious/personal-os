@@ -96,12 +96,12 @@ After scaffold is built, confirm each item before first use.
 
 After completing all phases, run these checks:
 
-1. `find . -name "CLAUDE.md" | sort` — should show 10 CLAUDE.md files
+1. `find . -name "CLAUDE.md" | sort` — should show 11 CLAUDE.md files
 2. `cat _system/data/synthesis-log.json` — should be valid JSON with empty processed_files
 3. `cat _system/data/open-loops.json` — should be valid JSON with empty loops array
 4. `ls .claude/commands/` — should show 19 command files (including personal-os-brief.md and personal-os-decide.md)
 5. `ls _system/workflows/` — should show 19 workflow files (including brief.md and decision-record.md)
-6. `ls profile/preferences/` — should show 6 files: synthesis.md, briefing.md, writing-style.md, decisions.md, 1on1.md, knowledge.md (plus calendar.md when calendar integration is configured)
+6. `ls profile/preferences/` — should show 7 files: synthesis.md, communication.md, briefing.md, writing-style.md, decisions.md, 1on1.md, knowledge.md (plus calendar.md when calendar integration is configured)
 7. `bash run-nightly.sh` in a separate tab — confirm it starts without error
 8. `cat PILLARS.md` — should show 4–6 pillar sections with keywords
 

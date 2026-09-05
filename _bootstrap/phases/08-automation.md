@@ -380,6 +380,12 @@ import sys
 FENCE_RE = re.compile(r"^\s*```")
 INLINE_RE = re.compile(r"`[^`]*`")
 ENTITY_RE = re.compile(r"&#?[a-zA-Z0-9]+;")
+# A URL is not prose. A semicolon or a dash inside one is punctuation of the address, and
+# flagging it trains the reader to ignore the linter.
+LINK_TARGET_RE = re.compile(r"\]\([^)]*\)")
+BARE_URL_RE = re.compile(r"https?://\S+")
+# A markdown table row holding "a; b" is data. The row is still scanned for every other rule.
+TABLE_ROW_RE = re.compile(r"^\s*\|.*\|\s*$")
 
 # Each detector is (category, compiled_regex). Patterns are deliberately tight to keep false
 # positives near zero. Anchors and specific phrases matter more than breadth here.
@@ -387,9 +393,11 @@ ENTITY_RE = re.compile(r"&#?[a-zA-Z0-9]+;")
 # mis-attribute a line-2 opener to line 1). Line starts are covered by ^ under re.M.
 SENT_START = r"(?:^|[.!?][ \t]+|[-*][ \t]+|>[ \t]+)"
 
-# The two grammar rules. Keeping detection here means a file hook, a chat guard, and a manual run
-# all agree on what counts as a violation. Enforcement that lives in three places with three
-# pattern lists drifts, and the drift shows up as a rule that fires on files and never on chat.
+# The two grammar rules. This file is the reference definition for a chat guard, a nightly
+# ratchet, or any manual run. The PreToolUse hook in Step 2b keeps its own one-character shell
+# match on purpose, so the write path stays dependency-free, which means it catches the em dash
+# and misses the horizontal bar and the space-padded en dash that EM_DASH also bans. Point the
+# hook here if you would rather have one definition than a fast one.
 #
 # En dash is scoped tighter than em dash on purpose: "Q1-Q2" style ranges are legitimate typography,
 # a space-padded en dash is the same clause-break tell as an em dash wearing a smaller hat.
@@ -444,7 +452,9 @@ _CONTRAST_TAIL = (
 )
 
 BINARY_CONTRAST = [
-    re.compile(r"\bit'?s not\b[^,.\n]{1,50},?\s+it'?s\b", re.I),
+    # "it is not X, it is Y" as well as the contracted form. The contraction-only pattern missed
+    # the spelled-out version, which is the one that survives a formal edit pass.
+    re.compile(r"\bit(?:'?s| is) not\b[^,.\n]{1,50},?\s+it(?:'?s| is)\b", re.I),
     re.compile(r"\bisn'?t\b[^,.\n]{1,50},\s+it'?s\b", re.I),
     re.compile(r"\bnot\b[^,.\n]{1,50},\s+but rather\b", re.I),
     re.compile(r"\bnot just\b[^,.\n]{1,50},\s+but\b", re.I),
@@ -468,7 +478,10 @@ NEGATIVE_LISTING = [
 
 # The self-posed question used as a transition ("The problem? Nobody owns it.").
 RHETORICAL_SETUP = [
-    re.compile(SENT_START + r"(?:the|its|their|our|his|her)\s+\w+\?\s+[A-Z]", re.M),
+    # re.I matters here. Without it this cannot match a sentence-initial "The problem?", the
+    # canonical example of the rule, and the docstring's own example only fired because a later
+    # pattern happens to list the word "problem".
+    re.compile(SENT_START + r"(?:the|its|their|our|his|her)\s+\w+\?\s+[A-Z]", re.M | re.I),
     re.compile(r"\bwhy does (?:this|that|it) matter\?", re.I),
     re.compile(r"\bwhat does (?:this|that) mean\?", re.I),
     re.compile(r"\bso what\?", re.I),
@@ -513,7 +526,7 @@ SELF_VOUCHING = [
 
 # Narrating the document instead of writing it.
 META_COMMENTARY = [
-    re.compile(r"\blet'?s (?:dive in|dig in|unpack|break (?:this|it) down|explore|take a look)\b", re.I),
+    re.compile(r"\blet(?:'?s| us) (?:dive in|dig in|unpack|break (?:this|it) down|explore|take a look)\b", re.I),
     re.compile(r"\bin this (?:section|post|document|brief|memo),?\s+(?:we|i)(?:'ll| will)\b", re.I),
     re.compile(r"\bbuckle up\b", re.I),
     re.compile(r"\bwithout further ado\b", re.I),
@@ -527,14 +540,21 @@ META_COMMENTARY = [
 # No re.I here, deliberately. The lowercase character class IS the proper-noun exemption, and a
 # case-insensitive flag silently cancels it, at which point "The reviewers are Ada, Grace, and
 # Katherine." reads as an engineered aphorism. Adding the flag back reopens that.
+# The first item may be capitalised, because the most common shape is sentence-initial
+# ("Fast, cheap, and reliable."). Items two and three stay lowercase, and that is what keeps a
+# list of three people quiet. Terminal punctuation is optional, since the aphorism often ends a
+# heading or a line carrying no period.
 RULE_OF_THREE = [
-    re.compile(r"\b[a-z]{3,},\s+[a-z]{3,},?\s+and\s+[a-z]{3,}[.!?]"),
+    re.compile(r"\b[A-Za-z][a-z]{2,},\s+[a-z]{3,},?\s+and\s+[a-z]{3,}[.!?]?(?:\s|$)"),
 ]
 
 # "Two asks:", "Three implications for the roadmap:". A list announces its own length instead
 # of just being a list.
 COUNT_ANNOUNCEMENT = [
     re.compile(r"^[#>*\-\s]*(?:two|three|four|five|six|seven)\s+[a-z][a-z\s'-]{0,40}:\s*$", re.I | re.M),
+    # The inline form, which is the one that shows up in prose: "Two asks: fund it and staff
+    # it." The end-of-line anchor above only ever caught the heading form.
+    re.compile(r"(?:^|[.!?]\s+)(?:two|three|four|five|six|seven)\s+[a-z][a-z\s'-]{0,40}:\s+\S", re.I | re.M),
 ]
 
 # A load-bearing claim with no quantity behind it. "Our review found little evidence it is costing
@@ -576,14 +596,33 @@ OPT_IN = {"unquantified_claim"}
 ALL_CATEGORIES = [c for c in DETECTORS if c not in OPT_IN]
 
 
-def strip_noncontent(text):
-    """Blank out fenced code, inline code, and HTML entities so they never match.
+def strip_noncontent(text, drop_semicolon_rows=False):
+    """Blank out fenced code, inline code, link targets, and HTML entities.
 
     Lines are preserved (replaced in place) so reported line numbers stay accurate.
+
+    Curly quotes fold to ASCII first. Every apostrophe-bearing pattern here is written with a
+    straight quote, and text pasted out of a word processor, a doc tool, or most model output
+    carries U+2019 instead. Without the fold, this reports textbook AI prose as clean, which is
+    the worst outcome available to a linter.
+
+    An unterminated fence used to blank the whole remainder of the file, so one stray fence hid
+    every violation below it and the tool still exited 0. A fence that never closes is treated
+    as prose, since a document failing to close a fence is more likely mid-edit than holding
+    hundreds of lines of code.
     """
+    text = (text.replace("\u2019", "'").replace("\u2018", "'")
+                .replace("\u201c", '"').replace("\u201d", '"'))
+    lines = text.split("\n")
+    fence_lines = [i for i, l in enumerate(lines) if FENCE_RE.match(l)]
+    unbalanced_from = fence_lines[-1] if len(fence_lines) % 2 else None
+
     out = []
     in_fence = False
-    for line in text.split("\n"):
+    for i, line in enumerate(lines):
+        if i == unbalanced_from:
+            out.append("")
+            continue
         if FENCE_RE.match(line):
             in_fence = not in_fence
             out.append("")
@@ -591,7 +630,12 @@ def strip_noncontent(text):
         if in_fence:
             out.append("")
             continue
+        if drop_semicolon_rows and TABLE_ROW_RE.match(line):
+            out.append("")
+            continue
         line = INLINE_RE.sub(lambda m: " " * len(m.group(0)), line)
+        line = LINK_TARGET_RE.sub(lambda m: " " * len(m.group(0)), line)
+        line = BARE_URL_RE.sub(lambda m: " " * len(m.group(0)), line)
         line = ENTITY_RE.sub(lambda m: " " * len(m.group(0)), line)
         out.append(line)
     return "\n".join(out)
@@ -618,8 +662,15 @@ def rule_of_three_ok(text_line):
 def find_violations(text, categories):
     scanned = strip_noncontent(text)
     lines = scanned.split("\n")
+    no_tables = strip_noncontent(text, drop_semicolon_rows=True)
     violations = []
     for cat in categories:
+        if cat == "prose_semicolon":
+            for rx in PROSE_SEMICOLON:
+                for m in rx.finditer(no_tables):
+                    line_no = no_tables.count("\n", 0, m.start()) + 1
+                    violations.append((cat, line_no, lines[line_no - 1].strip()[:80]))
+            continue
         if cat == "rule_of_three":
             for i, line in enumerate(lines, 1):
                 hit = rule_of_three_ok(line)
@@ -656,16 +707,22 @@ def main(argv):
     ap.add_argument("--count", action="store_true")
     args = ap.parse_args(argv)
 
-    cats = [c.strip() for c in args.categories.split(",") if c.strip() in DETECTORS]
-    if not cats:
-        cats = ALL_CATEGORIES
+    requested = [c.strip() for c in args.categories.split(",") if c.strip()]
+    unknown = [c for c in requested if c not in DETECTORS]
+    if unknown:
+        print("voice-lint: unknown category %s" % ", ".join(unknown), file=sys.stderr)
+        return 2
+    cats = requested or ALL_CATEGORIES
 
     if args.file:
+        # Exit 2 rather than 0. Reporting "no findings" for a path that does not exist tells the
+        # caller the draft is clean, and a workflow that runs this on a mistyped path would then
+        # report an audit it never performed.
         try:
             text = open(args.file, encoding="utf-8").read()
-        except (OSError, UnicodeDecodeError):
-            print(0 if args.count else "", end="")
-            return 0
+        except (OSError, UnicodeDecodeError) as exc:
+            print("voice-lint: cannot read %s: %s" % (args.file, exc), file=sys.stderr)
+            return 2
     else:
         text = sys.stdin.read()
 
@@ -721,8 +778,10 @@ SUMMARY_QUOTE_MIN_WORDS = 8
 FAT_SUMMARY_MAX_WORDS = 70
 LONG_PARA_MAX_WORDS = 90
 
+# Anchored to line start. Unanchored, "a note from the author: we should ship" read as a
+# metadata block, and a document with no ## heading treated its whole body as the head.
 PREAMBLE_RE = re.compile(
-    r"(^|\s)(author:|status:\s*draft|internal brief|draft for the|^\*v\d)", re.I | re.M
+    r"^\s*(?:\*\*)?(author:|status:\s*draft|internal brief|draft for the|\*v\d)", re.I | re.M
 )
 
 ABSTRACT_LABEL_RE = re.compile(
@@ -781,13 +840,19 @@ def find_findings(text):
     # --- section-scoped rules ---
     in_summary = False
     for start, buf in blocks(lines):
-        body = "\n".join(buf)
         heading = buf[0].strip() if buf[0].startswith("#") else None
 
         if heading:
             in_summary = bool(re.match(r"^#+\s*executive summary\b", heading, re.I))
-            continue
+            # A heading followed straight away by text, with no blank line, is valid and common
+            # markdown. Dropping the whole block here switched every section rule off for that
+            # section, so keep the remainder and score it.
+            buf = buf[1:]
+            start += 1
+            if not buf:
+                continue
 
+        body = "\n".join(buf)
         wc = word_count(body)
 
         if in_summary:
@@ -808,7 +873,9 @@ def find_findings(text):
                 )
         else:
             # Lists and tables are not paragraphs.
-            if not re.match(r"^\s*([-*+]|\d+\.|\|)", buf[0]) and wc > LONG_PARA_MAX_WORDS:
+            # Lists, tables, and block quotes are not paragraphs. A long quoted excerpt is the
+            # author choosing to quote at length, which is a different judgment call.
+            if not re.match(r"^\s*([-*+>]|\d+\.|\|)", buf[0]) and wc > LONG_PARA_MAX_WORDS:
                 findings.append(
                     ("long_para", start, "paragraph is %d words (> %d)" % (wc, LONG_PARA_MAX_WORDS))
                 )
@@ -829,9 +896,9 @@ def main(argv):
 
     try:
         text = open(args.file, encoding="utf-8").read()
-    except (OSError, UnicodeDecodeError):
-        print(0 if args.count else "", end="")
-        return 0
+    except (OSError, UnicodeDecodeError) as exc:
+        print("brief-lint: cannot read %s: %s" % (args.file, exc), file=sys.stderr)
+        return 2
 
     findings = find_findings(text)
 

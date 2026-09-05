@@ -66,37 +66,87 @@ else
   if [ ! -s "$T/voice-lint.py" ] || [ ! -s "$T/brief-lint.py" ]; then
     bad "could not extract both detectors from the phase"
   else
-    # voice-lint: one fixture per rule, plus a control that must stay silent.
-    vl() { python3 "$T/voice-lint.py" --file "$1" 2>/dev/null || true; }
+    # One POSITIVE fixture per category, each scoped with --categories so a fixture cannot be
+    # satisfied by a different rule firing. Without this the suite passed with 8 of 14 category
+    # lists emptied, which is the same defect one level up from the one this file was written to
+    # catch: a detector that catches nothing, guarded by a test that never asks it to.
+    vlcat() { python3 "$T/voice-lint.py" --file "$2" --categories "$1" 2>/dev/null || true; }
 
-    printf 'It is a backstop for links, not for broken ones.\n' > "$T/f1.md"
-    vl "$T/f1.md" | grep -q binary_contrast && ok "catches a trailing binary contrast" || bad "missed a trailing binary contrast"
+    fixture() { # category, label, content
+      printf '%b' "$3" > "$T/fx.md"
+      if vlcat "$1" "$T/fx.md" | grep -q "$1"; then
+        ok "$1 catches $2"
+      else
+        bad "$1 missed $2"
+      fi
+    }
 
-    printf 'The release was not delayed. It was cancelled.\n' > "$T/f2.md"
-    vl "$T/f2.md" | grep -q binary_contrast && ok "catches a binary contrast split across sentences" || bad "missed a split binary contrast"
-
-    printf 'Great question. Here is the thing, we should ship.\n' > "$T/f3.md"
-    out="$(vl "$T/f3.md")"
-    printf '%s' "$out" | grep -q sycophancy      && ok "catches sycophancy"      || bad "missed sycophancy"
-    printf '%s' "$out" | grep -q throat_clearing && ok "catches throat clearing" || bad "missed throat clearing"
-
-    printf 'We shipped it in March, and the number moved.\n' > "$T/f4.md"
-    printf 'Importantly, the migration lands first.\n' >> "$T/f4.md"
-    vl "$T/f4.md" | grep -q tee_up && ok "catches a tee-up" || bad "missed a tee-up"
-
-    printf 'The build is fast, cheap, and reliable.\n' > "$T/f5.md"
-    vl "$T/f5.md" | grep -q rule_of_three && ok "catches an aphoristic rule of three" || bad "missed a rule of three"
+    EM="$(printf '\xe2\x80\x94')"
+    fixture em_dash            "an em dash"                  "A sentence ${EM} with a clause break.\n"
+    fixture prose_semicolon    "a prose semicolon"           "We shipped it; the number moved.\n"
+    fixture sycophancy         "opener flattery"             "Great question. Here is my answer.\n"
+    fixture throat_clearing    "a filler preamble"           "It is worth noting that revenue rose.\n"
+    fixture binary_contrast    "a leading binary contrast"   "It is not a bug, it is a feature.\n"
+    fixture binary_contrast    "a trailing binary contrast"  "A backstop for links, not for broken ones.\n"
+    fixture binary_contrast    "a split binary contrast"     "The release was not delayed. It was cancelled.\n"
+    fixture negative_listing   "stacked negations"           "The pitch was no fluff, no filler.\n"
+    fixture rhetorical_setup   "a self-posed question"       "The migration? Nobody owns it.\n"
+    fixture tee_up             "a tee-up"                    "Importantly, the migration lands first.\n"
+    fixture structure_narration "argument narration"         "This distinction matters for pricing.\n"
+    fixture self_vouching      "self-vouching"               "To be direct, the plan is behind.\n"
+    fixture meta_commentary    "document narration"          "Let us dive in and unpack the numbers.\n"
+    fixture rule_of_three      "an aphoristic triple"        "The build is fast, cheap, and reliable.\n"
+    fixture rule_of_three      "a sentence-initial triple"   "Fast, cheap, and reliable.\n"
+    fixture count_announcement "a heading count"             "## Two asks:\n"
+    fixture count_announcement "an inline count"             "Two asks: fund it and staff it.\n"
+    fixture unquantified_claim "an unquantified claim"       "Our review found little evidence it is costing us.\n"
 
     # Controls. A detector that fires on clean prose gets turned off by its user, at which point
-    # it protects nothing, so the quiet cases are worth as many assertions as the loud ones.
-    printf 'Send the draft to the design team, not legal.\n' > "$T/c1.md"
-    vl "$T/c1.md" | grep -q binary_contrast && bad "fires on a plain factual correction" || ok "stays quiet on a plain factual correction"
+    # it protects nothing, so the quiet cases carry as many assertions as the loud ones.
+    quiet() { # category, label, content
+      printf '%b' "$3" > "$T/ct.md"
+      if vlcat "$1" "$T/ct.md" | grep -q "$1"; then
+        bad "$1 fires on $2"
+      else
+        ok "$1 stays quiet on $2"
+      fi
+    }
 
-    printf 'The reviewers are Ada, Grace, and Katherine.\n' > "$T/c2.md"
-    vl "$T/c2.md" | grep -q rule_of_three && bad "fires on a proper-noun list" || ok "stays quiet on a proper-noun list"
+    quiet rule_of_three    "a proper-noun list"        "The reviewers are Ada, Grace, and Katherine.\n"
+    quiet prose_semicolon  "a semicolon inside code"   'Use \`a; b\` in code.\n'
+    quiet prose_semicolon  "a semicolon inside a URL"  "See [the doc](https://x.example/a;b) for detail.\n"
+    quiet prose_semicolon  "a semicolon in a table"    "| Col | Val |\n|---|---|\n| a | x; y |\n"
+    quiet binary_contrast  "a factual correction"      "Send the draft to the design team, not legal.\n"
+    quiet em_dash          "a hyphenated range"        "The Q1-Q2 numbers held.\n"
 
-    printf 'Use `a; b` in code.\n\n```\nint x = 1; int y = 2;\n```\n' > "$T/c3.md"
-    vl "$T/c3.md" | grep -q prose_semicolon && bad "fires on a semicolon inside code" || ok "stays quiet on semicolons inside code"
+    # Curly quotes. Every apostrophe-bearing pattern is written with a straight quote, and text
+    # from a word processor or a model carries U+2019, so without a fold the linter reports
+    # textbook AI prose as clean.
+    printf 'Here\xe2\x80\x99s the thing, we should ship.\n' > "$T/smart.md"
+    if vlcat throat_clearing "$T/smart.md" | grep -q throat_clearing; then
+      ok "a curly apostrophe does not hide a violation"
+    else
+      bad "a curly apostrophe hides a violation"
+    fi
+
+    # An unterminated fence used to blank the rest of the file and still exit 0.
+    printf 'Clean line.\n\x60\x60\x60\ncode\nGreat question. Here is the thing.\n' > "$T/unbal.md"
+    if vlcat sycophancy "$T/unbal.md" | grep -q sycophancy; then
+      ok "an unterminated code fence does not hide the rest of the file"
+    else
+      bad "an unterminated code fence hides everything after it"
+    fi
+
+    # A path that cannot be read is an error. Reporting zero findings tells the caller the draft
+    # is clean, so a workflow run against a typo would report an audit it never performed.
+    set +e
+    python3 "$T/voice-lint.py" --file "$T/does-not-exist.md" >/dev/null 2>&1; missing_rc=$?
+    python3 "$T/voice-lint.py" --file "$T/fx.md" --categories not_a_category >/dev/null 2>&1; badcat_rc=$?
+    set -e
+    [ "$missing_rc" -eq 2 ] && ok "an unreadable path exits 2 rather than reporting clean" \
+      || bad "an unreadable path exits $missing_rc, which reads as clean"
+    [ "$badcat_rc" -eq 2 ] && ok "an unknown category is an error rather than a silent full scan" \
+      || bad "an unknown category exits $badcat_rc and scans everything"
 
     # brief-lint: structure rules, each with a fixture.
     blint() { python3 "$T/brief-lint.py" --file "$1" 2>/dev/null || true; }
@@ -113,6 +163,27 @@ else
     printf '## Risk\n\nThe residual risk is commercial.\n' > "$T/b4.md"
     blint "$T/b4.md" | grep -q abstract_label && ok "catches a category label where a plain noun belongs" || bad "missed an abstract label"
 
+    # A summary asserts, the body proves. This rule had no fixture, so emptying it passed.
+    printf '## Executive summary\n\nThe vendor said "we have never shipped a migration of this size and we do not intend to start now" last week.\n' > "$T/b6.md"
+    blint "$T/b6.md" | grep -q summary_quote && ok "catches a long quotation in the executive summary" || bad "missed a quotation in the summary"
+
+    # A heading followed straight away by text is valid markdown, and dropping that block used to
+    # switch every section rule off for the section.
+    printf '## Risk\nThe residual risk is commercial.\n' > "$T/b7.md"
+    blint "$T/b7.md" | grep -q abstract_label && ok "a heading with no blank line after it is still scored" || bad "a heading with no blank line disabled its section"
+
+    # Quoting at length is the author choosing to quote, which is a different judgment call.
+    { printf '## Body\n\n'; for i in $(seq 1 20); do printf '> quoted words go here and here and here\n'; done; } > "$T/b8.md"
+    blint "$T/b8.md" | grep -q long_para && bad "fires on a long block quote" || ok "stays quiet on a long block quote"
+
+    printf 'A note from the author: we should ship.\n\n## Executive summary\n\nShip.\n' > "$T/b9.md"
+    blint "$T/b9.md" | grep -q preamble && bad "fires on the word author mid-sentence" || ok "stays quiet on the word author mid-sentence"
+
+    set +e
+    python3 "$T/brief-lint.py" --file "$T/does-not-exist.md" >/dev/null 2>&1; bl_missing=$?
+    set -e
+    [ "$bl_missing" -eq 2 ] && ok "brief-lint exits 2 on an unreadable path" || bad "brief-lint exits $bl_missing on an unreadable path"
+
     # A table or a list is not a paragraph, and flagging one would make the tool useless on any
     # doc that carries data.
     { printf '## Body\n\n'; for i in $(seq 1 40); do printf -- '- a list row with several words in it\n'; done; } > "$T/b5.md"
@@ -120,10 +191,11 @@ else
 
     # Exit codes, since the workflow and any hook branch on them.
     printf 'Clean prose with nothing to find.\n' > "$T/clean.md"
+    printf 'Great question. It is worth noting that revenue rose.\n' > "$T/dirty.md"
     set +e
     python3 "$T/voice-lint.py" --file "$T/clean.md" >/dev/null 2>&1; clean_rc=$?
-    python3 "$T/voice-lint.py" --file "$T/f1.md"    >/dev/null 2>&1; dirty_rc=$?
-    count="$(python3 "$T/voice-lint.py" --count --file "$T/f3.md" 2>/dev/null)"
+    python3 "$T/voice-lint.py" --file "$T/dirty.md" >/dev/null 2>&1; dirty_rc=$?
+    count="$(python3 "$T/voice-lint.py" --count --file "$T/dirty.md" 2>/dev/null)"
     set -e
     [ "$clean_rc" -eq 0 ] && [ "$dirty_rc" -eq 1 ] && ok "exit 0 on clean prose, exit 1 on a finding" \
       || bad "exit codes wrong (clean=$clean_rc dirty=$dirty_rc)"
