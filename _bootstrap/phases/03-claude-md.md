@@ -334,7 +334,7 @@ These rules apply to every response in this vault — briefings, summaries, draf
 - Name specific things — not "the implications are significant" but what specifically
 
 ## Grammar
-- No em dashes — use commas or periods
+- No em dashes, use commas or periods
 - No adverbs — rewrite the sentence instead of intensifying it
 - No passive voice — name the actor ("Alex decided" not "the decision was made")
 - No false agency — inanimate things don't decide, shift, or emerge; someone does

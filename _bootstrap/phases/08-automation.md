@@ -164,6 +164,130 @@ Create `.claude/settings.json` with this content so automated `claude --print` c
 }
 ```
 
+
+## Step 2b: Install the prose guard hook
+
+The vault's writing rules (Phase 3, `profile/preferences/communication.md`) ban em dashes. A rule
+stated in prose is followed when convenient. Install a `PreToolUse` hook so a Write or Edit that
+introduces an em dash is blocked and retried.
+
+Create `.claude/hooks/no-em-dashes.sh`:
+
+```bash
+#!/bin/bash
+# PreToolUse hook: block a Write/Edit to a markdown file that introduces an em dash.
+# The vault's writing rules ban them (profile/preferences/communication.md).
+set -u
+
+# Fail CLOSED when jq is missing. Exiting 0 here would let every em dash through while the hook
+# still looks installed, which is the failure this whole step exists to prevent. macOS 15 and
+# later ship jq at /usr/bin/jq. On anything older, `brew install jq`.
+if ! command -v jq >/dev/null 2>&1; then
+  echo "prose guard: jq is not installed, cannot inspect the write. Install jq (brew install jq)." >&2
+  exit 2
+fi
+
+INPUT=$(cat)
+FILE=$(printf '%s' "$INPUT" | jq -r '.tool_input.file_path // ""')
+
+# Markdown prose only. Lowercase first, so A.MD and .markdown are not free passes.
+FILE_LC=$(printf '%s' "$FILE" | tr '[:upper:]' '[:lower:]')
+case "$FILE_LC" in
+  *.md|*.markdown) ;;
+  *) exit 0 ;;
+esac
+
+# The style guide quotes the banned character as an example, do not lint it.
+case "$FILE_LC" in
+  */profile/preferences/communication.md|*/profile/preferences/writing-style.md) exit 0 ;;
+esac
+
+# Raw captured content is not the vault owner's prose. raw.md is the immutable copy a workflow
+# writes next to a synthesized summary, so it carries the speaker's words verbatim.
+case "$FILE_LC" in
+  */inbox/*|*-transcript.md|*/raw.md) exit 0 ;;
+esac
+
+# Concatenate every field a write can arrive in. An if/elif chain stops at the first one
+# present, so a MultiEdit payload that also carries a clean `content` would hide its edits.
+CONTENT=$(printf '%s' "$INPUT" | jq -r '
+  [ (.tool_input.content // empty),
+    (.tool_input.new_string // empty),
+    (.tool_input.edits // [] | map(.new_string // empty) | join("\n")) ]
+  | join("\n")
+')
+
+case "$CONTENT" in
+  *—*)
+    cat >&2 <<MSG
+BLOCKED: em dash (—) detected in $FILE.
+
+The vault's writing rules ban em dashes. Replace each one with a comma, a period, or rephrase.
+Retry the Write/Edit with no em dashes.
+MSG
+    exit 2 ;;
+esac
+
+exit 0
+```
+
+Make it executable:
+
+```bash
+chmod +x .claude/hooks/no-em-dashes.sh
+```
+
+Then merge a `hooks` block into `.claude/settings.json`. Write ONE object holding both keys.
+Appending a second `{ ... }` produces invalid JSON, and replacing the file with a hooks-only
+object drops the `permissions` block Step 2 just wrote, which silently breaks the headless
+`claude --print` calls the nightly loop makes:
+
+```json
+{
+  "permissions": {
+    "allow": [
+      "Read(*)", "Write(*)", "Edit(*)",
+      "Bash(find *)", "Bash(ls *)", "Bash(mv *)", "Bash(mkdir *)",
+      "Bash(markitdown *)", "Bash(md5 *)", "Bash(md5sum *)",
+      "Bash(cat *)", "Bash(grep *)", "Bash(date *)"
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Write|Edit|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/no-em-dashes.sh"
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+**Quote `$CLAUDE_PROJECT_DIR`.** This is not cosmetic. Most vaults live on a path with a space in
+it (`~/Google Drive/My Drive/...`, `~/Library/Mobile Documents/...`, `~/OneDrive/My Notes`). Written
+unquoted as `$CLAUDE_PROJECT_DIR/.claude/hooks/no-em-dashes.sh`, the shell splits on the space,
+tries to execute `/Users/you/Google`, and fails. A `PreToolUse` hook that fails to launch does not
+block the tool, so the guard silently protects nothing and looks correctly configured while doing
+it. Verify after install:
+
+```bash
+# Read the command out of settings.json and run THAT, so the check fails when the file holds an
+# unquoted path. Running a hardcoded quoted invocation instead would pass no matter what you
+# installed. Feed it a real em dash, since an empty payload exits 0 at the .md check.
+CMD=$(jq -r '.hooks.PreToolUse[].hooks[].command' .claude/settings.json | head -1)
+printf '{"tool_input":{"file_path":"%s/Notes/probe.md","content":"a \u2014 b"}}' "$(pwd)" \
+  | CLAUDE_PROJECT_DIR="$(pwd)" sh -c "$CMD"
+echo "exit=$?  # 2 means the guard is live. 0 or 127 means it is not."
+```
+
+Run it once from a directory whose path contains a space. That is where an unquoted command
+fails, and a vault on a synced drive usually has one.
+
 ---
 
 ## Step 3: Register the automation loop with launchd
