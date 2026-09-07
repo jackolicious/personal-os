@@ -61,6 +61,9 @@ check_absent_dir "People"           "People/ not present"
 check_absent_dir "Meetings"         "Meetings/ not present"
 check_absent_dir "Inbox"            "Inbox/ not present"
 check_absent_dir "Projects"         "Projects/ not present"
+# A decision record holds hires, prices, vendor calls, and org moves. On a public installer repo
+# that is the last directory you want a `git add -A` to sweep up.
+check_absent_dir "Decisions"        "Decisions/ not present"
 check_absent_dir "Archive"          "Archive/ not present"
 
 echo ""

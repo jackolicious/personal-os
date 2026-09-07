@@ -167,6 +167,25 @@ Run the week-ahead planning review.
 Follow `_system/workflows/week-ahead.md` exactly.
 ```
 
+### `.claude/commands/personal-os-decide.md`
+
+```markdown
+---
+description: Open, resume, or close a decision record. Usage: /personal-os-decide [title | slug | project/slug]
+---
+
+Follow `_system/workflows/decision-record.md`.
+
+Load `profile/preferences/decisions.md` first and hold to it for the session.
+
+Classify reversibility before anything else. A two-way door gets "decide and move" and a short
+record. A one-way door earns the evidence bar.
+
+Name exactly one accountable approver. When you cannot, say the decision is not ready.
+
+$ARGUMENTS
+```
+
 ### `.claude/commands/personal-os-remember.md`
 
 ```markdown

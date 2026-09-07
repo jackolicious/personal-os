@@ -12,6 +12,7 @@ Projects/
 Projects/product-strategy/
 Projects/product-strategy/inputs/
 Projects/product-strategy/drafts/
+Decisions/
 Knowledge/
 Knowledge/annotated/
 Knowledge/wiki/
@@ -48,6 +49,17 @@ After creating directories, create these system files:
 
 Files the nightly router couldn't classify. Rename or move them to help it next time.
 
+```
+
+**`Decisions/_index.md`**
+```markdown
+# Decisions
+
+_One row per decision record. Standalone records live in `Decisions/<slug>/`, project-scoped
+ones in `Projects/<project>/decisions/<slug>/`. Both are indexed here._
+
+| Decision | Scope | Status | Reversibility | Approver | Opened | Decided | Review |
+|----------|-------|--------|---------------|----------|--------|---------|--------|
 ```
 
 **`Knowledge/wiki/log.md`**

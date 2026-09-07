@@ -16,6 +16,7 @@ _Depends on: Phase 1 (directories must exist)_
 | `1on1s/` | Per-person: profile, open loops, session notes |
 | `Meetings/` | Summaries + master action item list |
 | `Projects/` | Active initiatives |
+| `Decisions/` | Decision records (DACI). Project-scoped ones live under `Projects/<project>/decisions/` |
 | `Knowledge/` | Sources (immutable) + wiki (synthesized) |
 | `People/` | Team roster + stakeholder map |
 | `Interviews/` | Active roles: per-role context, question bank, interview notes |
@@ -59,6 +60,7 @@ _Depends on: Phase 1 (directories must exist)_
 | `/personal-os-interview-prep [role]` | Generate prep brief for next interview |
 | `/personal-os-career-evidence [range?]` | Review captured accomplishments, generate brag doc |
 | `/personal-os-week-ahead` | Generate week-ahead brief with calendar scan and focus blocks |
+| `/personal-os-decide [title]` | Open, resume, or close a decision record |
 | `/personal-os-remember` | File a decision, commitment, or relationship note to the wiki |
 
 ## Model routing
@@ -72,6 +74,7 @@ Extract/triage: `claude-haiku-4-5` | Synthesize/draft: `claude-sonnet-5`
 - Never modify files in `Knowledge/annotated/` or `Inbox/transcripts/`
 - Open loops: append only — archive, never delete
 - Wiki pages: append dated sections, never rewrite core content
+- A real call (deal, price, scope, hire, org move, vendor, commitment) gets a decision record via `/personal-os-decide`, with exactly one accountable approver and the logged why
 - Load `profile/preferences/synthesis.md` for any briefing or synthesis; workflows load their own specific preference module
 - `_system/` is managed by automation — do not edit files there directly
 ```
@@ -201,11 +204,58 @@ Completed items move to `## Completed` section — never deleted.
 ## Project folder structure
 ```
 [project-name]/
-  CLAUDE.md    ← project context and status
+  CLAUDE.md    ← project context and status, plus a ## Decisions pointer when decisions/ exists
   inputs/      ← excerpts from 1on1s and research feeding this project
   drafts/      ← versioned drafts (v0, v1, etc.)
+  decisions/   ← project-scoped decision records, indexed in Decisions/_index.md
   [final].md   ← current canonical version
 ```
+````
+
+### `Decisions/CLAUDE.md`
+
+````markdown
+# Decisions
+
+Read `_index.md` before any other operation. It indexes standalone and project-scoped records
+both, so it answers "what exists" without a directory scan.
+
+## Structure
+```
+_index.md                              ← portfolio of every decision, standalone and scoped
+[slug]/
+  decision.md                          ← canonical record
+  inputs/                              ← optional curated source excerpts
+Projects/[project]/decisions/[slug]/   ← same shape, for a call that only makes sense in-project
+```
+
+Default to standalone when unsure. A project-scoped record gets a `## Decisions` pointer in that
+project's `CLAUDE.md`.
+
+## Principles
+`profile/preferences/decisions.md` holds them, and `_system/workflows/decision-record.md` applies
+them. Two carry most of the weight: classify reversibility before analyzing, and name exactly one
+accountable approver.
+
+## Status values
+`proposed` | `in-review` | `decided` | `deferred` | `reversed`
+
+## Index format
+| Decision | Scope | Status | Reversibility | Approver | Opened | Decided | Review |
+|----------|-------|--------|---------------|----------|--------|---------|--------|
+| [slug](path/decision.md) | standalone \| project | proposed | two-way | [NAME] | YYYY-MM-DD | | |
+
+## Relationship to `_system/data/decisions.json`
+The JSON is the index the daily briefing reads, and it holds every decision including those the
+nightly extractor pulls from meeting notes. A record here is the long form for a decision worth
+one, and it back-links through the JSON entry's `record` field. A decided record writes both.
+
+## Query patterns
+- "What is open?" → read `_index.md`, filter `Status` to `proposed` or `in-review`
+- "Why did we pick X?" → read that record's `## Decision and why`, no other section
+- "What is stuck?" → read `_index.md` for rows with an `Opened` date more than two weeks old and
+  no `Decided` date
+- "What is due for review?" → read `_index.md` for a `Review` date at or before today
 ````
 
 ### `Knowledge/CLAUDE.md`
@@ -337,6 +387,7 @@ Contains my working preferences and style — modular files loaded per workflow.
 | `preferences/briefing.md` | Coaching tone, open loop display order, length | `daily-briefing.md` |
 | `preferences/writing-style.md` | Voice, tone, format, characteristic phrases | `cascade.md` |
 | `preferences/1on1.md` | Focus areas for 1on1 synthesis | `1on1-prep.md` |
+| `preferences/decisions.md` | Decision principles, reversibility, DACI, one approver | `decision-record.md` |
 | `preferences/knowledge.md` | Relevance filters — update weekly | `nightly-synthesis.md` |
 
 Preference tuning updates individual modules — never the whole set at once.

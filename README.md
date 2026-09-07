@@ -41,6 +41,7 @@ All three run inside `run-nightly.sh`. **Required Mac setting:** System Settings
 | `/personal-os-week-ahead` | Run the week-ahead review any time, not just Sunday |
 | `/personal-os-cascade` | Draft weekly updates for direct reports, cross-functional partners, and the C-suite |
 | `/personal-os-career-evidence` | Review captured accomplishments, star entries, generate a brag doc |
+| `/personal-os-decide [title]` | Open, resume, or close a decision record: DACI, one accountable approver, the logged why |
 
 ---
 
@@ -158,7 +159,7 @@ Workflows load summaries and synthesis, not sources. If synthesis logic improves
 
 ```
 vault/
-├── CLAUDE.md              ← Root context (70 lines max, always loaded)
+├── CLAUDE.md              ← Root context (80 lines max, always loaded)
 ├── GOALS.md               ← 30/60/90 objectives
 ├── HEARTBEAT.md           ← Current focus, upcoming meetings, synthesis state
 ├── PILLARS.md             ← Ongoing strategic focus areas with keywords
@@ -175,6 +176,9 @@ vault/
 ├── Meetings/
 │   └── _index.md          ← Meeting list: date, title, participants, action items
 ├── Projects/              ← Active initiatives
+├── Decisions/             ← Decision records (DACI, one approver, the logged why)
+│   ├── _index.md          ← Portfolio: standalone and project-scoped, status, review date
+│   └── [slug]/decision.md ← Canonical record
 ├── People/                ← Team roster + stakeholder map (with last_contact)
 ├── Knowledge/
 │   ├── annotated/         ← Annotated versions of processed sources (immutable)
@@ -189,7 +193,7 @@ vault/
 ├── _system/               ← System-managed (do not edit directly)
 │   ├── data/
 │   │   ├── open-loops.json      ← Commitments with priority, pillar, and due dates
-│   │   ├── decisions.json       ← Decision log with review dates
+│   │   ├── decisions.json       ← Decision index the briefing reads, with review dates
 │   │   ├── career-evidence.json ← Captured feedback, outcomes, growth moments
 │   │   └── synthesis-log.json   ← Incremental processing ledger (hash-based)
 │   ├── workflows/          ← Playbooks for each workflow
