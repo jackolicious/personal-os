@@ -175,6 +175,35 @@ check_absent "Knowledge/sources/" "Knowledge/sources/ must not appear anywhere"
 
 # ── Summary ─────────────────────────────────────────────────────────────────
 
+# --- Root CLAUDE.md line budget ---
+# CONTRIBUTING names this under "What not to break", and nothing checked it, so the file sat one
+# line under the limit with no way to notice a PR crossing it. The limit is read FROM CONTRIBUTING
+# rather than hardcoded here, so the number lives in one place and changing it is a deliberate edit
+# to the stated rule.
+LIMIT="$(grep -oE 'root CLAUDE\.md line limit \(.[0-9]+ lines' "$ROOT/CONTRIBUTING.md" | grep -oE '[0-9]+' | head -1)"
+if [ -z "$LIMIT" ]; then
+  echo "FAIL: could not read the root CLAUDE.md line limit from CONTRIBUTING.md"; FAIL=$((FAIL+1))
+elif ! command -v python3 >/dev/null 2>&1; then
+  echo "SKIP: python3 unavailable, cannot measure the CLAUDE.md template"
+else
+  LINES="$(python3 - "$ROOT/_bootstrap/phases/03-claude-md.md" <<'BUDGETPY'
+import sys
+s = open(sys.argv[1]).read()
+start = s.index("# [YOUR NAME] Personal OS")
+end = s.index(chr(96) * 3, start)   # a fence, spelled without backticks so bash 3.2 command
+                                    # substitution does not try to parse them
+print(len(s[start:end].rstrip("\n").split("\n")))
+BUDGETPY
+)"
+  if [ "$LINES" -le "$LIMIT" ]; then
+    echo "PASS: root CLAUDE.md template is $LINES lines (limit $LIMIT)"; PASS=$((PASS+1))
+  else
+    echo "FAIL: root CLAUDE.md template is $LINES lines, over the $LIMIT-line limit in CONTRIBUTING.md"
+    echo "      It loads every session. Cut a line, or change the limit in CONTRIBUTING.md on purpose."
+    FAIL=$((FAIL+1))
+  fi
+fi
+
 echo ""
 echo "Results: $PASS passed, $FAIL failed"
 if [ "$FAIL" -gt 0 ]; then
