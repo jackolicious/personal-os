@@ -167,6 +167,23 @@ Run the week-ahead planning review.
 Follow `_system/workflows/week-ahead.md` exactly.
 ```
 
+### `.claude/commands/personal-os-brief.md`
+
+```markdown
+---
+description: Write or repair a brief, an executive summary plus one tight argument for a reader who has to decide something. Usage: /personal-os-brief [topic | path-to-draft]
+---
+
+Follow `_system/workflows/brief.md`.
+
+Compose mode when given a topic. Revise mode when given a draft, and in revise mode the
+diagnosis with counts and line-level quotes comes before any rewritten prose.
+
+Run the audit before handing anything over, including both detectors, and state what it found.
+
+$ARGUMENTS
+```
+
 ### `.claude/commands/personal-os-decide.md`
 
 ```markdown
