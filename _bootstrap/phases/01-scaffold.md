@@ -25,6 +25,8 @@ profile/career/
 _system/
 _system/data/
 _system/logs/
+_system/scripts/
+_system/queues/
 _system/briefings/
 _system/templates/
 _system/workflows/
