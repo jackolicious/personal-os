@@ -63,6 +63,7 @@ _Depends on: Phase 1 (directories must exist)_
 | `/personal-os-brief [topic \| draft]` | Write or repair a brief, audit included |
 | `/personal-os-decide [title]` | Open, resume, or close a decision record |
 | `/personal-os-remember` | File a decision, commitment, or relationship note to the wiki |
+| `/personal-os-forget [name] [what]` | Forget a person or a topic about them, and stop the nightly from re-deriving it |
 
 ## Model routing
 Extract/triage: `claude-haiku-4-5` | Synthesize/draft: `claude-sonnet-5`
@@ -74,7 +75,7 @@ Extract/triage: `claude-haiku-4-5` | Synthesize/draft: `claude-sonnet-5`
 - Check `_system/data/synthesis-log.json` before processing any file
 - Never modify files in `Knowledge/annotated/` or `Inbox/transcripts/`
 - Open loops are append only. Archive them, do not delete them
-- Wiki pages: append dated sections, never rewrite core content
+- Wiki pages: append dated sections, never rewrite core content. Person profiles follow `1on1s/CLAUDE.md` instead: a rewritten, cited current picture above an append-only Evidence log
 - A real call (deal, price, scope, hire, org move, vendor, commitment) gets a decision record via `/personal-os-decide`, with exactly one accountable approver and the logged why
 - Load `profile/preferences/synthesis.md` for any briefing or synthesis. Workflows load their own specific preference module
 - `_system/` is managed by automation, do not edit files there directly
@@ -153,16 +154,33 @@ session count, and last contact — enabling targeted reads without scanning the
 ```
 [Person Name]/
   CLAUDE.md       ← person context (load for any query about them)
-  profile.md      ← role, background, working style, key themes
+  profile.md      ← current picture + Evidence log (shape: _system/templates/person-profile.md)
   open-loops.md   ← active commitments and follow-ups (append-only)
   sessions/
     _index.md              ← session index: date, key topic, summary link (auto-maintained)
     YYYY-MM-DD.md          ← raw notes (immutable after session)
     YYYY-MM-DD-summary.md  ← processed summary (structured)
+_forget.md        ← the forget register, written by /personal-os-forget
 ```
 
 ## Creating a new person folder
-Use `/personal-os-new-1on1 [name]` — creates from `_system/templates/person-folder.md`
+Use `/personal-os-new-1on1 [name]`, which creates from `_system/templates/person-folder.md` and `_system/templates/person-profile.md`
+
+## Profile contract
+A profile covers anyone you keep one for, at work or outside it. Its relationship label is the one you give it. This section overrides the root "Wiki pages: append dated sections" rule for profiles, and `_system/scripts/lint_people_profiles.py` enforces it.
+
+- **Current picture.** Everything above `## Evidence log` describes the person as of today. Writers rewrite it in place: merge a new observation into the bullet it sharpens, replace a bullet it supersedes, drop one that no longer holds. Never add `### Appended` or `## Synthesis as of` blocks.
+- **Evidence log.** `## Evidence log` is the last section and is append-only. Each update adds one `### YYYY-MM-DD, [label](sessions/YYYY-MM-DD-summary.md)` entry. A claim dropped from the current picture stays here, so nothing is lost.
+- **Citations.** Every current-picture bullet ends with its source: `([YYYY-MM-DD](sessions/YYYY-MM-DD-summary.md))` for a session, `(you, YYYY-MM-DD)` for something you said directly.
+- **Themes cap.** At most 10 themes. Each is a durable pattern with its latest supporting date. A one-session observation stays in the log until it recurs.
+- **What lands, what grates.** `## How to work with them (what lands, what grates)` records approaches that worked or backfired with this person, each cited.
+- **Readers** load the current picture first and open the Evidence log or `sessions/` only for the history behind a claim.
+
+## Forgetting
+`1on1s/_forget.md` lists what you asked the system to forget. Every profile or summary writer reads it first.
+- `scope: person` means no profile, roster entry, or new person folder for that person.
+- `scope: topic` means no profile bullet or session summary on that topic. `match:` lists distinctive terms the linter checks for, so a re-derived claim fails the lint.
+- Raw session notes and any source system stay untouched. Forgetting removes synthesized claims and stops re-derivation. It does not delete source records, and nothing should claim it does.
 
 ## Query patterns
 - "What's open with Alex?" → read `1on1s/_index.md`, then Alex/open-loops.md + last summary only

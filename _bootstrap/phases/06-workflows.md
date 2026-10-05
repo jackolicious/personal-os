@@ -327,7 +327,12 @@ the vault. Same rule in `Inbox/CLAUDE.md`, which covers every other ingestion pa
 4. **Generate summary** using appropriate template
    - Extract decisions, action items, open loops, themes
    - Assign priority to every open loop extracted
-   - For 1on1s: update `[Name]/profile.md` themes section if new themes observed
+   - Read `1on1s/_forget.md` first. A `scope: person` entry for this person means skip the summary and profile and log `forgotten person, skipped`. A `scope: topic` entry (for this person or `*`) means leave that topic out of the summary and the profile, and none of its `match:` terms may appear in either
+   - For 1on1s: update `1on1s/[Name]/profile.md` per the profile contract in `1on1s/CLAUDE.md`:
+     1. Append one entry at the end of `## Evidence log`: `### <date>, [<topic>](sessions/<date>-summary.md)` with 1-4 bullets of what this session showed about the person. Never edit earlier entries
+     2. Rewrite the current picture above the log so it reads true as of today. Merge the observation into the Themes bullet it sharpens and move that bullet's citation to this session, replace a bullet it supersedes, and record what landed or grated under `## How to work with them (what lands, what grates)`. Keep Themes at 10 or fewer. Every bullet you touch ends with `([<date>](sessions/<date>-summary.md))`
+     3. Never add `### Appended` or `## Synthesis as of` blocks
+     4. Run `python3 _system/scripts/lint_people_profiles.py --only "<Name>"` and fix every BAD line. A profile with no `## Evidence log` gets an empty one as its last section first
 
 5. **Update open loops**
    - New commitments → append to `_system/data/open-loops.json` with priority and due date
@@ -491,7 +496,7 @@ Context synthesis and probing question generation require reasoning.
 ## Trigger: `/personal-os-1on1-prep [name]`
 
 1. Check if `1on1s/[Name]/ready-note.md` exists — if it does, read it first. It's pre-built context; skip re-deriving anything already there and use it as the base for the prep doc.
-2. Load `1on1s/[Name]/CLAUDE.md`, `profile.md`, and `profile/preferences/1on1.md`
+2. Load `1on1s/[Name]/CLAUDE.md`, `profile.md`, and `profile/preferences/1on1.md`. In `profile.md`, the sections above `## Evidence log` are the current picture. Read those, and open the Evidence log only for the history behind a claim
 3. Read `1on1s/[Name]/sessions/_index.md` → identify the 2 most recent sessions by date
 4. Read only those 2 summary files — do not open the full sessions/ directory (unless ready-note.md was missing)
 5. Filter `_system/data/open-loops.json` where context_person = [Name] (skip if already shown in ready-note)
@@ -1024,9 +1029,11 @@ For each person touched tonight (new session processed, open loop created/update
 5. If no `ready-note.md` exists yet (new person folder), create it from template with empty manual section
 
 ### Step 9: Profile synthesis (triggered by session count)
-After 10+ sessions with any single person:
-- Re-read all their summaries
-- Update `[Name]/profile.md` themes section with synthesized patterns
+Every 10 new Evidence log entries for a person (entries dated after the profile's `rebuilt:` frontmatter date, or all of them if it has none):
+- Read `1on1s/_forget.md` and honor it as meeting-notes Step 4 does
+- Rebuild the current picture above `## Evidence log` from the full log plus the session summaries, per `1on1s/CLAUDE.md`. Incremental rewrites drift: a theme fades, a bullet loses its citation, Themes creeps past 10
+- Leave the Evidence log untouched. Never append a `## Synthesis as of` block to a profile
+- Set `rebuilt: <date>` in the profile frontmatter, then run `python3 _system/scripts/lint_people_profiles.py --only "<Name>"` and fix every BAD line
 - Log as processing_type: "profile-synthesis"
 
 After 5+ sources on any single wiki concept:
