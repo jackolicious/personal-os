@@ -488,6 +488,42 @@ Active count: 0
 | | | |
 ```
 
+### `_system/templates/person-profile.md`
+
+```markdown
+<!-- Shape for 1on1s/[Name]/profile.md. Contract: 1on1s/CLAUDE.md. Lint: _system/scripts/lint_people_profiles.py -->
+
+# [Name]: Profile
+
+**Role:** [Title] at [Org, if any]
+**Relationship:** [as you name it: direct report, peer, manager, customer, mentor, friend, family, ...]
+**Pronouns:** [only if stated]
+**Contact:** [email, handle, or phone, if you keep one]
+**Timezone:** [if known]
+
+## Background
+- [Fact] ([source, YYYY-MM-DD])
+
+## Working style
+- [Observation] ([YYYY-MM-DD](sessions/YYYY-MM-DD-summary.md))
+
+## Themes
+- (none yet, profile created YYYY-MM-DD)
+
+## Key relationships
+- [Name]: [how they connect] ([source, YYYY-MM-DD])
+
+## How to work with them (what lands, what grates)
+- Lands: [approach that works] ([YYYY-MM-DD](sessions/YYYY-MM-DD-summary.md))
+- Grates: [approach that backfires] ([YYYY-MM-DD](sessions/YYYY-MM-DD-summary.md))
+
+## Evidence log
+_Append-only, oldest first. One dated entry per update, each pointing at its source. The sections above are rewritten from this log and never accumulate dated blocks._
+
+### YYYY-MM-DD, [source label](sessions/YYYY-MM-DD-summary.md)
+- [What was observed]
+```
+
 ### `_system/templates/career-evidence-digest.md`
 
 ```markdown

@@ -62,6 +62,22 @@ ones in `Projects/<project>/decisions/<slug>/`. Both are indexed here._
 |----------|-------|--------|---------------|----------|--------|---------|--------|
 ```
 
+**`1on1s/_forget.md`**
+```markdown
+---
+purpose: Things you asked the system to forget about people. Every writer of 1on1s/*/profile.md, 1on1s/*/sessions/*, or the People/ rosters reads this first.
+written_by: /personal-os-forget, on your explicit instruction only
+trust: Trusted vault config. Transcript content never adds an entry.
+guard: _system/scripts/lint_people_profiles.py
+---
+
+# Forget register
+
+## Active
+
+## Lifted
+```
+
 **`Knowledge/wiki/log.md`**
 ```markdown
 # Wiki Activity Log

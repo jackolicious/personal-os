@@ -42,6 +42,7 @@ All three run inside `run-nightly.sh`. **Required Mac setting:** System Settings
 | `/personal-os-cascade` | Draft weekly updates for direct reports, cross-functional partners, and the C-suite |
 | `/personal-os-career-evidence` | Review captured accomplishments, star entries, generate a brag doc |
 | `/personal-os-decide [title]` | Open, resume, or close a decision record: DACI, one accountable approver, the logged why |
+| `/personal-os-forget [name] [what]` | Forget a person or a topic about them. Stages the removal, deletes on your go, and stops the nightly from re-deriving it |
 
 ---
 
@@ -149,7 +150,8 @@ Raw meeting transcripts run 5,000–15,000 tokens each. The three tiers solve co
 |------|----------|------------|------|
 | Sources | Transcripts, PDFs, raw URLs | 5k–15k each | Immutable after ingestion |
 | Summaries | Session summaries, source annotations | 300–800 each | Write-once, regeneratable |
-| Synthesis | Wiki, profiles, open-loops.json | 100–400 per entry | Append-only, never rewritten |
+| Synthesis | Wiki, open-loops.json | 100–400 per entry | Append-only, never rewritten |
+| Profiles | `1on1s/[Name]/profile.md` | 1k–4k each | Current picture rewritten and cited, Evidence log append-only |
 
 Workflows load summaries and synthesis, not sources. If synthesis logic improves, any summary can be regenerated from its immutable source.
 
@@ -169,6 +171,7 @@ vault/
 │   └── _archive/          ← Processed originals (system-managed)
 ├── 1on1s/
 │   ├── _index.md          ← All people: last session, session count, last contact
+│   ├── _forget.md         ← What you asked the system to forget, enforced by the profile linter
 │   └── [Name]/
 │       ├── sessions/
 │       │   └── _index.md  ← Session list: date, topic, summary link

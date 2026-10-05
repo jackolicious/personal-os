@@ -919,6 +919,152 @@ if __name__ == "__main__":
 
 ---
 
+## Step 0d: Create the profile linter
+
+Profiles drift toward a dated pile when nothing checks them: every session appends a theme, every
+synthesis pass appends a block, and the top of the file stops describing the person. This script
+enforces the profile contract in `1on1s/CLAUDE.md` and the forget register in `1on1s/_forget.md`.
+meeting-notes runs it after every profile write, nightly Step 9 after every rebuild, and
+`/personal-os-forget` after every removal.
+
+**`_system/scripts/lint_people_profiles.py`**
+
+```python
+#!/usr/bin/env python3
+"""Lint 1on1s/*/profile.md against the profile contract in 1on1s/CLAUDE.md.
+
+  - Everything above `## Evidence log` is the current picture. Writers rewrite it in place, so it
+    never accumulates `### Appended` or `## Synthesis as of` blocks.
+  - `## Evidence log` exists and is the last `## ` section, so appends land at the end.
+  - `## Themes` holds at most MAX_THEMES top-level bullets, each citing a dated source.
+  - `1on1s/_forget.md` Active entries hold: a person-scope entry leaves no profile or roster
+    entry, and a topic-scope entry's `match:` terms appear in neither the profile nor any
+    session summary.
+
+Usage: lint_people_profiles.py [--vault PATH] [--only NAME]
+Prints one `BAD: ...` line per violation, or `OK`. Exits 1 on any violation.
+"""
+import argparse
+import pathlib
+import re
+import sys
+
+MAX_THEMES = 10
+DATE_RE = re.compile(r"\d{4}-\d{2}-\d{2}")
+
+
+def parse_forget(path):
+    """Return the Active entries as dicts: id, person, scope, match (list of terms)."""
+    if not path.exists():
+        return []
+    entries, cur, active = [], None, False
+    for line in path.read_text().splitlines():
+        if line.startswith("## "):
+            active = line.strip() == "## Active"
+            cur = None
+            continue
+        if not active:
+            continue
+        if line.startswith("### "):
+            cur = {"id": line[4:].strip(), "person": "", "scope": "", "match": []}
+            entries.append(cur)
+            continue
+        m = re.match(r"^- (person|scope|match):\s*(.*)$", line.strip())
+        if cur and m:
+            key, val = m.group(1), m.group(2).strip()
+            if key == "match":
+                cur["match"] = [t.strip() for t in val.split("|") if t.strip()]
+            else:
+                cur[key] = val
+    return entries
+
+
+def lint_profile(path):
+    bad = []
+    lines = path.read_text().splitlines()
+    name = path.parent.name
+    log_idx = next((i for i, l in enumerate(lines) if l.strip() == "## Evidence log"), None)
+    if log_idx is None:
+        return [f"{name}: no `## Evidence log` section"]
+    for l in lines[log_idx + 1:]:
+        if l.startswith("## "):
+            bad.append(f"{name}: section after Evidence log ({l.strip()})")
+    above = lines[:log_idx]
+    for l in above:
+        if l.startswith("### Appended") or l.startswith("## Synthesis as of"):
+            bad.append(f"{name}: dated block above Evidence log ({l.strip()})")
+    themes, in_themes = [], False
+    for l in above:
+        if l.startswith("## "):
+            in_themes = l.startswith("## Themes")
+            continue
+        if in_themes and l.startswith("- "):
+            themes.append(l)
+    if len(themes) > MAX_THEMES:
+        bad.append(f"{name}: {len(themes)} Themes bullets (max {MAX_THEMES})")
+    for t in themes:
+        if "(none yet" not in t and not DATE_RE.search(t):
+            bad.append(f"{name}: uncited Themes bullet: {t[:70]}")
+    return bad
+
+
+def lint_forget(vault, entries):
+    bad = []
+    people = vault / "1on1s"
+    for e in entries:
+        person, scope = e["person"], e["scope"]
+        if scope not in ("person", "topic"):
+            bad.append(f"_forget {e['id']}: scope must be person|topic, got {scope!r}")
+            continue
+        if scope == "person":
+            if (people / person / "profile.md").exists():
+                bad.append(f"_forget {e['id']}: profile re-derived for forgotten person {person}")
+            row = re.compile(rf"^(###\s+{re.escape(person)}\s*|\|\s*{re.escape(person)}\s*\|.*)$", re.M)
+            for roster in ("team.md", "stakeholders.md"):
+                rp = vault / "People" / roster
+                if rp.exists() and row.search(rp.read_text()):
+                    bad.append(f"_forget {e['id']}: {person} still in {roster}")
+            continue
+        base = [people] if person == "*" else [people / person]
+        targets = []
+        for b in base:
+            targets += sorted(b.glob("**/profile.md")) + sorted(b.glob("**/sessions/**/*summary*.md"))
+        for t in targets:
+            text = t.read_text().lower()
+            for term in e["match"]:
+                if term.lower() in text:
+                    bad.append(f"_forget {e['id']}: term {term!r} reappeared in {t.relative_to(vault)}")
+    return bad
+
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--vault", default=str(pathlib.Path(__file__).resolve().parents[2]))
+    ap.add_argument("--only", help="lint a single person's profile")
+    args = ap.parse_args()
+    vault = pathlib.Path(args.vault)
+    profiles = sorted((vault / "1on1s").glob("*/profile.md"))
+    if args.only:
+        profiles = [p for p in profiles if p.parent.name == args.only]
+    bad = []
+    for p in profiles:
+        bad += lint_profile(p)
+    bad += lint_forget(vault, parse_forget(vault / "1on1s" / "_forget.md"))
+    for b in bad:
+        print("BAD: " + b)
+    if not bad:
+        print("OK")
+    return 1 if bad else 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
+```
+
+`chmod +x _system/scripts/lint_people_profiles.py`
+
+---
+
 ## Step 1: Create `run-nightly.sh`
 
 ```bash
