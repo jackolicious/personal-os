@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 DIR="$(cd "$(dirname "$0")" && pwd)"
+# TESTS_DIR lets 17-run-all-integrity.sh run the harness against a fixture suite directory.
+# Real runs never set it, so discovery stays in this dir.
+DIR="${TESTS_DIR:-$DIR}"
 
 TOTAL_PASS=0
 TOTAL_FAIL=0
@@ -19,10 +22,19 @@ run_suite() {
 
   echo "$output"
 
-  # Extract pass/fail counts from the script's own summary line
+  # Extract pass/fail counts from the script's own summary line. A suite that prints no
+  # "Results:" line crashed (a syntax error, an unbound variable under set -u, a traceback).
+  # Both counts used to fall through to 0, so the crash vanished and the total read green.
+  # Count a missing Results line as a failure.
   local p f
-  p=$(echo "$output" | grep -E '^Results:' | grep -oE '[0-9]+ passed' | grep -oE '[0-9]+' || echo 0)
-  f=$(echo "$output" | grep -E '^Results:' | grep -oE '[0-9]+ failed' | grep -oE '[0-9]+' || echo 0)
+  if echo "$output" | grep -E '^Results:' >/dev/null; then
+    p=$(echo "$output" | grep -E '^Results:' | grep -oE '[0-9]+ passed' | grep -oE '[0-9]+' || echo 0)
+    f=$(echo "$output" | grep -E '^Results:' | grep -oE '[0-9]+ failed' | grep -oE '[0-9]+' || echo 0)
+  else
+    echo "run-all: $name produced no 'Results:' line (crashed? exit $exit_code), counting as 1 failure"
+    p=0
+    f=1
+  fi
 
   TOTAL_PASS=$((TOTAL_PASS + p))
   TOTAL_FAIL=$((TOTAL_FAIL + f))

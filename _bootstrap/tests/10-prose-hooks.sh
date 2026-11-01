@@ -42,7 +42,7 @@ if grep -q 'No em dashes' "$ROOT/_bootstrap/phases/03-claude-md.md"; then
 else
   bad "Phase 3 states the em dash rule"
 fi
-if grep -n 'No em dashes' "$ROOT/_bootstrap/phases/03-claude-md.md" | grep -q '—'; then
+if grep -n 'No em dashes' "$ROOT/_bootstrap/phases/03-claude-md.md" | grep '—' >/dev/null; then
   bad "the 'No em dashes' rule contains an em dash"
 else
   ok "the 'No em dashes' rule contains no em dash"

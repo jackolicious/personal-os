@@ -74,7 +74,7 @@ else
 
     fixture() { # category, label, content
       printf '%b' "$3" > "$T/fx.md"
-      if vlcat "$1" "$T/fx.md" | grep -q "$1"; then
+      if vlcat "$1" "$T/fx.md" | grep "$1" >/dev/null; then
         ok "$1 catches $2"
       else
         bad "$1 missed $2"
@@ -105,7 +105,7 @@ else
     # it protects nothing, so the quiet cases carry as many assertions as the loud ones.
     quiet() { # category, label, content
       printf '%b' "$3" > "$T/ct.md"
-      if vlcat "$1" "$T/ct.md" | grep -q "$1"; then
+      if vlcat "$1" "$T/ct.md" | grep "$1" >/dev/null; then
         bad "$1 fires on $2"
       else
         ok "$1 stays quiet on $2"
@@ -123,7 +123,7 @@ else
     # from a word processor or a model carries U+2019, so without a fold the linter reports
     # textbook AI prose as clean.
     printf 'Here\xe2\x80\x99s the thing, we should ship.\n' > "$T/smart.md"
-    if vlcat throat_clearing "$T/smart.md" | grep -q throat_clearing; then
+    if vlcat throat_clearing "$T/smart.md" | grep throat_clearing >/dev/null; then
       ok "a curly apostrophe does not hide a violation"
     else
       bad "a curly apostrophe hides a violation"
@@ -131,7 +131,7 @@ else
 
     # An unterminated fence used to blank the rest of the file and still exit 0.
     printf 'Clean line.\n\x60\x60\x60\ncode\nGreat question. Here is the thing.\n' > "$T/unbal.md"
-    if vlcat sycophancy "$T/unbal.md" | grep -q sycophancy; then
+    if vlcat sycophancy "$T/unbal.md" | grep sycophancy >/dev/null; then
       ok "an unterminated code fence does not hide the rest of the file"
     else
       bad "an unterminated code fence hides everything after it"
@@ -152,32 +152,32 @@ else
     blint() { python3 "$T/brief-lint.py" --file "$1" 2>/dev/null || true; }
 
     printf 'Author: someone\nStatus: draft\n\n## Executive summary\n\nShip it.\n' > "$T/b1.md"
-    blint "$T/b1.md" | grep -q preamble && ok "catches a metadata preamble" || bad "missed a metadata preamble"
+    blint "$T/b1.md" | grep preamble >/dev/null && ok "catches a metadata preamble" || bad "missed a metadata preamble"
 
     { printf '## Executive summary\n\n'; python3 -c "print('word '*120)"; } > "$T/b2.md"
-    blint "$T/b2.md" | grep -q fat_summary && ok "catches an executive summary that stopped summarizing" || bad "missed a fat summary"
+    blint "$T/b2.md" | grep fat_summary >/dev/null && ok "catches an executive summary that stopped summarizing" || bad "missed a fat summary"
 
     { printf '## Body\n\n'; python3 -c "print('word '*120)"; } > "$T/b3.md"
-    blint "$T/b3.md" | grep -q long_para && ok "catches a paragraph past the verbosity cap" || bad "missed a long paragraph"
+    blint "$T/b3.md" | grep long_para >/dev/null && ok "catches a paragraph past the verbosity cap" || bad "missed a long paragraph"
 
     printf '## Risk\n\nThe residual risk is commercial.\n' > "$T/b4.md"
-    blint "$T/b4.md" | grep -q abstract_label && ok "catches a category label where a plain noun belongs" || bad "missed an abstract label"
+    blint "$T/b4.md" | grep abstract_label >/dev/null && ok "catches a category label where a plain noun belongs" || bad "missed an abstract label"
 
     # A summary asserts, the body proves. This rule had no fixture, so emptying it passed.
     printf '## Executive summary\n\nThe vendor said "we have never shipped a migration of this size and we do not intend to start now" last week.\n' > "$T/b6.md"
-    blint "$T/b6.md" | grep -q summary_quote && ok "catches a long quotation in the executive summary" || bad "missed a quotation in the summary"
+    blint "$T/b6.md" | grep summary_quote >/dev/null && ok "catches a long quotation in the executive summary" || bad "missed a quotation in the summary"
 
     # A heading followed straight away by text is valid markdown, and dropping that block used to
     # switch every section rule off for the section.
     printf '## Risk\nThe residual risk is commercial.\n' > "$T/b7.md"
-    blint "$T/b7.md" | grep -q abstract_label && ok "a heading with no blank line after it is still scored" || bad "a heading with no blank line disabled its section"
+    blint "$T/b7.md" | grep abstract_label >/dev/null && ok "a heading with no blank line after it is still scored" || bad "a heading with no blank line disabled its section"
 
     # Quoting at length is the author choosing to quote, which is a different judgment call.
     { printf '## Body\n\n'; for i in $(seq 1 20); do printf '> quoted words go here and here and here\n'; done; } > "$T/b8.md"
-    blint "$T/b8.md" | grep -q long_para && bad "fires on a long block quote" || ok "stays quiet on a long block quote"
+    blint "$T/b8.md" | grep long_para >/dev/null && bad "fires on a long block quote" || ok "stays quiet on a long block quote"
 
     printf 'A note from the author: we should ship.\n\n## Executive summary\n\nShip.\n' > "$T/b9.md"
-    blint "$T/b9.md" | grep -q preamble && bad "fires on the word author mid-sentence" || ok "stays quiet on the word author mid-sentence"
+    blint "$T/b9.md" | grep preamble >/dev/null && bad "fires on the word author mid-sentence" || ok "stays quiet on the word author mid-sentence"
 
     set +e
     python3 "$T/brief-lint.py" --file "$T/does-not-exist.md" >/dev/null 2>&1; bl_missing=$?
@@ -187,7 +187,7 @@ else
     # A table or a list is not a paragraph, and flagging one would make the tool useless on any
     # doc that carries data.
     { printf '## Body\n\n'; for i in $(seq 1 40); do printf -- '- a list row with several words in it\n'; done; } > "$T/b5.md"
-    blint "$T/b5.md" | grep -q long_para && bad "fires on a long list" || ok "stays quiet on a long list"
+    blint "$T/b5.md" | grep long_para >/dev/null && bad "fires on a long list" || ok "stays quiet on a long list"
 
     # Exit codes, since the workflow and any hook branch on them.
     printf 'Clean prose with nothing to find.\n' > "$T/clean.md"
